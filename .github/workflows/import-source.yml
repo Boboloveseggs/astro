@@ -1,8 +1,6 @@
 name: Import GitHub safe source package
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -10,7 +8,6 @@ permissions:
 
 jobs:
   import-source:
-    if: ${{ github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, 'Import GitHub safe source package') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -24,7 +21,6 @@ jobs:
           import os
           import shutil
           import ssl
-          import sys
           import urllib.request
           import zipfile
           from pathlib import Path
