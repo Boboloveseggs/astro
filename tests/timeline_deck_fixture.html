@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>时间轴 Deck fixture</title>
+  <style>
+    :root {
+      --bg: #0d0b08;
+      --bg-panel: #141210;
+      --bg-card: #1a1815;
+      --bg-hover: #201e1a;
+      --gold: #c8a44a;
+      --gold-dim: #8a6c2e;
+      --gold-glow: rgba(200,164,74,0.12);
+      --gold-glow2: rgba(200,164,74,0.06);
+      --border: rgba(200,164,74,0.1);
+      --text-1: #e4dbc8;
+      --text-2: #948878;
+      --text-3: #524c42;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 22px; background: var(--bg); color: var(--text-1);
+      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    }
+    .fixture-title {
+      width: min(1040px, calc(100vw - 44px)); margin: 0 auto 12px;
+      font-family: "Noto Serif SC", serif; color: var(--gold); font-size: 17px; letter-spacing: .12em;
+    }
+    #fixture { width: min(1040px, calc(100vw - 44px)); margin: 0 auto; }
+    .tl-deck-layout {
+      display: grid; grid-template-columns: minmax(0,1fr) clamp(118px,28vw,260px);
+      min-height: 520px; border: 1px solid var(--border); border-radius: 8px;
+      overflow: hidden; background: radial-gradient(circle at 24% 32%,var(--gold-glow2),transparent 34%),var(--bg);
+    }
+    .tl-deck-main { min-width: 0; display: flex; flex-direction: column; padding: 18px 20px 16px; overflow: hidden; }
+    .tl-date-path { display: flex; align-items: center; gap: 10px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-bottom: 18px; min-height: 46px; overflow-x: auto; scrollbar-width: thin; scrollbar-color: rgba(200,164,74,.52) rgba(200,164,74,.08); }
+    .tl-date-path::-webkit-scrollbar { height: 6px; }
+    .tl-date-path::-webkit-scrollbar-track { background: rgba(200,164,74,.08); border-radius: 999px; }
+    .tl-date-path::-webkit-scrollbar-thumb { background: linear-gradient(90deg, var(--gold-dim), var(--gold)); border-radius: 999px; box-shadow: 0 0 8px rgba(200,164,74,.22); }
+    .tl-date-path-item { display: inline-flex; align-items: center; gap: 7px; border: 0; background: transparent; color: var(--text-2); font-size: 13px; font-family: inherit; white-space: nowrap; cursor: pointer; padding: 3px 4px; }
+    .tl-date-path-item.active,.tl-date-path-item:hover { color: var(--gold); }
+    .tl-date-path-icon { width: 18px; height: 18px; border: 1px solid var(--gold-dim); border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; color: var(--gold); font-size: 11px; background: var(--gold-glow); }
+    .tl-date-path-sep { color: var(--text-3); font-size: 14px; }
+    .tl-date-track { position: relative; padding: 26px 22px 20px; margin-bottom: 16px; }
+    .tl-date-track::before { content: ""; position: absolute; left: 24px; right: 24px; top: 36px; border-top: 2px solid rgba(200,164,74,.44); }
+    .tl-date-dot-row { display: grid; grid-template-columns: repeat(var(--date-count,1),minmax(80px,1fr)); gap: 14px; position: relative; z-index: 1; }
+    .tl-date-dot-btn { border: 0; background: transparent; color: var(--text-2); cursor: pointer; font-family: inherit; display: flex; flex-direction: column; align-items: center; gap: 9px; min-width: 0; }
+    .tl-date-dot { width: 18px; height: 18px; border-radius: 50%; border: 3px solid var(--gold-dim); background: var(--bg); box-shadow: 0 0 0 5px rgba(200,164,74,.055); }
+    .tl-date-dot-btn.active .tl-date-dot,.tl-date-dot-btn:hover .tl-date-dot { transform: scale(1.18); border-color: var(--gold); box-shadow: 0 0 0 8px rgba(200,164,74,.1); }
+    .tl-date-dot-label { font-size: 12px; color: var(--gold); line-height: 1.2; }
+    .tl-date-dot-sub { font-size: 10px; color: var(--text-3); }
+    .tl-deck-area { flex: 1; min-height: 0; display: flex; align-items: center; overflow: hidden; }
+    .tl-card-deck { display: flex; align-items: center; gap: 12px; overflow-x: auto; overflow-y: hidden; scroll-behavior: auto; scroll-padding-inline: clamp(70px,10vw,132px); padding: 18px clamp(70px,10vw,132px) 22px; width: 100%; height: 100%; overscroll-behavior-inline: contain; }
+    .tl-card-deck::-webkit-scrollbar { height: 0; }
+    @keyframes tlDealIn { from { opacity: 0; translate: 36px 0; rotate: 3deg; } to { opacity: 1; translate: 0 0; rotate: 0deg; } }
+    .tl-deck-card { flex: 0 0 182px; height: 280px; overflow: hidden; background: linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,.005)),var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 15px; cursor: pointer; transition: transform .2s ease,opacity .3s ease,border-color .24s ease,box-shadow .2s ease,flex-basis .32s cubic-bezier(.2,.72,.16,1); display: flex; flex-direction: column; gap: 10px; animation: tlDealIn .42s cubic-bezier(.2,.72,.16,1) both; animation-delay: calc(var(--deal-index,0) * .052s); }
+    .tl-card-deck.has-active .tl-deck-card:not(.active) { opacity: .66; }
+    .tl-card-deck:hover .tl-deck-card:not(:hover) { opacity: .66; }
+    .tl-deck-card:hover { transform: translateY(-6px); opacity: 1; border-color: var(--gold); box-shadow: 0 8px 24px rgba(200,164,74,.35),0 0 0 1px rgba(200,164,74,.38),0 14px 34px rgba(0,0,0,.32); }
+    .tl-deck-card.active { opacity: 1; border-color: var(--gold-dim); }
+    .tl-card-icon { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--gold-dim); background: var(--gold-glow); color: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 15px; margin-bottom: 6px; }
+    .tl-card-title { font-size: 16px; color: var(--text-1); font-family: "Noto Serif SC", serif; font-weight: 700; line-height: 1.45; }
+    .tl-card-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+    .tl-card-tag { font-size: 10px; color: var(--gold); border: 1px solid var(--gold-dim); background: var(--gold-glow); border-radius: 4px; padding: 2px 6px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tl-card-label { font-size: 10px; color: var(--text-3); margin-top: 4px; }
+    .tl-card-summary { font-size: 12px; color: var(--text-2); line-height: 1.7; display: -webkit-box; -webkit-line-clamp: 4; line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+    .tl-card-action { margin-top: auto; border-top: 1px solid var(--border); padding-top: 10px; font-size: 12px; color: var(--gold); display: flex; justify-content: flex-end; gap: 8px; }
+    .tl-card-rail { display: grid; grid-template-columns: 34px minmax(0,1fr) 34px; align-items: center; gap: 10px; padding: 7px 4px 0; }
+    .tl-rail-btn { height: 28px; border: 0; background: transparent; color: var(--text-3); font-size: 26px; cursor: pointer; }
+    .tl-rail-btn:hover { color: var(--gold); }
+    .tl-card-slider { width: 100%; accent-color: var(--gold); cursor: pointer; }
+    .tl-rail-meta { text-align: center; font-size: 10px; color: var(--gold); line-height: 1.5; margin-top: 2px; }
+    .tl-date-gear { border-left: 1px solid var(--border); background: rgba(0,0,0,.08); padding: 18px 14px; overflow-y: auto; }
+    .tl-date-gear-title { font-size: 13px; color: var(--text-1); font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .tl-date-gear-list { display: flex; flex-direction: column; gap: 7px; position: relative; }
+    .tl-date-gear-list::before { content: ""; position: absolute; left: 17px; top: 10px; bottom: 10px; border-left: 1px dashed rgba(200,164,74,.25); }
+    .tl-date-gear-item { position: relative; z-index: 1; display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 8px; border: 1px solid transparent; background: transparent; color: var(--text-2); border-radius: 20px; padding: 8px 9px; cursor: pointer; font-family: inherit; text-align: left; }
+    .tl-date-gear-item:hover,.tl-date-gear-item.active { background: var(--gold-glow); border-color: var(--gold-dim); color: var(--gold); }
+    .tl-gear-dot { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--text-3); box-shadow: 0 0 0 3px rgba(255,255,255,.02); }
+    .tl-date-gear-item.active .tl-gear-dot { border-color: var(--gold); box-shadow: 0 0 0 5px rgba(200,164,74,.14); }
+    .tl-gear-label { font-size: 12px; line-height: 1.35; }
+    .tl-gear-count { font-size: 10px; color: var(--text-3); }
+  </style>
+</head>
+<body>
+  <div class="fixture-title">时间轴 Deck · 双轴与卡片牌组</div>
+  <div id="fixture"></div>
+
+  <script>window.__ZHJ_PANEL_TEST__ = true;</script>
+  <script src="../panel.js"></script>
+  <script>
+    const dates = ['2024-05-10', '2024-05-09', '2024-05-08', '2024-05-07', '2024-05-06'];
+    const records = [];
+    dates.forEach((date, dayIndex) => {
+      const count = dayIndex === 0 ? 4 : dayIndex + 1;
+      for (let i = 0; i < count; i++) {
+        records.push({
+          id: `${date}-rec-${i}`,
+          savedAt: `${date}T${String(9 + i).padStart(2, '0')}:00:00.000Z`,
+          article: {
+            title: `${date.slice(5)} 创作札记 ${i + 1}`,
+            body: '这是一段用于卡片摘要的正文。它记录一次创作判断、一个概念连接，以及后续可以继续追问的方向。',
+            type: i === 3 ? 'idea' : 'article',
+          },
+          analysis: {
+            domain: i % 2 ? '文学' : '哲学',
+            sub_domain: i % 2 ? '叙事结构' : '认识论',
+            core_claim: '时间轴把连续创作压成可浏览的卡片牌组。',
+            nodes_hit: [{ name: i % 2 ? '红楼梦' : '康德', type: 'theory', role: 'primary', contribution: '作为卡片标签出现。' }],
+          },
+        });
+      }
+    });
+    document.getElementById('fixture').innerHTML = reviewTimelineBlock(records);
+    bindTimelineDeck(document.getElementById('fixture'));
+  </script>
+</body>
+</html>

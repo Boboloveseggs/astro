@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>知境图鉴 · 分析验证台</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: #0f0f13;
+      color: #e0e0e6;
+      min-height: 100vh;
+      padding: 40px 24px 80px;
+    }
+
+    .container { max-width: 760px; margin: 0 auto; }
+
+    .header { margin-bottom: 36px; }
+    .header h1 { font-size: 20px; font-weight: 600; color: #fff; letter-spacing: 0.06em; }
+    .header p  { font-size: 13px; color: #555; margin-top: 6px; }
+
+    textarea {
+      width: 100%;
+      height: 220px;
+      background: #1a1a22;
+      border: 1px solid #252535;
+      border-radius: 10px;
+      color: #c8c8d4;
+      font-size: 14px;
+      line-height: 1.75;
+      padding: 16px 18px;
+      resize: vertical;
+      outline: none;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    textarea:focus { border-color: #4a4af0; }
+    textarea::placeholder { color: #383848; }
+
+    .btn {
+      margin-top: 14px;
+      padding: 11px 30px;
+      background: #4a4af0;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-family: inherit;
+    }
+    .btn:hover { background: #5c5cf8; }
+    .btn:disabled { background: #22223a; color: #444; cursor: not-allowed; }
+
+    /* loading */
+    .loading { display: none; padding: 52px 0; text-align: center; }
+    .dots { display: inline-flex; gap: 8px; align-items: center; }
+    .dots span {
+      width: 8px; height: 8px;
+      background: #4a4af0; border-radius: 50%;
+      animation: pulse 1.3s infinite ease-in-out;
+    }
+    .dots span:nth-child(2) { animation-delay: 0.2s; }
+    .dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes pulse {
+      0%, 80%, 100% { transform: scale(0.55); opacity: 0.4; }
+      40%            { transform: scale(1);    opacity: 1;   }
+    }
+    .loading-text { margin-top: 16px; font-size: 13px; color: #484860; }
+
+    /* error */
+    .error-box {
+      display: none;
+      background: #180a0a; border: 1px solid #3a1515;
+      border-radius: 10px; padding: 18px 22px;
+      color: #bb5555; font-size: 13px; line-height: 1.7;
+      margin-top: 20px;
+    }
+
+    /* result cards */
+    .result { display: none; }
+
+    .card {
+      background: #1a1a22;
+      border: 1px solid #22222e;
+      border-radius: 12px;
+      padding: 20px 22px;
+      margin-bottom: 14px;
+    }
+
+    .card-label {
+      font-size: 10px;
+      color: #5050c0;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .field {
+      background: #111118;
+      border-radius: 8px;
+      padding: 11px 14px;
+    }
+    .field-label { font-size: 10px; color: #444458; margin-bottom: 4px; }
+    .field-value { font-size: 13px; color: #c0c0d0; line-height: 1.55; }
+
+    .core-claim {
+      font-size: 19px; font-weight: 600;
+      color: #ffffff; line-height: 1.5;
+      margin-top: 16px; padding-top: 14px;
+      border-top: 1px solid #1e1e2a;
+    }
+
+    /* nodes */
+    .node-item {
+      background: #111118;
+      border-radius: 8px;
+      padding: 12px 14px;
+      border-left: 3px solid #252540;
+      margin-bottom: 10px;
+    }
+    .node-item[data-role="primary"]    { border-left-color: #4a4af0; }
+    .node-item[data-role="secondary"]  { border-left-color: #2060a0; }
+    .node-item[data-role="background"] { border-left-color: #2a2a40; }
+
+    .node-header { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; flex-wrap: wrap; }
+    .node-name   { font-size: 14px; font-weight: 600; color: #dcdce8; }
+
+    .badge {
+      font-size: 10px; padding: 2px 7px; border-radius: 4px; font-weight: 500;
+    }
+    .badge-type { background: #1c1c2c; color: #6060a0; }
+    .badge-primary    { background: #181840; color: #5858c0; }
+    .badge-secondary  { background: #0f2030; color: #3878a0; }
+    .badge-background { background: #181820; color: #505060; }
+
+    .node-contribution { font-size: 13px; color: #787890; line-height: 1.65; }
+
+    /* tags */
+    .tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+    .tag {
+      background: #111118; border: 1px solid #22222e;
+      color: #7878a0; font-size: 12px;
+      padding: 5px 12px; border-radius: 20px;
+    }
+
+    /* suggestions */
+    .sug-item {
+      background: #111118; border-radius: 8px;
+      padding: 14px 16px; margin-bottom: 10px;
+    }
+    .sug-header { display: flex; align-items: flex-start; gap: 9px; margin-bottom: 7px; flex-wrap: wrap; }
+    .sug-badge {
+      font-size: 10px; padding: 2px 8px; border-radius: 4px;
+      font-weight: 600; white-space: nowrap; margin-top: 2px;
+    }
+    .sug-延伸 { background: #0f2040; color: #3878c0; }
+    .sug-补空 { background: #0f2818; color: #38a060; }
+    .sug-跨域 { background: #220f30; color: #9060b8; }
+
+    .sug-title  { font-size: 14px; color: #d0d0dc; font-weight: 500; line-height: 1.5; }
+    .sug-reason { font-size: 12px; color: #585868; margin-top: 5px; line-height: 1.65; }
+    .sug-ref    { font-size: 11px; color: #3858a0; margin-top: 6px; }
+
+    /* strengths */
+    .strength-item {
+      background: #111118; border-radius: 8px;
+      padding: 12px 14px; border-left: 3px solid #1a5035;
+      margin-bottom: 10px;
+    }
+    .strength-dim {
+      font-size: 10px; color: #28a060; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 5px;
+    }
+    .strength-evidence { font-size: 13px; color: #788878; line-height: 1.65; }
+
+    /* insight */
+    .insight {
+      font-size: 15px; color: #c0c0d8; line-height: 1.85;
+      border-left: 3px solid #4a4af0; padding-left: 16px;
+    }
+
+    /* raw JSON toggle */
+    .raw-toggle { margin-top: 22px; }
+    .raw-toggle button {
+      background: none; border: 1px solid #22222e;
+      color: #484860; font-size: 12px; padding: 6px 14px;
+      border-radius: 6px; cursor: pointer; font-family: inherit;
+    }
+    .raw-toggle button:hover { color: #7878a0; border-color: #303048; }
+
+    pre.raw-json {
+      display: none;
+      background: #0d0d12; border: 1px solid #1c1c28;
+      border-radius: 8px; padding: 16px;
+      font-family: 'Courier New', Consolas, monospace;
+      font-size: 12px; color: #5858a0;
+      white-space: pre-wrap; overflow-x: auto;
+      margin-top: 10px; line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>知境图鉴 · 分析验证台</h1>
+    <p>粘贴一篇文章，AI 将它编译进你的知识地图</p>
+  </div>
+
+  <textarea id="articleInput" placeholder="把文章全文粘贴进来……"></textarea>
+  <br>
+  <button class="btn" id="analyzeBtn" onclick="analyze()">开始分析</button>
+
+  <div class="loading" id="loading">
+    <div class="dots"><span></span><span></span><span></span></div>
+    <div class="loading-text">正在编译进知识地图…</div>
+  </div>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <div class="result" id="result"></div>
+
+</div>
+
+<script>
+  // ── 配置 ────────────────────────────────────────────
+  const API_KEY  = ''; // GitHub public build: fill a local key only for private testing.
+  const MODEL    = 'glm-4-flash';
+  const ENDPOINT = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+
+  // ── 智谱 JWT 签名 ────────────────────────────────────
+  async function buildToken(apiKey) {
+    const [id, secret] = apiKey.split('.');
+    const now = Date.now();
+
+    const b64url = s =>
+      btoa(unescape(encodeURIComponent(s)))
+        .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+
+    const header  = b64url(JSON.stringify({ alg: 'HS256', sign_type: 'SIGN' }));
+    const payload = b64url(JSON.stringify({ api_key: id, exp: now + 3_600_000, timestamp: now }));
+    const unsigned = `${header}.${payload}`;
+
+    const key = await crypto.subtle.importKey(
+      'raw', new TextEncoder().encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+    );
+    const sigBuf = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(unsigned));
+    const sig = btoa(String.fromCharCode(...new Uint8Array(sigBuf)))
+      .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+
+    return `${unsigned}.${sig}`;
+  }
+
+  // ── Prompt ───────────────────────────────────────────
+  const SYSTEM = `你是一位知识地图分析师。只输出 JSON，不要有任何说明或 markdown 代码块标记。`;
+
+  const makeUserPrompt = text => `分析以下文章，严格按照下方格式输出 JSON（仅 JSON，不加任何说明文字）：
+
+{
+  "domain": "主学科领域",
+  "sub_domain": "具体分支",
+  "perspective": "分析视角（词组）",
+  "core_claim": "核心判断（20字以内）",
+  "strengths": [
+    {
+      "dimension": "论证结构|概念界定|案例质量|跨学科连接|新颖视角（选最匹配的一项）",
+      "evidence": "具体说明（引用文章中的具体做法，读者可自行验证，不写主观评语）"
+    }
+  ],
+  "nodes_hit": [
+    {
+      "name": "节点名称",
+      "type": "person|concept|theory|event",
+      "role": "primary|secondary|background",
+      "contribution": "这篇文章对此节点的贡献（一句话）"
+    }
+  ],
+  "new_concepts": ["新引入的概念或视角"],
+  "map_position": "在知识地图里的位置描述（一句话）",
+  "next_suggestions": [
+    {
+      "type": "延伸|补空|跨域",
+      "suggestion": "具体可写的选题",
+      "reason": "为什么现在写这个有价值（结合该领域的空白、趋势或跨学科连接点，不写泛泛评语）",
+      "theory_ref": "可参考理论或著作"
+    }
+  ],
+  "connections": ["相邻领域或理论"],
+  "insight": "用一句话说出这篇文章体现了创作者的什么能力或视角——重点是创作者本人，不是预测读者反应或市场表现。根据文章实际内容，从下列开头中选最贴切的一个（每篇选不同的，不要重复套用）：「你在这篇文章里展示了一种能力：」「这篇文章能看出，你对X有一种别人少有的感知：」「你真正思考过这个问题，因为：」「这篇文章里有一个视角，是大多数人写同类题材时会错过的：」「你在这篇文章里做到了一件真正困难的事：」「能写出这篇文章，说明你：」。语气真诚，像一个真正读懂了文章的人在说话，不夸张，不空洞。"
+}
+
+文章内容：
+${text}`;
+
+  // ── 主流程 ───────────────────────────────────────────
+  async function analyze() {
+    const text = document.getElementById('articleInput').value.trim();
+    if (!text || text.length < 50) {
+      showError('请先粘贴文章内容（至少 50 字）');
+      return;
+    }
+
+    setLoading(true);
+    document.getElementById('result').style.display = 'none';
+    document.getElementById('errorBox').style.display = 'none';
+
+    try {
+      if (!API_KEY) {
+        throw new Error('GitHub 公开版未内置 API Key。请在本地临时填写自己的 Key，或直接使用扩展设置页。');
+      }
+      const token = await buildToken(API_KEY);
+
+      const resp = await fetch(ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          model: MODEL,
+          messages: [
+            { role: 'system', content: SYSTEM },
+            { role: 'user',   content: makeUserPrompt(text) }
+          ],
+          temperature: 0.3,
+          max_tokens: 2500
+        })
+      });
+
+      if (!resp.ok) {
+        const errText = await resp.text();
+        throw new Error(`API ${resp.status}：${errText}`);
+      }
+
+      const data = await resp.json();
+      const raw  = (data.choices?.[0]?.message?.content || '').trim();
+
+      // 去掉可能的 ```json ... ``` 包裹
+      const jsonStr = raw
+        .replace(/^```json\s*/i, '')
+        .replace(/^```\s*/i, '')
+        .replace(/```\s*$/, '')
+        .trim();
+
+      const result = JSON.parse(jsonStr);
+      renderResult(result, jsonStr);
+
+    } catch (e) {
+      showError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ── 渲染结果 ─────────────────────────────────────────
+  function renderResult(r, rawJson) {
+    const roleMap = { primary: '主节点', secondary: '次节点', background: '背景节点' };
+    const typeMap = { person: '人物', concept: '概念', theory: '理论', event: '事件' };
+
+    const nodes = (r.nodes_hit || []).map(n => `
+      <div class="node-item" data-role="${esc(n.role)}">
+        <div class="node-header">
+          <span class="node-name">${esc(n.name)}</span>
+          <span class="badge badge-type">${typeMap[n.type] || esc(n.type)}</span>
+          <span class="badge badge-${esc(n.role)}">${roleMap[n.role] || esc(n.role)}</span>
+        </div>
+        <div class="node-contribution">${esc(n.contribution)}</div>
+      </div>`).join('');
+
+    const suggestions = (r.next_suggestions || []).map(s => `
+      <div class="sug-item">
+        <div class="sug-header">
+          <span class="sug-badge sug-${esc(s.type)}">${esc(s.type)}</span>
+          <span class="sug-title">${esc(s.suggestion)}</span>
+        </div>
+        <div class="sug-reason">${esc(s.reason)}</div>
+        ${s.theory_ref ? `<div class="sug-ref">参考：${esc(s.theory_ref)}</div>` : ''}
+      </div>`).join('');
+
+    const tags = arr =>
+      (arr || []).map(t => `<span class="tag">${esc(t)}</span>`).join('');
+
+    document.getElementById('result').innerHTML = `
+
+      <div class="card">
+        <div class="card-label">定位</div>
+        <div class="meta-grid">
+          <div class="field">
+            <div class="field-label">主领域</div>
+            <div class="field-value">${esc(r.domain)}</div>
+          </div>
+          <div class="field">
+            <div class="field-label">分支</div>
+            <div class="field-value">${esc(r.sub_domain)}</div>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label">分析视角</div>
+          <div class="field-value">${esc(r.perspective)}</div>
+        </div>
+        <div class="core-claim">${esc(r.core_claim)}</div>
+      </div>
+
+      ${(r.strengths||[]).length ? `
+      <div class="card">
+        <div class="card-label">文章优势（可验证）</div>
+        ${(r.strengths||[]).map(s => `
+          <div class="strength-item">
+            <div class="strength-dim">${esc(s.dimension)}</div>
+            <div class="strength-evidence">${esc(s.evidence)}</div>
+          </div>`).join('')}
+      </div>` : ''}
+
+      <div class="card">
+        <div class="card-label">知识节点 (${(r.nodes_hit||[]).length})</div>
+        ${nodes}
+      </div>
+
+      ${(r.new_concepts||[]).length ? `
+      <div class="card">
+        <div class="card-label">新引入概念</div>
+        <div class="tag-row">${tags(r.new_concepts)}</div>
+      </div>` : ''}
+
+      <div class="card">
+        <div class="card-label">地图位置</div>
+        <div class="field-value" style="font-size:13px;line-height:1.7;color:#a0a0b8">${esc(r.map_position)}</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">下一步选题建议</div>
+        ${suggestions}
+      </div>
+
+      ${(r.connections||[]).length ? `
+      <div class="card">
+        <div class="card-label">相邻领域</div>
+        <div class="tag-row">${tags(r.connections)}</div>
+      </div>` : ''}
+
+      <div class="card">
+        <div class="card-label">编辑评语</div>
+        <div class="insight">${esc(r.insight)}</div>
+      </div>
+
+      <div class="raw-toggle">
+        <button onclick="toggleRaw(this)">查看原始 JSON ↓</button>
+      </div>
+      <pre class="raw-json" id="rawJson">${esc(rawJson)}</pre>
+    `;
+
+    document.getElementById('result').style.display = 'block';
+  }
+
+  function toggleRaw(btn) {
+    const pre = document.getElementById('rawJson');
+    const show = pre.style.display !== 'block';
+    pre.style.display = show ? 'block' : 'none';
+    btn.textContent = show ? '收起 JSON ↑' : '查看原始 JSON ↓';
+  }
+
+  function esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function setLoading(on) {
+    document.getElementById('loading').style.display = on ? 'block' : 'none';
+    document.getElementById('analyzeBtn').disabled = on;
+    document.getElementById('analyzeBtn').textContent = on ? '分析中…' : '开始分析';
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('errorBox');
+    el.textContent = '⚠ ' + msg;
+    el.style.display = 'block';
+  }
+</script>
+</body>
+</html>

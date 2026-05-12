@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>知识图鉴 · 设置</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0b08;
+      --bg-panel: #141210;
+      --bg-card: #1a1815;
+      --bg-hover: #201e1a;
+      --bg-active: #272420;
+      --gold: #c8a44a;
+      --gold-light: #e6c46a;
+      --gold-dim: #8a6c2e;
+      --gold-glow: rgba(200,164,74,0.12);
+      --border: rgba(200,164,74,0.1);
+      --border-mid: rgba(200,164,74,0.22);
+      --text-1: #e4dbc8;
+      --text-2: #948878;
+      --text-3: #524c42;
+      --danger: #bb6b5d;
+      --danger-bg: rgba(187,107,93,0.08);
+      --danger-mid: rgba(187,107,93,0.25);
+      --danger-light: #e08a7a;
+      --green: #5aaa72;
+      --green-bg: rgba(90,170,114,0.08);
+      --green-mid: rgba(90,170,114,0.25);
+    }
+    html.theme-light {
+      --bg: #f5f8ff;
+      --bg-panel: #ffffff;
+      --bg-card: #f8fbff;
+      --bg-hover: #edf5ff;
+      --bg-active: #e7f1ff;
+      --gold: #1772f6;
+      --gold-light: #3f8cff;
+      --gold-dim: #77aaf2;
+      --gold-glow: rgba(23,114,246,0.10);
+      --border: rgba(23,114,246,0.12);
+      --border-mid: rgba(23,114,246,0.22);
+      --text-1: #121b2b;
+      --text-2: #4f627a;
+      --text-3: #8ca0b8;
+      --danger: #b74f42;
+      --danger-bg: rgba(183,79,66,0.08);
+      --danger-mid: rgba(183,79,66,0.25);
+      --danger-light: #d66c60;
+      --green: #248b62;
+      --green-bg: rgba(36,139,98,0.08);
+      --green-mid: rgba(36,139,98,0.25);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Noto Sans SC', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: var(--bg); color: var(--text-1);
+      min-height: 100vh; padding: 40px 24px;
+      font-size: 14px; max-width: 560px; margin: 0 auto;
+    }
+    html.theme-light body {
+      background:
+        radial-gradient(circle at 12% 0%, rgba(23,114,246,0.08), transparent 32%),
+        linear-gradient(180deg, #fbfdff 0%, var(--bg) 62%, #eef5ff 100%);
+    }
+    h1 { font-family: 'Noto Serif SC', serif; font-size: 20px; font-weight: 700; color: var(--gold); margin-bottom: 6px; letter-spacing: 0.08em; }
+    .subtitle { font-size: 12px; color: var(--text-3); margin-bottom: 36px; }
+
+    .section { margin-bottom: 24px; }
+    .section-title {
+      font-size: 10px; color: var(--gold); letter-spacing: 0.14em;
+      font-weight: 700; text-transform: uppercase; margin-bottom: 12px;
+    }
+    label { font-size: 12px; color: var(--text-2); display: block; margin-bottom: 6px; }
+
+    select, input[type="password"], input[type="text"], input[type="number"] {
+      width: 100%; background: var(--bg-card); border: 1px solid var(--border-mid);
+      border-radius: 8px; color: var(--text-1); font-size: 13px;
+      padding: 10px 14px; outline: none; font-family: inherit;
+      transition: border-color 0.2s; margin-bottom: 0;
+    }
+    select:focus, input:focus { border-color: var(--gold); }
+
+    .hint { font-size: 11px; color: var(--text-3); margin-top: 7px; line-height: 1.7; }
+    .hint a { color: var(--gold-dim); text-decoration: none; }
+    .hint a:hover { color: var(--gold-light); }
+
+    .field { margin-bottom: 16px; }
+
+    .btn-row { display: flex; gap: 10px; margin-top: 28px; }
+    .btn {
+      padding: 10px 22px; border: none; border-radius: 8px;
+      font-size: 14px; font-weight: 500; cursor: pointer;
+      font-family: inherit; transition: background 0.2s;
+    }
+    .btn-primary   { background: var(--gold); color: var(--bg); }
+    .btn-primary:hover { background: var(--gold-light); }
+    .btn-secondary { background: var(--bg-card); color: var(--gold); border: 1px solid var(--border-mid); }
+    .btn-secondary:hover { background: var(--gold-glow); color: var(--gold-light); }
+    .btn:disabled  { opacity: 0.5; cursor: not-allowed; }
+
+    .status {
+      margin-top: 18px; padding: 10px 14px; border-radius: 8px;
+      font-size: 12px; line-height: 1.6; display: none;
+    }
+    .status.ok  { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-mid); }
+    .status.err { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger-mid); }
+
+    .saved-keys {
+      background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-top: 24px;
+    }
+    .saved-keys-title { font-size: 10px; color: var(--text-3); margin-bottom: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
+    .saved-key-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px;
+    }
+    .saved-key-row:last-child { border-bottom: none; }
+    .saved-key-name  { color: var(--gold); }
+    .saved-key-value { color: var(--text-3); font-family: monospace; }
+    .saved-key-del   { color: var(--danger); cursor: pointer; font-size: 11px; }
+    .saved-key-del:hover { color: var(--danger-light); }
+
+    .btn-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger-mid); }
+    .btn-danger:hover { background: var(--danger-bg); color: var(--danger-light); }
+    .danger-zone { border-top: 1px solid var(--danger-bg); padding-top: 24px; margin-top: 40px; }
+    .danger-zone .section-title { color: var(--danger); }
+    .danger-hint { font-size: 11px; color: var(--danger); line-height: 1.7; margin-bottom: 16px; }
+
+    .onboarding {
+      background: var(--gold-glow); border: 1px solid var(--border-mid);
+      border-radius: 8px; padding: 12px 14px; margin-bottom: 28px;
+      font-size: 12px; color: var(--text-2); line-height: 1.75;
+    }
+    .onboarding b { color: var(--gold-light); font-weight: 600; }
+    .onboarding a { color: var(--gold); text-decoration: none; }
+    .onboarding a:hover { color: var(--gold-light); }
+    .advanced-box {
+      margin-top: 32px; background: var(--bg-panel); border: 1px solid var(--border);
+      border-radius: 10px; padding: 0 16px;
+    }
+    .advanced-box summary {
+      list-style: none; cursor: pointer; padding: 16px 0;
+      color: var(--gold); font-size: 10px; font-weight: 700;
+      letter-spacing: 0.14em; text-transform: uppercase;
+    }
+    .advanced-box summary::-webkit-details-marker { display: none; }
+    .advanced-box summary::after {
+      content: "展开"; float: right; color: var(--text-3);
+      font-size: 10px; letter-spacing: 0;
+    }
+    .advanced-box[open] summary::after { content: "收起"; }
+    .advanced-body { border-top: 1px solid var(--border); padding: 18px 0 4px; }
+    .onboarding-layer {
+      position: fixed; inset: 0; z-index: 9999; display: none;
+      background: rgba(4,6,10,.56); backdrop-filter: blur(2px);
+      padding: 18px; align-items: flex-end; justify-content: center;
+    }
+    .onboarding-layer.visible { display: flex; }
+    html.theme-light .onboarding-layer { background: rgba(18,45,85,.20); }
+    .onboarding-card {
+      width: min(100%, 520px); background: var(--bg-panel);
+      border: 1px solid var(--border-mid); border-radius: 12px;
+      box-shadow: 0 18px 60px rgba(0,0,0,.34), 0 0 0 1px var(--gold-glow);
+      padding: 16px 16px 14px;
+      max-height: min(72vh, 520px); overflow-y: auto;
+    }
+    .onboarding-step-meta {
+      font-size: 10px; color: var(--gold); letter-spacing: .12em;
+      font-weight: 700; margin-bottom: 8px;
+    }
+    .onboarding-title {
+      font-family: 'Noto Serif SC', serif; font-size: 17px;
+      color: var(--text-1); margin-bottom: 8px; line-height: 1.35;
+    }
+    .onboarding-body {
+      color: var(--text-2); font-size: 13px; line-height: 1.75;
+      white-space: pre-line;
+    }
+    .onboarding-actions {
+      display: flex; gap: 8px; align-items: center; justify-content: flex-end;
+      margin-top: 14px; flex-wrap: wrap;
+    }
+    .onboarding-btn {
+      border: 1px solid var(--border-mid); border-radius: 8px;
+      background: var(--bg-card); color: var(--gold); padding: 8px 12px;
+      font-size: 12px; cursor: pointer; font-family: inherit;
+    }
+    .onboarding-btn.primary {
+      background: var(--gold); color: var(--bg); border-color: var(--gold);
+      font-weight: 600;
+    }
+    .onboarding-btn:hover { border-color: var(--border-mid); color: var(--gold-light); }
+    .onboarding-btn.primary:hover { background: var(--gold-light); color: var(--bg); }
+    .onboarding-skip { margin-right: auto; color: var(--text-3); }
+    .onboarding-highlight {
+      position: relative; z-index: 10000 !important;
+      outline: 2px solid var(--gold); outline-offset: 4px;
+      box-shadow: 0 0 0 8px var(--gold-glow), 0 0 24px var(--gold-glow);
+      border-radius: 8px;
+    }
+    .onboarding-arrow {
+      position: fixed; z-index: 10000; display: none;
+      width: 34px; height: 34px; pointer-events: none; color: var(--gold);
+    }
+    .onboarding-arrow.visible { display: block; }
+    .onboarding-arrow::before {
+      content: "➜"; position: absolute; inset: 0;
+      font-size: 30px; line-height: 34px; transform: rotate(-35deg);
+      text-shadow: 0 2px 12px var(--gold-glow);
+    }
+  </style>
+</head>
+<body>
+
+<h1>知识图鉴</h1>
+<p class="subtitle">GitHub 公开版 · 请配置自己的 API Key 后使用</p>
+
+<div class="onboarding">
+  <b>公开源码版不内置 API Key。</b>请填写自己的提供商密钥后再分析文章。
+  比赛演示包会另行内置一次性默认通道；GitHub 版为了安全已经移除。个人 Key 只保存在本机，不要公开截图。
+  <div style="margin-top:10px">
+    <button class="btn btn-secondary" id="replayOptionsOnboardingBtn" type="button" style="padding:7px 12px;font-size:12px">了解可选 API 设置</button>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">提供商与模型</div>
+
+  <div class="field">
+    <label for="provider">AI 提供商</label>
+    <select id="provider"></select>
+  </div>
+
+  <div class="field">
+    <label for="apiKey">API Key</label>
+    <input type="password" id="apiKey" placeholder="">
+    <div class="hint" id="keyHint"></div>
+    <div class="hint">GitHub 公开版不会携带默认 API Key；这里需要填写自己的 Key，密钥只保存在本机 chrome.storage.local。</div>
+  </div>
+
+  <div class="field">
+    <label for="model">分析模型</label>
+    <select id="model"></select>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">知乎开放平台增强</div>
+  <div class="field">
+    <label for="zhihuAccessSecret">Access Secret（可选）</label>
+    <input type="password" id="zhihuAccessSecret" placeholder="用于知乎搜索 / 热榜的 Bearer Token">
+    <div class="hint">填写后，AI 分析会先读取知乎社区参照，再生成“知乎环境建议”。不填写也不影响文章分析、归库和知识宇宙。</div>
+    <div class="hint">Access Secret 只保存在本机，不写入发布包。获取入口：<a href="https://developer.zhihu.com/profile" target="_blank">developer.zhihu.com/profile</a></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">创作目标</div>
+  <div class="field">
+    <label for="weekGoal">周创作目标</label>
+    <input type="number" id="weekGoal" min="1" max="99" step="1" value="3">
+    <div class="hint">每周写到几篇才算达标？知识图鉴会按这个数字显示进度。</div>
+  </div>
+</div>
+
+<div class="btn-row">
+  <button class="btn btn-primary"   id="saveBtn">保存设置</button>
+  <button class="btn btn-secondary" id="testBtn">测试连接</button>
+</div>
+
+<div class="status" id="status"></div>
+
+<div class="saved-keys" id="savedKeysBox" style="display:none">
+  <div class="saved-keys-title">已保存的密钥</div>
+  <div id="savedKeysList"></div>
+</div>
+
+<div class="section" style="margin-top:32px">
+  <div class="section-title">数据备份</div>
+  <p class="hint" style="margin-bottom:16px;color:var(--text-3)">导出全部分析记录和知识图谱，换电脑或重装浏览器前请先备份。导入会与现有数据合并（同项目内同 URL 文章以备份为准）。</p>
+  <div class="btn-row" style="margin-top:0">
+    <button class="btn btn-primary" id="exportBtn">导出备份</button>
+    <label class="btn btn-secondary" id="importLabel" style="cursor:pointer;text-align:center">
+      从备份恢复
+      <input type="file" id="importFile" accept=".json" style="display:none">
+    </label>
+  </div>
+</div>
+
+<details class="advanced-box" id="advancedSettings">
+  <summary>高级设置</summary>
+  <div class="advanced-body">
+    <div class="section">
+      <div class="section-title">本地文件夹</div>
+      <p class="hint" style="margin-bottom:12px;color:var(--text-3)">选择一个本地文件夹，每次分析后自动将结果保存为 Markdown 文件，在文件管理器中可直接查阅。</p>
+      <div id="localFolderStatus" class="hint" style="margin-bottom:14px;color:var(--text-3)">未设置</div>
+      <div class="btn-row" style="margin-top:0">
+        <button class="btn btn-primary"   id="pickFolderBtn">选择文件夹</button>
+        <button class="btn btn-secondary" id="reAuthFolderBtn" style="display:none">重新授权</button>
+        <button class="btn btn-secondary" id="clearFolderBtn"  style="display:none">取消绑定</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Obsidian Vault 导出</div>
+      <p class="hint" style="margin-bottom:16px;color:var(--text-3)">将全部作品导出为 Obsidian 可索引的 Markdown 文件夹，适合阶段性整理或迁移。</p>
+      <div class="btn-row" style="margin-top:0">
+        <button class="btn btn-secondary" id="exportVaultBtn">导出 Obsidian Vault</button>
+      </div>
+    </div>
+  </div>
+</details>
+
+<div class="section danger-zone">
+  <div class="section-title">危险区域</div>
+  <p class="danger-hint">清空会删除所有已保存的分析记录和知识图谱数据，此操作不可撤销。</p>
+  <button class="btn btn-danger" id="clearAllBtn">清空全部数据</button>
+</div>
+
+<div class="onboarding-layer" id="optionsOnboardingLayer" aria-live="polite">
+  <div class="onboarding-arrow" id="optionsOnboardingArrow" aria-hidden="true"></div>
+  <div class="onboarding-card" role="dialog" aria-modal="true" aria-labelledby="optionsOnboardingTitle">
+    <div class="onboarding-step-meta" id="optionsOnboardingMeta"></div>
+    <div class="onboarding-title" id="optionsOnboardingTitle"></div>
+    <div class="onboarding-body" id="optionsOnboardingBody"></div>
+    <div class="onboarding-actions">
+      <button class="onboarding-btn onboarding-skip" id="optionsOnboardingSkipBtn" type="button">不设置，直接使用</button>
+      <button class="onboarding-btn" id="optionsOnboardingBackBtn" type="button">上一步</button>
+      <button class="onboarding-btn" id="optionsOnboardingExtraBtn" type="button" style="display:none">打开官方平台</button>
+      <button class="onboarding-btn primary" id="optionsOnboardingNextBtn" type="button">下一步</button>
+    </div>
+  </div>
+</div>
+
+<script src="providers.js"></script>
+<script src="competition_defaults.js"></script>
+<script src="analyzer.js"></script>
+<script src="db.js"></script>
+<script src="options.js"></script>
+</body>
+</html>

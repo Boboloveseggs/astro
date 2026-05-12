@@ -1,0 +1,5 @@
+{
+  "enabled": true,
+  "appKey": "your-zhihu-user-token",
+  "appSecret": "your-hackathon-app-secret"
+}

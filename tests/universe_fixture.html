@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>紫黑金宇宙 fixture</title>
+  <style>
+    :root {
+      --bg: #0d0b08;
+      --bg-panel: #141210;
+      --bg-card: #1a1815;
+      --bg-hover: #201e1a;
+      --gold: #c8a44a;
+      --gold-light: #e6c46a;
+      --gold-dim: #8a6c2e;
+      --gold-glow: rgba(200,164,74,0.12);
+      --gold-glow2: rgba(200,164,74,0.06);
+      --border: rgba(200,164,74,0.1);
+      --border-mid: rgba(200,164,74,0.22);
+      --text-1: #e4dbc8;
+      --text-2: #948878;
+      --text-3: #524c42;
+      --link-strong: rgba(200,164,74,0.7);
+      --link-mid: rgba(140,110,60,0.5);
+      --link-weak: rgba(60,54,44,0.6);
+      --node-active-inner: #302410;
+      --node-active-outer: #1c1608;
+      --node-locked-inner: #181614;
+      --node-locked-outer: #111009;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 22px; background: var(--bg); color: var(--text-1);
+      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    }
+    .fixture-wrap { width: 760px; max-width: calc(100vw - 44px); margin: 0 auto; }
+    .fixture-title {
+      font-family: "Noto Serif SC", serif; color: var(--gold);
+      font-size: 16px; letter-spacing: 0.12em; margin-bottom: 12px;
+    }
+    .graph-area {
+      position: relative; overflow: hidden; min-height: 476px;
+      background: radial-gradient(ellipse at 40% 50%, var(--gold-glow2) 0%, transparent 60%);
+      border: 1px solid var(--border); border-radius: 10px;
+    }
+    .universe-area {
+      min-height: 540px; background: #030206; border-color: rgba(230,196,106,.08);
+      border-radius: 4px;
+      box-shadow: inset 0 0 150px rgba(13,8,30,.74), 0 18px 64px rgba(0,0,0,.34);
+    }
+    .map-tools {
+      position: absolute; left: 12px; top: 12px; z-index: 4;
+      display: flex; align-items: center; gap: 6px; padding: 6px;
+      background: rgba(13,11,8,0.72); border: 1px solid var(--border);
+      border-radius: 7px; backdrop-filter: blur(10px);
+    }
+    .map-tool {
+      height: 28px; padding: 0 10px; background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: 5px;
+      color: var(--text-2); font-size: 11px; font-family: inherit;
+      cursor: pointer; white-space: nowrap;
+    }
+    .map-tool:hover { color: var(--text-1); border-color: var(--gold-dim); }
+    .map-tool.active { color: var(--gold); background: var(--gold-glow); border-color: var(--gold-dim); }
+    .map-tool:disabled { cursor: default; opacity: .42; color: var(--text-3); }
+    .map-node-fab {
+      position: absolute; right: 14px; bottom: 14px; z-index: 5;
+      height: 30px; padding: 0 12px; background: var(--gold-glow);
+      border: 1px solid var(--gold-dim); border-radius: 999px;
+      color: var(--gold); font-size: 11px; font-family: inherit;
+    }
+    .map-hint {
+      position: absolute; left: 14px; bottom: 14px; z-index: 4;
+      font-size: 10px; color: var(--text-3);
+      background: rgba(13,11,8,0.68); border: 1px solid var(--border);
+      border-radius: 5px; padding: 5px 8px; pointer-events: none;
+    }
+    #universeView { display: block; width: 100%; height: 540px; }
+    .universe-canvas-wrap {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      background:
+        radial-gradient(ellipse at 48% 42%, rgba(52,70,118,.34), transparent 38%),
+        radial-gradient(ellipse at 52% 55%, rgba(207,161,72,.16), transparent 34%),
+        #030206;
+    }
+    .universe-canvas-wrap::before,
+    .universe-canvas-wrap::after {
+      content: ""; position: absolute; inset: 0; z-index: 2;
+      pointer-events: none;
+    }
+    .universe-canvas-wrap::before {
+      background:
+        radial-gradient(ellipse at center, transparent 56%, rgba(0,0,0,.18) 84%, rgba(0,0,0,.48) 100%),
+        linear-gradient(180deg, rgba(255,220,140,.045), transparent 28%, transparent 74%, rgba(87,114,180,.045));
+      mix-blend-mode: normal;
+    }
+    .universe-canvas-wrap::after {
+      background: linear-gradient(112deg, transparent 22%, rgba(255,232,174,.08) 42%, transparent 58%);
+      opacity: .14; transform: translateX(-36%);
+      animation: universeSlideSheen 36s ease-in-out infinite;
+      mix-blend-mode: screen;
+    }
+    .universe-canvas-wrap canvas {
+      display: block; width: 100%; height: 100%; outline: none;
+      cursor: grab; touch-action: none;
+      user-select: none; -webkit-user-select: none;
+    }
+    .universe-area.locked .universe-canvas-wrap canvas { cursor: grab; }
+    .universe-area.dragging .universe-canvas-wrap canvas { cursor: grabbing; }
+    .universe-star-tooltip {
+      position: absolute; z-index: 7; left: 0; top: 0;
+      transform: translate(-50%, calc(-100% - 14px));
+      min-width: 118px; max-width: 220px; padding: 7px 9px;
+      border: 1px solid rgba(230,196,106,.24); border-radius: 5px;
+      background: rgba(5,4,9,.70); backdrop-filter: blur(10px);
+      color: var(--gold-light); font-size: 12px; line-height: 1.45;
+      box-shadow: 0 12px 34px rgba(0,0,0,.34);
+      pointer-events: none; opacity: 0;
+      scale: .96;
+      transition: opacity .22s ease, scale .22s ease;
+    }
+    .universe-star-tooltip.visible { opacity: .96; scale: 1; }
+    .universe-star-tooltip small {
+      display: block; margin-top: 2px; color: rgba(228,219,200,.56); font-size: 10px;
+    }
+    #earthSphere { display: block; width: 100%; height: 476px; }
+    #earthSphere {
+      cursor: grab; touch-action: none;
+      user-select: none; -webkit-user-select: none;
+    }
+    #earthSphere.rotating { cursor: grabbing; }
+    #universeCamera { transition: transform 1.45s cubic-bezier(.16,.78,.12,1); }
+    #universeMotion {
+      transform-origin: 360px 238px;
+      animation: universeBreath 210s ease-in-out infinite;
+    }
+    #galaxyLayer {
+      transform-origin: 360px 238px;
+      animation: galaxySlowTurn 1320s linear infinite;
+    }
+    .universe-area.locked #universeMotion { animation-duration: 280s; }
+    .universe-tools {
+      opacity: .14; transition: opacity .24s ease, transform .24s ease;
+      background: rgba(5,4,9,.30); border-color: rgba(230,196,106,.08);
+    }
+    .universe-area:hover .universe-tools,
+    .universe-tools:focus-within {
+      opacity: .94; transform: translateY(0);
+    }
+    .universe-area .map-tool {
+      background: rgba(10,8,14,.38); border-color: rgba(230,196,106,.14);
+      color: rgba(228,219,200,.58);
+    }
+    .universe-area .map-tool:hover,
+    .universe-area .map-tool.active {
+      color: var(--gold-light); border-color: rgba(230,196,106,.46);
+      background: rgba(200,164,74,.12);
+    }
+    .universe-hint,
+    .universe-area .map-node-fab {
+      opacity: .18; transition: opacity .24s ease;
+    }
+    .universe-area:hover .universe-hint,
+    .universe-area:hover .map-node-fab,
+    .universe-hint:focus,
+    .universe-area .map-node-fab:focus { opacity: .82; }
+    .galaxy-core { filter: drop-shadow(0 0 26px rgba(246,226,178,.52)); }
+    .galaxy-dust-lane { filter: blur(.8px); }
+    .galaxy-arm {
+      fill: none; stroke-linecap: round; stroke-linejoin: round;
+      mix-blend-mode: screen; pointer-events: none;
+    }
+    .galaxy-arm-gold { stroke: url(#galaxyArmGold); }
+    .galaxy-arm-blue { stroke: url(#galaxyArmBlue); }
+    .galaxy-arm.soft { filter: url(#galaxySoftBlur); opacity: .92; }
+    .galaxy-arm.crisp { opacity: .64; }
+    .universe-star.bright { filter: drop-shadow(0 0 4px rgba(220,240,255,.9)); }
+    .galaxy-dust-star { filter: drop-shadow(0 0 2px rgba(150,205,255,.42)); }
+    @keyframes universeBreath {
+      0%, 100% { transform: translate(0, 0) scale(1); opacity: .96; }
+      50% { transform: translate(-2px, 1px) scale(1.006); opacity: 1; }
+    }
+    @keyframes universeSlideSheen {
+      0%, 100% { transform: translateX(-42%) rotate(0deg); opacity: .10; }
+      48% { transform: translateX(34%) rotate(0deg); opacity: .28; }
+      64% { opacity: .08; }
+    }
+    @keyframes galaxySlowTurn {
+      from { transform: rotate(-0.8deg); }
+      to { transform: rotate(359.2deg); }
+    }
+    @keyframes planetPulse {
+      0%, 100% { opacity: var(--planet-glow, .42); }
+      50% { opacity: calc(var(--planet-glow, .42) + .06); }
+    }
+    .universe-link {
+      stroke: rgba(210,220,245,.10); stroke-dasharray: 2 6;
+      pointer-events: none;
+    }
+    .universe-area.locked .universe-link { opacity: .05; }
+    .universe-ball { cursor: pointer; transition: opacity .18s ease; }
+    .universe-area.locked .universe-ball:not(.locked) { opacity: .18; }
+    .universe-area.locked .universe-ball.locked { opacity: 1; }
+    .universe-area.locked .universe-ball:not(.locked) .universe-ball-label,
+    .universe-area.locked .universe-ball:not(.locked) .universe-ball-meta { display: none; }
+    .universe-area.locked .universe-ball.locked .universe-ball-label,
+    .universe-area.locked .universe-ball.locked .universe-ball-meta { display: none; }
+    .universe-ball-glow {
+      --planet-glow: .42;
+      animation: planetPulse 38s ease-in-out infinite;
+      mix-blend-mode: screen;
+    }
+    .universe-ball-atmosphere {
+      fill: none; stroke: rgba(255,232,166,.52); stroke-width: .75;
+      filter: drop-shadow(0 0 4px rgba(236,193,84,.48));
+    }
+    .universe-ball-core {
+      vector-effect: non-scaling-stroke;
+      filter: url(#ballGlowFilter) drop-shadow(0 0 5px rgba(236,193,84,.45));
+    }
+    .universe-ball-spark { filter: drop-shadow(0 0 4px rgba(255,246,217,.80)); }
+    .universe-ball.locked .universe-ball-glow { --planet-glow: .82; }
+    .universe-ball.locked .universe-ball-atmosphere {
+      stroke: rgba(255,235,174,.72); stroke-width: .95;
+    }
+    .universe-ball.locked .universe-ball-core {
+      filter: url(#ballGlowFilter) drop-shadow(0 0 14px rgba(246,216,132,.78));
+    }
+    .universe-ball:hover .universe-ball-label,
+    .universe-ball:focus .universe-ball-label { display: block; fill: var(--gold-light); }
+    .universe-ball-label {
+      display: none;
+      text-anchor: middle; font-family: 'Noto Serif SC', serif;
+      font-size: 13px; font-weight: 600; fill: var(--gold-light);
+      pointer-events: none; paint-order: stroke; stroke: #050308; stroke-width: 2px;
+      stroke-linejoin: round;
+    }
+    .universe-ball-meta {
+      display: none;
+      text-anchor: middle; font-size: 10px; fill: var(--text-3);
+      pointer-events: none; paint-order: stroke; stroke: #050308; stroke-width: 3px;
+      stroke-linejoin: round;
+    }
+    .universe-lock-card {
+      position: absolute; right: 14px; top: 58px; z-index: 5;
+      max-width: 210px; padding: 10px 12px;
+      border: 1px solid rgba(230,196,106,.18); border-radius: 6px;
+      background: linear-gradient(135deg, rgba(5,4,9,.42), rgba(18,13,24,.24));
+      backdrop-filter: blur(12px);
+      box-shadow: 0 14px 42px rgba(0,0,0,.28);
+      opacity: 0; pointer-events: none;
+      transform: translateY(-4px);
+      transition: opacity .22s ease, transform .22s ease;
+    }
+    .universe-lock-card.visible { opacity: .78; transform: translateY(0); }
+    .universe-lock-kicker { font-size: 10px; color: var(--text-3); margin-bottom: 4px; }
+    .universe-lock-name {
+      color: var(--gold-light); font-family: 'Noto Serif SC', serif;
+      font-size: 16px; line-height: 1.35; font-weight: 700;
+    }
+    .universe-lock-meta {
+      margin-top: 4px; color: var(--text-2); font-size: 11px; line-height: 1.5;
+    }
+    .sphere-shell-line, .sphere-shell-lat { display: none; }
+    .sphere-link { pointer-events: none; }
+    .sphere-link-strong { stroke: var(--link-strong); stroke-width: 1.5; }
+    .sphere-link-mid { stroke: var(--link-mid); stroke-width: 1.0; }
+    .sphere-link-weak { stroke: var(--link-weak); stroke-width: 0.8; stroke-dasharray: 4 3; }
+    .sphere-node { cursor: pointer; }
+    .sphere-node,
+    .sphere-node * {
+      user-select: none; -webkit-user-select: none;
+    }
+    .sphere-node-core {
+      vector-effect: non-scaling-stroke;
+      shape-rendering: geometricPrecision;
+    }
+    .sphere-node-label {
+      fill: var(--text-2); font-size: 11px; font-family: 'Noto Serif SC', serif; text-anchor: middle;
+      pointer-events: none; paint-order: stroke; stroke: var(--bg); stroke-width: 3px;
+      stroke-linejoin: round;
+      user-select: none; -webkit-user-select: none;
+      text-rendering: geometricPrecision;
+    }
+    .node-hover-card { display: none; }
+    .earth-status {
+      margin-top: 8px; color: var(--text-3); font-size: 11px; line-height: 1.5;
+      display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap;
+    }
+    .universe-status { display: none; }
+    .map-legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+    .map-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-2); }
+    .universe-legend { display: none; }
+    .map-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+  <div class="fixture-wrap">
+    <div class="fixture-title" id="fixtureTitle">紫黑金领域宇宙</div>
+    <div id="fixture"></div>
+  </div>
+
+  <script>window.__ZHJ_PANEL_TEST__ = true;</script>
+  <script src="../three.min.js"></script>
+  <script src="../map_math.js"></script>
+  <script src="../panel.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const total = Number(params.get('balls') || 5);
+    const withLinks = params.get('links') === '1';
+    const view = params.get('view') || 'universe';
+    const domainNames = ['哲学', '文学', '经济学', '科技', '历史', '艺术', '社会', '教育', '心理', '传播', '城市', '法律', '商业', '生态', '方法论'];
+    const articles = [];
+    for (let i = 0; i < total; i++) {
+      const domain = domainNames[i] || `领域${i + 1}`;
+      const articleCount = 1 + (i % 5);
+      for (let j = 0; j < articleCount; j++) {
+        const shared = withLinks ? `共享节点${j % 3}` : `${domain}节点${j}`;
+        articles.push({
+          id: `article-${i}-${j}`,
+          project_id: `project-${i % 3}`,
+          savedAt: `2026-05-${String(1 + ((i + j) % 20)).padStart(2, '0')}T08:00:00.000Z`,
+          article: { title: `${domain}作品 ${j + 1}`, type: 'article', body: `${domain}正文` },
+          analysis: {
+            domain,
+            nodes_hit: [
+              { name: shared, type: 'concept', role: 'primary', contribution: '跨领域共振点' },
+              { name: `${domain}核心${j}`, type: 'theory', role: 'secondary', contribution: '领域内部支点' },
+            ],
+          },
+        });
+      }
+    }
+    const projects = [
+      { id: 'project-0', name: '主项目' },
+      { id: 'project-1', name: '副项目' },
+      { id: 'project-2', name: '旁支项目' },
+    ];
+
+    if (view === 'single') {
+      const domain = domainNames[Math.min(4, total - 1)];
+      const singleArticles = articles.filter(item => item.analysis.domain === domain);
+      const nodeNames = [...new Set(singleArticles.flatMap(item => item.analysis.nodes_hit.map(n => n.name)))];
+      const nodes = nodeNames.map((name, index) => ({
+        id: name.toLowerCase(),
+        name,
+        type: index % 2 ? 'theory' : 'concept',
+        role: index % 2 ? 'secondary' : 'primary',
+        count: index + 2,
+      }));
+      const links = nodes.slice(1).map((node, index) => ({
+        source: nodes[index].id,
+        target: node.id,
+        value: index + 1,
+      }));
+      document.getElementById('fixtureTitle').textContent = `从宇宙进入 · ${domain}单球`;
+      renderEarthSphere(nodes, links, document.getElementById('fixture'), singleArticles);
+    } else {
+      if (params.get('lock')) activeBallId = params.get('lock');
+      document.getElementById('fixtureTitle').textContent = `紫黑金领域宇宙 · ${total} 个领域球`;
+      renderUniverseView(articles, projects, document.getElementById('fixture'), 'domain');
+    }
+  </script>
+</body>
+</html>

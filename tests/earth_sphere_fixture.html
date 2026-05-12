@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>3D 地球渲染 fixture</title>
+  <style>
+    :root {
+      --bg: #0d0b08;
+      --bg-panel: #141210;
+      --bg-card: #1a1815;
+      --bg-hover: #201e1a;
+      --bg-active: #272420;
+      --gold: #c8a44a;
+      --gold-light: #e6c46a;
+      --gold-dim: #8a6c2e;
+      --gold-glow: rgba(200,164,74,0.12);
+      --gold-glow2: rgba(200,164,74,0.06);
+      --border: rgba(200,164,74,0.1);
+      --border-mid: rgba(200,164,74,0.22);
+      --border-bright: rgba(200,164,74,0.35);
+      --text-1: #e4dbc8;
+      --text-2: #948878;
+      --text-3: #524c42;
+      --link-strong: rgba(200,164,74,0.7);
+      --link-mid: rgba(140,110,60,0.5);
+      --link-weak: rgba(60,54,44,0.6);
+      --node-active-inner: #302410;
+      --node-active-outer: #1c1608;
+      --node-locked-inner: #181614;
+      --node-locked-outer: #111009;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 22px;
+      background: var(--bg); color: var(--text-1);
+      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    }
+    .fixture-wrap { width: 760px; max-width: calc(100vw - 44px); margin: 0 auto; }
+    .fixture-title {
+      font-family: "Noto Serif SC", serif; color: var(--gold);
+      font-size: 16px; letter-spacing: 0.12em; margin-bottom: 12px;
+    }
+    .graph-area {
+      position: relative; overflow: hidden; min-height: 476px;
+      background: radial-gradient(ellipse at 40% 50%, var(--gold-glow2) 0%, transparent 60%);
+      border: 1px solid var(--border); border-radius: 10px;
+    }
+    .map-tools {
+      position: absolute; left: 12px; top: 12px; z-index: 4;
+      display: flex; align-items: center; gap: 6px; padding: 6px;
+      background: rgba(13,11,8,0.72); border: 1px solid var(--border);
+      border-radius: 7px; backdrop-filter: blur(10px);
+    }
+    .map-tool {
+      height: 28px; padding: 0 10px; background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: 5px;
+      color: var(--text-2); font-size: 11px; font-family: inherit;
+      cursor: pointer; white-space: nowrap;
+    }
+    .map-tool:hover { color: var(--text-1); border-color: var(--gold-dim); }
+    .map-tool.active {
+      color: var(--gold); background: var(--gold-glow); border-color: var(--gold-dim);
+    }
+    .map-node-fab {
+      position: absolute; right: 14px; bottom: 14px; z-index: 5;
+      height: 30px; padding: 0 12px; background: var(--gold-glow);
+      border: 1px solid var(--gold-dim); border-radius: 999px;
+      color: var(--gold); font-size: 11px; font-family: inherit;
+      cursor: pointer; box-shadow: 0 8px 24px rgba(0,0,0,.24);
+    }
+    .map-node-fab:hover { color: var(--gold-light); border-color: var(--gold); }
+    .map-hint {
+      position: absolute; left: 14px; bottom: 14px; z-index: 4;
+      font-size: 10px; color: var(--text-3);
+      background: rgba(13,11,8,0.68); border: 1px solid var(--border);
+      border-radius: 5px; padding: 5px 8px; pointer-events: none;
+    }
+    .node-hover-card {
+      position: absolute; z-index: 6; width: min(320px, calc(100% - 24px));
+      max-height: min(380px, calc(100% - 28px)); overflow: hidden;
+      display: none; background: rgba(18,15,10,0.94);
+      border: 1px solid var(--border-mid); border-radius: 8px;
+      box-shadow: 0 18px 54px rgba(0,0,0,0.46);
+      backdrop-filter: blur(14px); padding: 11px; pointer-events: auto;
+    }
+    .node-hover-card.visible { display: flex; flex-direction: column; gap: 9px; }
+    .node-hover-head {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 10px; border-bottom: 1px solid var(--border); padding-bottom: 8px;
+    }
+    .node-hover-title { min-width: 0; }
+    .node-hover-name {
+      font-size: 13px; color: var(--text-1); font-weight: 600; line-height: 1.35;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .node-hover-sub { font-size: 10px; color: var(--text-3); line-height: 1.6; margin-top: 2px; }
+    .node-hover-count {
+      font-size: 10px; color: var(--gold); border: 1px solid var(--gold-dim);
+      background: var(--gold-glow); border-radius: 4px; padding: 2px 6px; white-space: nowrap;
+    }
+    .node-hover-list { display: flex; flex-direction: column; gap: 7px; overflow-y: auto; padding-right: 2px; }
+    .node-hover-article {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 7px; padding: 8px 9px; cursor: pointer; min-width: 0;
+    }
+    .node-hover-article:hover { border-color: var(--gold-dim); background: var(--bg-hover); }
+    .node-hover-article-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+    .node-hover-article-title { font-size: 12px; color: var(--text-1); line-height: 1.45; font-weight: 500; min-width: 0; }
+    .node-hover-date { font-size: 10px; color: var(--text-3); white-space: nowrap; line-height: 1.45; }
+    .node-hover-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+    .node-hover-tag {
+      font-size: 10px; color: var(--gold); background: var(--gold-glow);
+      border: 1px solid var(--gold-dim); border-radius: 4px; padding: 1px 5px;
+      max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .node-hover-hit {
+      font-size: 11px; color: var(--text-2); line-height: 1.55; margin-top: 6px;
+      display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .node-hover-hit b { color: var(--gold); font-weight: 500; }
+    .node-hover-empty {
+      font-size: 12px; color: var(--text-3); line-height: 1.7;
+      background: var(--bg-card); border: 1px dashed var(--border-mid);
+      border-radius: 7px; padding: 10px;
+    }
+    #earthSphere {
+      display: block; width: 100%; height: 476px; cursor: grab; touch-action: none;
+      user-select: none; -webkit-user-select: none;
+    }
+    #earthSphere.rotating { cursor: grabbing; }
+    .sphere-shell-line,
+    .sphere-shell-lat { display: none; }
+    .sphere-link { pointer-events: none; }
+    .sphere-link-strong { stroke: var(--link-strong); stroke-width: 1.5; }
+    .sphere-link-mid { stroke: var(--link-mid); stroke-width: 1.0; }
+    .sphere-link-weak { stroke: var(--link-weak); stroke-width: 0.8; stroke-dasharray: 4 3; }
+    .sphere-demo-node {
+      pointer-events: none;
+      mix-blend-mode: screen;
+      shape-rendering: geometricPrecision;
+    }
+    .sphere-demo-core {
+      vector-effect: non-scaling-stroke;
+    }
+    .sphere-node { cursor: pointer; }
+    .sphere-node, .sphere-node * { user-select: none; -webkit-user-select: none; }
+    .sphere-node-core { vector-effect: non-scaling-stroke; shape-rendering: geometricPrecision; }
+    .sphere-node-label {
+      fill: var(--text-2); font-size: 11px; font-family: 'Noto Serif SC', serif; text-anchor: middle;
+      pointer-events: none; paint-order: stroke; stroke: var(--bg); stroke-width: 3px;
+      stroke-linejoin: round; user-select: none; -webkit-user-select: none;
+      text-rendering: geometricPrecision;
+    }
+    .earth-status {
+      margin-top: 8px; color: var(--text-3); font-size: 11px; line-height: 1.5;
+      display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap;
+    }
+    .map-legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+    .map-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-2); }
+    .map-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+  <div class="fixture-wrap">
+    <div class="fixture-title" id="fixtureTitle">3D 认知地球</div>
+    <div id="fixture"></div>
+  </div>
+
+  <script>window.__ZHJ_PANEL_TEST__ = true;</script>
+  <script src="../map_math.js"></script>
+  <script src="../panel.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const total = Number(params.get('n') || 30);
+    const types = ['person', 'concept', 'theory', 'event'];
+    const roles = ['primary', 'secondary', 'background'];
+    const nodes = Array.from({ length: total }, (_, i) => ({
+      id: 'node-' + String(i).padStart(3, '0'),
+      name: '节点' + String(i + 1).padStart(2, '0'),
+      type: types[i % types.length],
+      role: roles[i % roles.length],
+      count: i % 12 + 1,
+    }));
+    const links = nodes.slice(1).map((node, i) => ({
+      source: nodes[Math.max(0, i - 1)].id,
+      target: node.id,
+      value: i % 4 + 1,
+    }));
+    const articles = nodes.slice(0, Math.min(8, nodes.length)).map((node, i) => ({
+      id: 'article-' + i,
+      savedAt: `2024-03-${String(10 + i).padStart(2, '0')}T08:00:00.000Z`,
+      article: { title: `${node.name} 的关联文章` },
+      analysis: {
+        domain: i % 2 ? '文学' : '哲学',
+        sub_domain: i % 2 ? '叙事结构' : '认识论',
+        nodes_hit: [{ name: node.name, type: node.type, role: node.role, contribution: `${node.name} 在这篇文章里承担核心论证支点。` }],
+      },
+    }));
+    document.getElementById('fixtureTitle').textContent = `3D 认知地球 · ${total} 节点`;
+    renderEarthSphere(nodes, links, document.getElementById('fixture'), articles);
+    if (params.get('demo') === '1') {
+      document.getElementById('earthDemoFillBtn')?.click();
+    }
+    if (params.get('hover') === '1') {
+      showNodeHoverCard('节点01', { clientX: 458, clientY: 210 });
+    }
+  </script>
+</body>
+</html>

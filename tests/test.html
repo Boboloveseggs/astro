@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>知识图鉴 · 单元测试</title>
+  <style>
+    body { font-family: 'Courier New', monospace; background: #0f0f13; color: #c0c0d0;
+           padding: 24px; font-size: 13px; }
+    h1   { color: #9090cc; font-size: 15px; margin-bottom: 4px; }
+    p    { color: #383850; font-size: 11px; margin-bottom: 20px; }
+    .test { padding: 6px 0; border-bottom: 1px solid #1a1a28; }
+    .pass  { color: #40c080; }
+    .fail  { color: #cc5555; }
+    .error { color: #884444; font-size: 11px; margin: 4px 0 2px 20px; white-space: pre-wrap; }
+    .summary { margin-top: 20px; font-size: 14px; font-weight: bold;
+               padding: 10px 14px; border-radius: 6px; display: inline-block; }
+    .summary.pass { color: #40c080; background: #0f2018; border: 1px solid #1a4028; }
+    .summary.fail { color: #cc5555; background: #200f0f; border: 1px solid #3a1515; }
+  </style>
+</head>
+<body>
+  <h1>知识图鉴 · 单元测试</h1>
+  <p>在 Chrome 扩展页打开此文件运行：chrome-extension://[extension-id]/tests/test.html</p>
+  <div id="results"></div>
+  <div id="summary">运行中…</div>
+
+  <script src="runner.js"></script>
+  <script src="../three.min.js"></script>
+  <script src="../map_math.js"></script>
+  <script src="../db.js"></script>
+  <script src="../zhihu_openapi_defaults.js"></script>
+  <script src="../zhihu_openapi.js"></script>
+  <script src="../zhihu_content_api.js"></script>
+  <script src="../analyzer.js"></script>
+  <script>window.__ZHJ_PANEL_TEST__ = true;</script>
+  <script src="../panel.js"></script>
+  <script src="db.test.js"></script>
+  <script src="analyzer.test.js"></script>
+  <script src="zhihu_openapi.test.js"></script>
+  <script src="zhihu_content_api.test.js"></script>
+  <script src="map.test.js"></script>
+  <script src="panel_map.test.js"></script>
+  <script src="panel_timeline.test.js"></script>
+  <script src="panel_cleanup.test.js"></script>
+  <script src="panel_analysis.test.js"></script>
+  <script src="panel_assets.test.js"></script>
+  <script src="panel_chat.test.js"></script>
+  <script src="panel_review.test.js"></script>
+  <script type="module">await globalThis.Suite.run();</script>
+</body>
+</html>

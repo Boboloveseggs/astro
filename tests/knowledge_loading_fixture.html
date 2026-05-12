@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>知识图鉴加载动画 fixture</title>
+  <style>
+    :root {
+      --bg: #0d0b08;
+      --bg-panel: #141210;
+      --gold: #c8a44a;
+      --gold-dim: #8a6c2e;
+      --text-3: #524c42;
+    }
+    body {
+      margin: 0; min-height: 100vh; display: grid; place-items: center;
+      background: var(--bg); color: var(--text-3);
+      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    }
+    .loading {
+      width: 360px; min-height: 360px; padding: 34px 0 38px; text-align: center;
+      background: var(--bg-panel); border-radius: 10px;
+    }
+    .knowledge-loader-wrap {
+      display: flex; justify-content: center; margin-bottom: 13px;
+      perspective: 420px;
+    }
+    .knowledge-loader {
+      width: 96px; height: 96px; overflow: visible;
+      filter: drop-shadow(0 0 18px rgba(200,164,74,.22));
+    }
+    .knowledge-loader-orbits,
+    .knowledge-loader-gear,
+    .knowledge-loader-nodes {
+      transform-box: fill-box; transform-origin: center;
+    }
+    .knowledge-loader-orbits { animation: knowledgeOrbit 9.6s linear infinite; }
+    .knowledge-loader-gear { animation: knowledgeGear 7.2s linear infinite reverse; }
+    .knowledge-loader-nodes { animation: knowledgeNodes 3.6s ease-in-out infinite; }
+    .knowledge-loader-core {
+      transform-box: fill-box; transform-origin: center;
+      animation: knowledgeCoreBreath 2.8s ease-in-out infinite;
+    }
+    @keyframes knowledgeOrbit {
+      from { transform: rotateX(58deg) rotateZ(0deg); }
+      to { transform: rotateX(58deg) rotateZ(360deg); }
+    }
+    @keyframes knowledgeGear {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes knowledgeNodes {
+      0%, 100% { opacity: .42; transform: scale(.96); }
+      45% { opacity: 1; transform: scale(1.04); }
+      70% { opacity: .7; transform: scale(1); }
+    }
+    @keyframes knowledgeCoreBreath {
+      0%, 100% { transform: scale(.94); opacity: .82; }
+      50% { transform: scale(1.08); opacity: 1; }
+    }
+    .loading-text { margin-top: 12px; font-size: 12px; color: var(--text-3); }
+    .knowledge-loading-message {
+      margin-top: 9px; min-height: 18px;
+      font-family: "Noto Serif SC", serif;
+      font-size: 12px; color: var(--gold-dim); line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="loading">
+    <div class="knowledge-loader-wrap">
+      <svg class="knowledge-loader" viewBox="0 0 120 120" aria-hidden="true">
+        <defs>
+          <radialGradient id="knowledgeCoreGlow" cx="40%" cy="35%">
+            <stop offset="0%" stop-color="#fff2b8"/>
+            <stop offset="55%" stop-color="#c8a44a"/>
+            <stop offset="100%" stop-color="#4c3265"/>
+          </radialGradient>
+          <filter id="knowledgeSoftGlow" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="2.8" result="blur"/>
+            <feMerge>
+              <feMergeNode in="blur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+        <g class="knowledge-loader-orbits" fill="none" stroke="rgba(200,164,74,.5)" stroke-width="1.4">
+          <ellipse cx="60" cy="60" rx="47" ry="18"/>
+          <ellipse cx="60" cy="60" rx="37" ry="14" transform="rotate(62 60 60)"/>
+          <ellipse cx="60" cy="60" rx="42" ry="16" transform="rotate(122 60 60)"/>
+        </g>
+        <g class="knowledge-loader-gear" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round">
+          <circle cx="60" cy="60" r="23"/>
+          <path d="M60 25v9M60 86v9M25 60h9M86 60h9M35 35l7 7M78 78l7 7M85 35l-7 7M42 78l-7 7"/>
+          <circle cx="60" cy="60" r="8"/>
+        </g>
+        <g class="knowledge-loader-nodes" filter="url(#knowledgeSoftGlow)">
+          <path d="M38 72 53 43 82 52 72 82 38 72Z" fill="none" stroke="rgba(255,232,164,.45)" stroke-width="1"/>
+          <circle cx="38" cy="72" r="3.4" fill="#e9c86a"/>
+          <circle cx="53" cy="43" r="2.8" fill="#fff2b8"/>
+          <circle cx="82" cy="52" r="3.2" fill="#c8a44a"/>
+          <circle cx="72" cy="82" r="2.6" fill="#8f6ed5"/>
+        </g>
+        <circle class="knowledge-loader-core" cx="60" cy="60" r="13" fill="url(#knowledgeCoreGlow)" filter="url(#knowledgeSoftGlow)"/>
+      </svg>
+    </div>
+    <div class="loading-text">知识图鉴正在解析…</div>
+    <div class="knowledge-loading-message">知识图鉴正在整理文章线索</div>
+  </div>
+</body>
+</html>

@@ -6,32 +6,33 @@
 
 ## GitHub 公开版说明
 
-本仓库是公开源码版，不包含任何 API Key、Access Secret、app_secret 或本机凭证。
+这个目录是可公开上传到 GitHub 的源码版：
 
-- 公开源码包：<https://astro.r2049.cn/zhijing-github-safe-20260512.zip>
-- SHA256：`B094A418D3075BB9D97EBD8AEBC9E984F299D2A926A8F3F335E5E0BC7A1E4209`
-- 参赛体验包：<https://astro.r2049.cn/astro.release.zip>
-
-## 源码导入
-
-仓库已放入 `.github/workflows/import-source.yml`。如果 GitHub 没有自动展开完整源码，请在仓库页面执行：
-
-1. 打开 **Actions**。
-2. 选择 **Import GitHub safe source package**。
-3. 点击 **Run workflow**。
-4. 等它完成后，完整去密钥源码会自动提交到 `main`。
+- 不包含任何 API Key、Access Secret、app_secret 或本机凭证。
+- `competition_defaults.js` 与 `zhihu_openapi_defaults.js` 默认关闭且为空。
+- 如需本地运行，请在扩展设置页填写自己的 AI API Key。
+- 参赛演示下载包与公开源码包是两条线：参赛包可内置一次性演示 Key，GitHub 源码包必须保持无密钥。
 
 ## 本地安装
 
-1. 下载或克隆源码。
-2. 打开 Chrome / Edge 扩展管理页。
-3. 开启“开发者模式”。
-4. 选择“加载已解压的扩展程序”。
-5. 选择项目目录。
-6. 打开扩展设置页，填写自己的 API Key。
-7. 回到知乎文章页或扩展面板，载入文章并点击“开始分析”。
+1. 打开 Chrome / Edge 的扩展管理页。
+2. 开启“开发者模式”。
+3. 选择“加载已解压的扩展程序”。
+4. 选择本目录。
+5. 打开扩展设置页，填写自己的 API Key。
+6. 回到知乎文章页或扩展面板，载入文章并点击“开始分析”。
+
+## 核心体验
+
+- 文章分析：把文章收敛成创作者真正关心的素材、立意和延展方向。
+- 知乎环境建议：可结合知乎开放平台搜索语境，推荐更像知乎问题的下一篇选题。
+- 知识宇宙：把作品、节点和方向可视化成个人知识星球。
+- 写作指纹：从长期作品里识别高频主题、表达优势和潜在天赋方向。
+- 问问过去的我：基于历史作品资产提问，让旧文章重新参与创作。
 
 ## 不要提交到 GitHub 的文件
+
+以下文件只适合保存在本机或参赛发布环境，不应进入公开仓库：
 
 - `competition_key.local.json`
 - `zhihu_openapi.local.json`
@@ -40,3 +41,10 @@
 - `知乎API.txt`
 - `astro.release.zip`
 - 含有真实密钥、账号、上传日志或本机调试数据的文件
+
+## 参赛下载包
+
+参赛评审使用的下载地址可单独发布：
+
+https://astro.r2049.cn/astro.release.zip
+

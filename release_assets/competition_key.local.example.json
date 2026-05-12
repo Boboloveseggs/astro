@@ -1,0 +1,5 @@
+{
+  "provider": "zhipu",
+  "model": "glm-4-flash",
+  "apiKey": "put-your-disposable-competition-key-here"
+}
