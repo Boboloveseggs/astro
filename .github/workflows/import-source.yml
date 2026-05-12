@@ -16,14 +16,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download public source package
+      - name: Download and extract public source package
         run: |
           set -euo pipefail
           python3 - <<'PY'
           import hashlib
+          import os
+          import shutil
           import ssl
           import sys
           import urllib.request
+          import zipfile
+          from pathlib import Path
 
           url = 'https://astro.r2049.cn/zhijing-github-safe-20260512.zip'
           expected = 'B094A418D3075BB9D97EBD8AEBC9E984F299D2A926A8F3F335E5E0BC7A1E4209'.lower()
@@ -43,14 +47,35 @@ jobs:
                       raise RuntimeError(f'sha256 mismatch: expected {expected}, got {digest}')
                   with open('source.zip', 'wb') as f:
                       f.write(data)
-                  sys.exit(0)
+                  break
               except Exception as exc:
                   last_error = exc
                   print(f'download attempt verify={verify} failed: {exc}')
-          raise SystemExit(last_error)
+          else:
+              raise SystemExit(last_error)
+
+          root = Path('source').resolve()
+          if root.exists():
+              shutil.rmtree(root)
+          root.mkdir(parents=True)
+
+          with zipfile.ZipFile('source.zip') as archive:
+              for info in archive.infolist():
+                  normalized = info.filename.replace('\\', '/').strip('/')
+                  if not normalized:
+                      continue
+                  target = (root / normalized).resolve()
+                  if not str(target).startswith(str(root) + os.sep):
+                      raise RuntimeError(f'unsafe zip path: {info.filename}')
+                  if info.is_dir() or normalized.endswith('/'):
+                      target.mkdir(parents=True, exist_ok=True)
+                      continue
+                  target.parent.mkdir(parents=True, exist_ok=True)
+                  with archive.open(info) as src, open(target, 'wb') as dst:
+                      shutil.copyfileobj(src, dst)
+
+          print('extracted files:', sum(1 for p in root.rglob('*') if p.is_file()))
           PY
-          rm -rf source
-          unzip -q source.zip -d source
 
       - name: Import source files
         run: |
