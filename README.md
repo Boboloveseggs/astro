@@ -30,21 +30,14 @@
 - 写作指纹：从长期作品里识别高频主题、表达优势和潜在天赋方向。
 - 问问过去的我：基于历史作品资产提问，让旧文章重新参与创作。
 
-## 不要提交到 GitHub 的文件
+## 安全与配置说明
 
-以下文件只适合保存在本机或参赛发布环境，不应进入公开仓库：
+本仓库是公开源码版本，不包含任何真实 API Key、Access Secret、账号凭证或本地发布包。
 
-- `competition_key.local.json`
-- `zhihu_openapi.local.json`
-- `.env` / `.env.*`
-- `KIMIkey.docx`
-- `知乎API.txt`
-- `astro.release.zip`
-- 含有真实密钥、账号、上传日志或本机调试数据的文件
+如需运行 AI 分析能力，请在本地自行创建配置文件，并填入自己的模型服务密钥。相关本地配置文件已加入 `.gitignore`，不会提交到公开仓库。
 
 ## 参赛下载包
 
 参赛评审使用的下载地址可单独发布：
 
 https://astro.r2049.cn/astro.release.zip
-
