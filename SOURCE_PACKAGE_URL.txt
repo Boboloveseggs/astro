@@ -1,0 +1,5 @@
+GitHub safe source package:
+https://astro.r2049.cn/zhijing-github-safe-20260512.zip
+
+SHA256:
+B094A418D3075BB9D97EBD8AEBC9E984F299D2A926A8F3F335E5E0BC7A1E4209
