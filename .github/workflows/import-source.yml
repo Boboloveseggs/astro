@@ -1,0 +1,66 @@
+name: Import GitHub safe source package
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import-source:
+    if: ${{ github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, 'Import GitHub safe source package') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download public source package
+        run: |
+          set -euo pipefail
+          curl -fsSL "https://astro.r2049.cn/zhijing-github-safe-20260512.zip" -o source.zip
+          echo "B094A418D3075BB9D97EBD8AEBC9E984F299D2A926A8F3F335E5E0BC7A1E4209  source.zip" | sha256sum -c -
+          rm -rf source
+          unzip -q source.zip -d source
+
+      - name: Import source files
+        run: |
+          set -euo pipefail
+          rsync -a --delete --exclude='.git' --exclude='.github' source/ ./
+          rm -rf source source.zip
+
+      - name: Guard against leaked secrets
+        run: |
+          set -euo pipefail
+          if find . \
+            -name 'KIMIkey.docx' -o \
+            -name '知乎API.txt' -o \
+            -name 'competition_key.local.json' -o \
+            -name 'zhihu_openapi.local.json' -o \
+            -name 'astro.release.zip' -o \
+            -name '*最终参赛版*.zip' | grep .; then
+            echo 'Sensitive local file was imported.'
+            exit 1
+          fi
+          if grep -R -I -E 'Bearer [A-Za-z0-9._-]{24,}|[a-f0-9]{32}\.[A-Za-z0-9_-]{12,}' . \
+            --exclude-dir=.git \
+            --exclude-dir=.github \
+            --exclude='providers.js' \
+            --exclude='README.md'; then
+            echo 'Possible secret pattern found.'
+            exit 1
+          fi
+
+      - name: Commit imported source
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No source changes to commit."
+            exit 0
+          fi
+          git commit -m "Import GitHub safe source package"
+          git push
