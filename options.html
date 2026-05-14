@@ -236,7 +236,12 @@
     <input type="password" id="apiKey" placeholder="">
     <div class="hint" id="keyHint"></div>
     <div class="hint">比赛包已内置默认 API；这里留空也能分析。填写自己的 Key 后会覆盖默认通道，密钥只保存在本机 chrome.storage.local。</div>
-    <button type="button" class="btn btn-secondary" id="useCompetitionKeyBtn" style="margin-top:10px;padding:8px 14px;font-size:12px;font-weight:600">
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn btn-primary"   id="saveBtn">保存设置</button>
+      <button class="btn btn-secondary" id="testBtn">测试连接</button>
+    </div>
+    <div class="status" id="status"></div>
+    <button type="button" class="btn btn-secondary" id="useCompetitionKeyBtn" style="margin-top:12px;padding:8px 14px;font-size:12px;font-weight:600">
       ⚡ 比赛专用密钥 · 供评委使用
     </button>
     <div class="hint" id="competitionKeyHint" style="margin-top:6px">点击后,本机将自动填入比赛演示用的 GLM-4.5 Air 通道与 Key,并保存设置,无需自行申请。</div>
@@ -266,13 +271,6 @@
     <div class="hint">每周写到几篇才算达标？知乎创作图鉴会按这个数字显示进度。</div>
   </div>
 </div>
-
-<div class="btn-row">
-  <button class="btn btn-primary"   id="saveBtn">保存设置</button>
-  <button class="btn btn-secondary" id="testBtn">测试连接</button>
-</div>
-
-<div class="status" id="status"></div>
 
 <div class="saved-keys" id="savedKeysBox" style="display:none">
   <div class="saved-keys-title">已保存的密钥</div>

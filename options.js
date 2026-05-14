@@ -246,7 +246,7 @@ async function loadSettings() {
 }
 
 // ── 保存设置 ─────────────────────────────────────────────
-async function saveSettings() {
+async function saveSettings(opts = {}) {
   const provider = document.getElementById('provider').value;
   const model    = document.getElementById('model').value;
   const apiKey   = document.getElementById('apiKey').value.trim();
@@ -266,7 +266,11 @@ async function saveSettings() {
     setStoredApiKeys(apiKeys),
   ]);
   renderSavedKeys(apiKeys);
-  showStatus('设置已保存 ✓', 'ok');
+  if (opts.silent) {
+    showStatus(opts.silentText || '已自动保存', 'ok');
+  } else {
+    showStatus('设置已保存 ✓', 'ok');
+  }
 }
 
 // ── 渲染已保存密钥列表 ────────────────────────────────────
@@ -342,6 +346,23 @@ document.getElementById('provider').addEventListener('change', async e => {
   updateKeyHint(pid);
   const apiKeys = await getStoredApiKeys();
   document.getElementById('apiKey').value = apiKeys[pid] || '';
+  await saveSettings({ silent: true, silentText: '提供商已切换并保存' });
+});
+
+document.getElementById('model').addEventListener('change', () => {
+  saveSettings({ silent: true, silentText: '模型已切换并保存' }).catch(() => {});
+});
+
+let zhihuSecretSaveTimer = null;
+document.getElementById('zhihuAccessSecret').addEventListener('input', () => {
+  clearTimeout(zhihuSecretSaveTimer);
+  zhihuSecretSaveTimer = setTimeout(() => {
+    saveSettings({ silent: true, silentText: 'Access Secret 已自动保存' }).catch(() => {});
+  }, 600);
+});
+
+document.getElementById('weekGoal').addEventListener('change', () => {
+  saveSettings({ silent: true, silentText: '周创作目标已保存' }).catch(() => {});
 });
 
 document.getElementById('useCompetitionKeyBtn')?.addEventListener('click', async () => {
