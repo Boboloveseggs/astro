@@ -743,7 +743,7 @@ async function dbExportObsidianVault(handle, filter = {}) {
 
   let exported = 0;
   const indexLines = [
-    '# 知识图鉴索引',
+    '# 知乎创作图鉴索引',
     '',
     `导出时间：${new Date().toISOString()}`,
     '',
@@ -760,7 +760,7 @@ async function dbExportObsidianVault(handle, filter = {}) {
     exported++;
   }
 
-  const indexHandle = await handle.getFileHandle('知识图鉴索引.md', { create: true });
+  const indexHandle = await handle.getFileHandle('知乎创作图鉴索引.md', { create: true });
   const writable    = await indexHandle.createWritable();
   await writable.write(indexLines.join('\n'));
   await writable.close();
@@ -793,7 +793,7 @@ async function writeArticleToLocalFolder(record) {
     await writable.write(buildArticleMarkdown(record));
     await writable.close();
   } catch (e) {
-    console.warn('[知识图鉴] 写入本地文件夹失败:', e.message);
+    console.warn('[知乎创作图鉴] 写入本地文件夹失败:', e.message);
   }
 }
 
@@ -1024,7 +1024,7 @@ async function syncFromLocalFolder() {
       if (merged.shouldReplaceNodes) await dbReplaceArticleNodes(merged.record.analysis.nodes_hit || [], merged.record.id);
       synced++;
     } catch (e) {
-      console.warn('[知识图鉴] 扫描文件失败:', name, e.message);
+      console.warn('[知乎创作图鉴] 扫描文件失败:', name, e.message);
     }
   }
   return { synced };
@@ -1059,5 +1059,5 @@ async function dbMigrateFromStorage() {
 
   await chrome.storage.local.set({ zhijing_migrated: true });
   await chrome.storage.local.remove(['zhijing_articles', 'zhijing_nodes']);
-  debugLog('[知识图鉴] storage → IndexedDB 迁移完成');
+  debugLog('[知乎创作图鉴] storage → IndexedDB 迁移完成');
 }

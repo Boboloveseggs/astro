@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "知识图鉴",
+  "name": "知乎创作图鉴",
   "version": "2.0.0",
-  "description": "知识图鉴：面向知乎创作者的作品资产库、写作指纹系统与个人知识宇宙",
+  "description": "知乎创作图鉴：面向知乎创作者的作品资产库、写作指纹系统与个人知识宇宙",
   "minimum_chrome_version": "114",
   "permissions": [
     "storage",
@@ -56,6 +56,6 @@
     "default_path": "panel.html"
   },
   "action": {
-    "default_title": "打开知识图鉴"
+    "default_title": "打开知乎创作图鉴"
   }
 }

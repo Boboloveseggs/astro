@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <title>知识图鉴 - 作品资产库与写作指纹系统</title>
+  <title>知乎创作图鉴 - 作品资产库与写作指纹系统</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -1815,7 +1815,106 @@
     .clip-source:hover { color: var(--gold); }
 
     /* chat */
-    .chat-card { display: flex; flex-direction: column; gap: 10px; }
+    /* 主分析完成 toast */
+    .analyze-done-toast {
+      position: fixed; right: 16px; bottom: 22px; z-index: 13000;
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px 10px 10px;
+      background: var(--bg-panel);
+      border: 1.5px solid var(--gold); border-radius: 14px;
+      box-shadow: 0 14px 38px rgba(0,0,0,.5), 0 0 0 1px var(--gold-glow), 0 0 24px rgba(200,164,74,.32);
+      opacity: 0; transform: translateY(28px) scale(0.85);
+      pointer-events: none;
+    }
+    .analyze-done-toast[hidden] { display: none; }
+    .analyze-done-toast.show {
+      animation:
+        analyzeDoneToastIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+        analyzeDoneToastOut 0.45s ease 2.5s forwards;
+    }
+    @keyframes analyzeDoneToastIn {
+      0%   { opacity: 0; transform: translateY(28px) scale(0.7); }
+      60%  { opacity: 1; transform: translateY(-6px) scale(1.06); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes analyzeDoneToastOut {
+      0%   { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-10px) scale(0.92); }
+    }
+    .analyze-done-toast .adt-mascot {
+      width: 48px; height: 52px; flex-shrink: 0;
+      background: url('icons/liukanshan.png') center/contain no-repeat;
+      filter: drop-shadow(0 3px 8px rgba(0,0,0,.28));
+      transform-origin: 50% 100%;
+      animation: liukanshanWag 0.95s ease-in-out 0.55s infinite alternate;
+    }
+    @keyframes liukanshanWag {
+      0%   { transform: rotate(-5deg) translateY(0); }
+      100% { transform: rotate(5deg) translateY(-2px); }
+    }
+    .analyze-done-toast .adt-text {
+      font-size: 12.5px; line-height: 1.45; color: var(--text-1);
+    }
+    .analyze-done-toast .adt-title {
+      display: block; font-weight: 700; font-size: 14.5px;
+      color: var(--gold-light); margin-bottom: 1px;
+      letter-spacing: 0.5px;
+    }
+    html.theme-light .analyze-done-toast {
+      box-shadow: 0 14px 38px rgba(28,54,94,.2), 0 0 0 1px rgba(200,164,74,.18), 0 0 24px rgba(200,164,74,.22);
+    }
+
+    .chat-card { display: flex; flex-direction: column; gap: 10px; position: relative; }
+    .chat-mascot {
+      position: absolute; bottom: 50px; right: 8px;
+      width: 52px; height: 56px;
+      background: url('icons/liukanshan.png') center/contain no-repeat;
+      opacity: 0; pointer-events: none; z-index: 5;
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,.32));
+      transform-origin: 50% 100%;
+    }
+    .chat-mascot[hidden] { display: none; }
+    .chat-mascot.visible {
+      animation: liukanshanPop 0.62s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    .chat-mascot.visible::before {
+      content: "答好啦";
+      position: absolute; top: 4px; right: 100%;
+      margin-right: 6px; padding: 3px 7px;
+      background: var(--gold); color: var(--bg);
+      border-radius: 10px; font-size: 10px; font-weight: 700;
+      white-space: nowrap; line-height: 1.2;
+      box-shadow: 0 4px 12px rgba(200,164,74,.45);
+      animation: liukanshanBubble 0.45s ease 0.42s both;
+      opacity: 0;
+    }
+    @keyframes liukanshanBubble {
+      0%   { opacity: 0; transform: translateY(-3px) scale(0.7); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    html.theme-light .chat-mascot { filter: drop-shadow(0 3px 8px rgba(28,54,94,.22)); }
+    @keyframes liukanshanPop {
+      0%   { opacity: 0; transform: translateY(34px) scale(0.45) rotate(-12deg); }
+      55%  { opacity: 1; transform: translateY(-8px) scale(1.12) rotate(4deg); }
+      78%  { transform: translateY(3px) scale(0.96) rotate(-2deg); }
+      100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
+    }
+    .chat-status.is-loading {
+      color: var(--gold-light);
+      transition: opacity 0.28s ease;
+    }
+    .chat-status.is-loading.fading { opacity: 0; }
+    .chat-status .chat-status-dot {
+      display: inline-block; vertical-align: middle;
+      width: 6px; height: 6px; margin-right: 6px; border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 6px var(--gold-glow);
+      animation: chatStatusDot 1.1s ease-in-out infinite;
+    }
+    @keyframes chatStatusDot {
+      0%, 100% { transform: scale(1); opacity: 0.85; }
+      50%      { transform: scale(1.45); opacity: 1; }
+    }
     .chat-card.chat-card-attention {
       border-color: var(--border-bright);
       box-shadow: 0 0 0 1px var(--gold-glow), 0 0 22px rgba(216, 176, 96, 0.18);
@@ -2169,12 +2268,86 @@
       text-align: center; text-shadow: 0 2px 12px var(--gold-glow);
     }
     .onboarding-arrow.visible { display: block; }
+
+    /* 引导结束后的"分析自己文章"提示气泡 */
+    .analyze-own-hint {
+      position: fixed; z-index: 12500;
+      width: min(264px, calc(100vw - 20px));
+      padding: 24px 14px 13px;
+      border: 1.5px solid var(--gold); border-radius: 12px;
+      background: var(--bg-panel); color: var(--text-1);
+      box-shadow: 0 18px 48px rgba(0,0,0,.5), 0 0 0 1px var(--gold-glow), 0 0 24px rgba(200,164,74,.32);
+      opacity: 0; transform: translateY(-8px); pointer-events: none;
+      transition: opacity .22s ease, transform .22s ease;
+      text-align: center;
+    }
+    .analyze-own-hint[hidden] { display: none; }
+    .analyze-own-hint.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .analyze-own-hint-arrow {
+      position: absolute; top: -14px; left: 50%;
+      width: 20px; height: 20px;
+      transform: translateX(-50%);
+      pointer-events: none;
+      animation: analyzeOwnHintBounce 1.1s ease-in-out infinite;
+      filter: drop-shadow(0 0 8px rgba(200,164,74,.85)) drop-shadow(0 0 2px rgba(255,220,140,.9));
+    }
+    .analyze-own-hint-arrow::before {
+      content: ""; position: absolute; inset: 0;
+      background: var(--gold);
+      clip-path: polygon(50% 0%, 100% 55%, 70% 55%, 70% 100%, 30% 100%, 30% 55%, 0% 55%);
+    }
+    @keyframes analyzeOwnHintBounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50%      { transform: translateX(-50%) translateY(-5px); }
+    }
+    .analyze-own-hint-title {
+      font-size: 13.5px; color: var(--text-1); line-height: 1.55; font-weight: 500;
+    }
+    .own-emphasis {
+      display: inline-block;
+      font-size: 18px;
+      font-weight: 800;
+      color: #ffd96b;
+      text-shadow:
+        0 0 10px rgba(255,217,107,.75),
+        0 0 3px rgba(255,237,160,1),
+        0 1px 0 rgba(0,0,0,.55);
+      padding: 0 4px;
+      letter-spacing: 0.5px;
+    }
+    html.theme-light .own-emphasis {
+      color: #b8860b;
+      text-shadow:
+        0 0 6px rgba(184,134,11,.35),
+        0 1px 0 rgba(255,255,255,.6);
+    }
+    .analyze-own-hint-body {
+      margin-top: 8px;
+      font-size: 11.5px; color: var(--text-2); line-height: 1.55;
+    }
+    .analyze-own-hint-warn {
+      margin-top: 10px; padding: 6px 8px;
+      border: 1px dashed var(--gold-dim); border-radius: 6px;
+      font-size: 10.5px; line-height: 1.5;
+      color: var(--gold); background: var(--gold-glow);
+    }
+    .analyze-own-hint-close {
+      position: absolute; top: 3px; right: 5px;
+      background: none; border: none;
+      color: var(--text-3); font-size: 16px; line-height: 1;
+      padding: 4px 7px; border-radius: 4px;
+      cursor: pointer; font-family: inherit;
+    }
+    .analyze-own-hint-close:hover { color: var(--gold); background: var(--bg-card); }
+    html.theme-light .analyze-own-hint {
+      box-shadow: 0 18px 48px rgba(28,54,94,.18), 0 0 0 1px rgba(200,164,74,.18), 0 0 24px rgba(200,164,74,.2);
+    }
   </style>
 </head>
 <body>
 
 <div class="header">
-  <h1>知识图鉴</h1>
+  <h1>知乎创作图鉴</h1>
   <div class="project-bar">
     <select id="projectSelect" class="project-select"></select>
     <button id="recaptureBtn" class="project-capture-btn" type="button" title="重新抓取当前知乎页" aria-label="重新抓取当前知乎页">
@@ -2295,8 +2468,8 @@
       <circle class="knowledge-loader-core" cx="60" cy="60" r="13" fill="url(#knowledgeCoreGlow)" filter="url(#knowledgeSoftGlow)"/>
     </svg>
   </div>
-  <div class="loading-text">知识图鉴正在拆成作品资产…</div>
-  <div class="knowledge-loading-message" id="knowledgeLoadingMessage">知识图鉴正在整理观点资产</div>
+  <div class="loading-text">知乎创作图鉴正在拆成作品资产…</div>
+  <div class="knowledge-loading-message" id="knowledgeLoadingMessage">知乎创作图鉴正在整理观点资产</div>
 </div>
 
 <div class="error-box" id="errorBox"></div>
@@ -2312,6 +2485,22 @@
 <div id="mapTab"    style="display:none"></div>
 <div id="fingerprintTab" style="display:none"></div>
 <div id="authorTab" style="display:none"></div>
+
+<div class="analyze-done-toast" id="analyzeDoneToast" role="status" aria-live="polite" hidden>
+  <div class="adt-mascot" aria-hidden="true"></div>
+  <div class="adt-text">
+    <span class="adt-title">答好啦!</span>
+    来看看你这篇的分析结果
+  </div>
+</div>
+
+<div class="analyze-own-hint" id="analyzeOwnHint" role="dialog" aria-live="polite" hidden>
+  <button type="button" class="analyze-own-hint-close" id="analyzeOwnHintCloseBtn" aria-label="关闭提示">×</button>
+  <div class="analyze-own-hint-arrow" aria-hidden="true"></div>
+  <div class="analyze-own-hint-title">现在就来分析一篇<span class="own-emphasis">自己</span>的文章吧</div>
+  <div class="analyze-own-hint-body">打开你自己的知乎文章页,然后点上方按钮抓取当前页。</div>
+  <div class="analyze-own-hint-warn">⚠ 请只分析您本人创作的内容,尊重创作者知识产权</div>
+</div>
 
 <div class="onboarding-layer" id="onboardingLayer" aria-live="polite">
   <div class="onboarding-arrow" id="onboardingArrow" aria-hidden="true"></div>

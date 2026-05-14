@@ -36,8 +36,9 @@ const ONBOARDING_RESUME_SECTION_KEY = 'onboardingResumeSection';
 const ONBOARDING_HINT_SEEN_KEY = 'onboardingHintSeen';
 const THEME_RECOMMEND_DONE_KEY = 'themeRecommendDone';
 const MAP_LIGHT_HINT_DONE_KEY = 'mapLightHintDone';
+const ANALYZE_OWN_HINT_DONE_KEY = 'analyzeOwnHintDone_v1';
 const DEMO_SEED_KEY = 'demoSeededFromPackage20260511';
-const DEMO_DATA_PATH = 'demo_data/知识图鉴_演示数据_当前库.json';
+const DEMO_DATA_PATH = 'demo_data/知乎创作图鉴_演示数据_当前库.json';
 const NODE_HOVER_SHOW_DELAY = 1000;
 let nodeHoverShowTimer = null;
 let nodeHoverHideTimer = null;
@@ -76,6 +77,83 @@ const KNOWLEDGE_LOADING_MESSAGES = [
   '正在看你到底总在惦记什么…',
   '正在从旧文里挖未来方向…',
 ];
+
+const AUTHOR_CHAT_LOADING_MESSAGES = [
+  ...KNOWLEDGE_LOADING_MESSAGES,
+  '正在翻你以前写过的那几页…',
+  '正在请过去的你出来说几句…',
+  '正在让旧文章站到一起照镜子…',
+  '正在数你最爱回到的那些话题…',
+  '正在从抽屉里翻你以前的素材…',
+  '正在让上一篇和下一篇牵起手…',
+  '正在让历史的你回答一下…',
+  '正在比对你以前怎么说这件事…',
+  '正在请旧观点自己开口…',
+  '正在让记忆翻到你写过的那一页…',
+  '正在把过去的金句请上台…',
+  '正在让旧观点对你点点头…',
+  '正在把以前的判断重新读一遍…',
+  '正在请你的写作风格做自我介绍…',
+  '正在偷听旧文里的小声嘀咕…',
+  '正在让历史观点穿越到现在…',
+  '正在请上一个版本的你回答…',
+  '正在翻箱倒柜找能复用的段落…',
+  '正在和过去的你对照笔记…',
+  '正在让旧素材跑出来排队…',
+  '正在让节点串成一根思路…',
+  '正在让旧文给新方向递棒…',
+  '正在让旧标题和新选题握手…',
+  '正在请你的写作指纹来认领…',
+  '正在让旧作品给你打小报告…',
+  '正在让历史里的你陪你想下一篇…',
+  '正在让以前的判断重新发光…',
+  '正在让旧文章为新句子伸援手…',
+  '正在请历史的你点头说"就这么写"…',
+  '正在把你的老话题再揉一遍…',
+];
+
+const REVIEW_CHAT_LOADING_MESSAGES = [
+  '正在数一数你这一周写了什么…',
+  '正在把本周作品摆成一排看比例…',
+  '正在和上周的你对比变化…',
+  '正在挑本周哪一篇最值得放大…',
+  '正在看你最近写得最稳的是什么…',
+  '正在给本周创作打个轻轻的分…',
+  '正在找你本周还没说完的话…',
+  '正在揉揉本周写作的小肩膀…',
+  '正在看你本周的笔有没有偷懒…',
+  '正在偷瞄你这周最亮的金句…',
+  '正在数你这周点亮了几片星区…',
+  '正在把本周话题做成小清单…',
+  '正在替下周列三个新方向…',
+  '正在算你这周写作的小连胜…',
+  '正在看你最近常回到的几个词…',
+  '正在把本周文章按情绪分类…',
+  '正在闻一闻本周写作的气味…',
+  '正在标出本周值得保留的写法…',
+  '正在挑本周想写却没写的事…',
+  '正在替你回看本周的小高峰…',
+  '正在数本周创作走过的几个弯…',
+  '正在看本周素材有没有用上…',
+  '正在把本周节奏画成小心电图…',
+  '正在记下本周创作的小转折点…',
+  '正在帮你看本周写得最自由的那一段…',
+  '正在替你拉出下周可以接着写的线索…',
+  '正在为本周作品颁一个迷你奖…',
+  '正在记一笔本周成长的台阶…',
+  '正在看本周的你是不是更敢写了…',
+  '正在替你把本周笔记串起来…',
+];
+
+function pickNextLoadingIndex(arr, prev) {
+  if (!arr || arr.length === 0) return 0;
+  if (arr.length === 1) return 0;
+  let next = prev;
+  while (next === prev) {
+    next = Math.floor(Math.random() * arr.length);
+  }
+  return next;
+}
 
 const CHAT_ARTICLE_LIMIT = 7000;
 const CHAT_ANALYSIS_LIMIT = 3200;
@@ -133,7 +211,7 @@ const AUTHOR_AGENT_TEMPLATES = {
 };
 
 function formalizeProductName(text) {
-  return String(text || '').replace(/\u7403\u7403/g, '知识图鉴');
+  return String(text || '').replace(/\u7403\u7403/g, '知乎创作图鉴');
 }
 
 function debugLog(...args) {
@@ -173,15 +251,15 @@ const PANEL_ONBOARDING_SECTIONS = {
     label: '分析区引导',
     steps: [
       {
-        title: '第一步：先配置自己的 API Key',
-        body: 'GitHub 公开版不内置 API Key。请先点右上角小齿轮，在设置页填写自己的 API Key。\n\n比赛演示包会内置一次性默认通道；源码公开版为了安全已经移除。配置完成后，我们再跑通核心流程：分析一篇文章，然后看它归库。',
+        title: '第一步：默认分析通道已准备好',
+        body: '比赛提交版已经内置默认 API，可以直接开始分析，不需要先去设置。\n\n右上角小齿轮只是给你以后更换自己的 API 或模型用。现在我们先跑通核心流程：分析一篇文章，然后看它归库。',
         target: '#settingsBtn',
         tab: 'analyze',
-        primary: '知道了',
+        primary: '直接开始',
       },
       {
         title: '第二步：载入示例文章',
-        body: '先用一篇示例文章跑通完整流程。\n\n点下面的按钮，知识图鉴会载入一篇已经准备好的文章。标题出现后，引导会自动进入下一步。',
+        body: '先用一篇示例文章跑通完整流程。\n\n点下面的按钮，知乎创作图鉴会载入一篇已经准备好的文章。标题出现后，引导会自动进入下一步。',
         target: '#demoArticleBtn',
         tab: 'analyze',
         action: 'loadDemoArticle',
@@ -189,7 +267,7 @@ const PANEL_ONBOARDING_SECTIONS = {
       },
       {
         title: '第三步：开始分析',
-        body: '点“开始分析”，知识图鉴会把这篇作品拆成核心观点、可复用素材、写作指纹和下一篇知乎选题，并写入你的资产库。\n\n这一步完成后，你就能看到一篇旧文章如何继续为下一次创作工作。',
+        body: '点“开始分析”，知乎创作图鉴会把这篇作品拆成核心观点、可复用素材、写作指纹和下一篇知乎选题，并写入你的资产库。\n\n这一步完成后，你就能看到一篇旧文章如何继续为下一次创作工作。',
         target: '#analyzeBtn',
         tab: 'analyze',
         requiresTarget: '#analyzeBtn',
@@ -257,7 +335,7 @@ const PANEL_ONBOARDING_SECTIONS = {
       },
       {
         title: '完整分析报告，在“作品”里找',
-        body: '资产页上面有“素材 / 立意 / 作品”三个入口。\n\n每次分析完一篇文章，完整报告都会放进“作品”里；素材和立意，是知识图鉴从作品里拆出来的可复用资产。',
+        body: '资产页上面有“素材 / 立意 / 作品”三个入口。\n\n每次分析完一篇文章，完整报告都会放进“作品”里；素材和立意，是知乎创作图鉴从作品里拆出来的可复用资产。',
         target: '.asset-mode[data-asset-mode="assets"]',
         tab: 'assets',
         primary: '完成本区引导',
@@ -338,7 +416,7 @@ const PANEL_ONBOARDING_SECTIONS = {
     steps: [
       {
         title: '读出的你：每周看一次就够',
-        body: '这一段只讲“知识图鉴读出的你”。\n\n它会告诉你本周新增了多少作品资产、哪些主题变亮、哪些素材最值得继续写，以及你的写作指纹正在往哪里长。',
+        body: '这一段只讲“知乎创作图鉴读出的你”。\n\n它会告诉你本周新增了多少作品资产、哪些主题变亮、哪些素材最值得继续写，以及你的写作指纹正在往哪里长。',
         target: '.tab-btn[data-tab="fingerprint"]',
         tab: 'fingerprint',
         primary: '下一步',
@@ -413,15 +491,15 @@ async function maybeStartPanelOnboardingForSection(section, opts = {}) {
 function legacyPanelOnboardingSteps() {
   return [
     {
-      title: '欢迎来到知识图鉴',
-      body: '这里是面向知乎创作者的作品资产库、写作指纹系统与个人知识宇宙。\n\n知识图鉴会通过作品，看见创作者自己；也会让旧文章继续为下一篇创作工作。你不用一下子学会所有按钮，我们先跑通第一篇文章。',
+      title: '欢迎来到知乎创作图鉴',
+      body: '这里是面向知乎创作者的作品资产库、写作指纹系统与个人知识宇宙。\n\n知乎创作图鉴会通过作品，看见创作者自己；也会让旧文章继续为下一篇创作工作。你不用一下子学会所有按钮，我们先跑通第一篇文章。',
       primary: '下一步',
     },
     {
-      title: '第一件事：先配置自己的 API Key',
-      body: 'GitHub 公开版不内置 API Key。请先点右上角小齿轮，在设置页填写自己的 API Key。\n\n比赛演示包会内置一次性默认通道；源码公开版为了安全已经移除。配置完成后，我们再跑通第一篇文章。',
+      title: '第一件事：默认分析通道已准备好',
+      body: '比赛提交版已经内置默认 API，可以直接开始分析，不需要先去设置。\n\n右上角小齿轮只是给你以后更换自己的 API 或模型用。现在我们先跑通第一篇文章。',
       target: '#settingsBtn',
-      primary: '知道了',
+      primary: '直接开始',
     },
     {
       title: '先载入一篇示例文章',
@@ -436,7 +514,7 @@ function legacyPanelOnboardingSteps() {
     },
     {
       title: '点开始分析',
-      body: '看到“开始分析”以后，点它一下。\n\n知识图鉴会把这篇文章拆成核心观点、可复用素材、写作指纹证据、下一篇知乎选题和创作者优势。分析完成后，这篇文章会进入你的知识资产。',
+      body: '看到“开始分析”以后，点它一下。\n\n知乎创作图鉴会把这篇文章拆成核心观点、可复用素材、写作指纹证据、下一篇知乎选题和创作者优势。分析完成后，这篇文章会进入你的知识资产。',
       target: '#analyzeBtn',
       primary: '下一步',
     },
@@ -456,7 +534,7 @@ function legacyPanelOnboardingSteps() {
     },
     {
       title: '完整分析报告，在“作品”里找',
-      body: '资产页上面有“素材 / 立意 / 作品”三个小入口。\n\n每次分析完一篇文章，完整报告都会放进“作品”里；素材和立意，是知识图鉴从报告里帮你拆出来的可复用片段。以后想回看一篇文章的完整解析，就先点“作品”。',
+      body: '资产页上面有“素材 / 立意 / 作品”三个小入口。\n\n每次分析完一篇文章，完整报告都会放进“作品”里；素材和立意，是知乎创作图鉴从报告里帮你拆出来的可复用片段。以后想回看一篇文章的完整解析，就先点“作品”。',
       target: '.asset-mode[data-asset-mode="assets"]',
       tab: 'assets',
       primary: '我知道去作品里找',
@@ -512,7 +590,7 @@ function legacyPanelOnboardingSteps() {
     },
     {
       title: '地图：这里是你的知识宇宙',
-      body: '点“地图”。\n\n这一块是知识图鉴最重要的地方之一：它不是列表，也不是普通收藏夹，而是把你的文章、主题、节点和项目慢慢变成一片知识宇宙。\n\n你每分析一篇文章，都会在这里点亮一点光。某个领域写得越多、读得越多，那片星区就会越来越亮。一开始只是一颗小点，后来会变成一片星云。',
+      body: '点“地图”。\n\n这一块是知乎创作图鉴最重要的地方之一：它不是列表，也不是普通收藏夹，而是把你的文章、主题、节点和项目慢慢变成一片知识宇宙。\n\n你每分析一篇文章，都会在这里点亮一点光。某个领域写得越多、读得越多，那片星区就会越来越亮。一开始只是一颗小点，后来会变成一片星云。',
       target: '.tab-btn[data-tab="map"]',
       tab: 'map',
       primary: '去看看知识地图',
@@ -540,7 +618,7 @@ function legacyPanelOnboardingSteps() {
     },
     {
       title: '读出的你：每周看一次就够',
-      body: '点“读出的你”。\n\n这里会告诉你本周分析了多少篇文章、哪些主题变亮、哪些素材最值得继续写、哪些领域正在积累，以及知识图鉴从作品里读出了怎样的你。',
+      body: '点“读出的你”。\n\n这里会告诉你本周分析了多少篇文章、哪些主题变亮、哪些素材最值得继续写、哪些领域正在积累，以及知乎创作图鉴从作品里读出了怎样的你。',
       target: '.tab-btn[data-tab="fingerprint"]',
       tab: 'fingerprint',
       primary: '打开读出的你',
@@ -559,7 +637,7 @@ function legacyPanelOnboardingSteps() {
     },
     {
       title: '把插件固定到浏览器右上角',
-      body: '如果你还没有固定插件：\n\n1. 找浏览器右上角的拼图图标。\n2. 点开它，找到“知识图鉴”。\n3. 点旁边的小图钉。\n4. 图钉变亮后，它就会一直待在右上角。\n\n以后不用再到插件列表里找它。',
+      body: '如果你还没有固定插件：\n\n1. 找浏览器右上角的拼图图标。\n2. 点开它，找到“知乎创作图鉴”。\n3. 点旁边的小图钉。\n4. 图钉变亮后，它就会一直待在右上角。\n\n以后不用再到插件列表里找它。',
       primary: '我知道了',
     },
     {
@@ -677,7 +755,7 @@ function buildGuidedDemoAnalysis(article, sourceAnalysis = null) {
     core_claim: `《${article.title || '知乎开放故事'}》可以作为创作者练习结构拆解、素材提炼和选题延展的演示文本。`,
     creator_strength: '你可以把一篇知乎内容快速转成可复用资产：先抓主线，再拆素材，再把下一篇选题从文本里长出来。',
     craft_review: {
-      praise: '这篇内容适合展示知识图鉴的核心能力：把一次阅读转化为结构复盘、素材库和后续创作线索。',
+      praise: '这篇内容适合展示知乎创作图鉴的核心能力：把一次阅读转化为结构复盘、素材库和后续创作线索。',
       praise_quote: article.title || '知乎开放故事',
       summary: '从知乎内容到创作资产的演示链路',
     },
@@ -686,7 +764,7 @@ function buildGuidedDemoAnalysis(article, sourceAnalysis = null) {
       { dimension: '素材沉淀', evidence: '把故事内容转换成素材、立意和知识节点，方便后续复用。' },
     ],
     nodes_hit: [
-      { name: '示例素材', type: 'work', role: 'primary', contribution: '作为示例内容进入知识图鉴分析链路。' },
+      { name: '示例素材', type: 'work', role: 'primary', contribution: '作为示例内容进入知乎创作图鉴分析链路。' },
       { name: '创作者资产化', type: 'concept', role: 'primary', contribution: '把阅读内容沉淀为下一次创作的素材与方向。' },
       { name: labelText, type: 'concept', role: 'secondary', contribution: '作为本次演示文本的主题标签。' },
     ],
@@ -695,7 +773,7 @@ function buildGuidedDemoAnalysis(article, sourceAnalysis = null) {
       { content: article.title || '知乎开放故事', why_reusable: '标题本身可作为选题复盘和表达训练的入口。' },
     ],
     essence_insights: [
-      { viewpoint: '创作者不只需要读内容，还需要把内容变成可检索、可复盘、可继续写的资产。', why_essential: '这是知识图鉴与知乎内容生态结合的主线。' },
+      { viewpoint: '创作者不只需要读内容，还需要把内容变成可检索、可复盘、可继续写的资产。', why_essential: '这是知乎创作图鉴与知乎内容生态结合的主线。' },
     ],
     new_concepts: ['知乎开放内容', '创作者资产化', '素材复盘'],
     connections: ['知乎知识', '故事素材', '选题延展'],
@@ -710,7 +788,7 @@ function buildGuidedDemoAnalysis(article, sourceAnalysis = null) {
       community_difference: '这篇示例不只是被摘要，而是被放进创作者自己的素材库、知识节点和下一篇选题里。',
       search_keywords: ['知乎开放内容', '素材复盘', '选题延展', labelText],
       next_zhihu_topics: [
-        { title: '为什么好内容不该只被读完一次？', angle: '从内容资产化切入', reason: '能直接说明知识图鉴如何让旧内容继续产生创作价值。' },
+        { title: '为什么好内容不该只被读完一次？', angle: '从内容资产化切入', reason: '能直接说明知乎创作图鉴如何让旧内容继续产生创作价值。' },
       ],
       hotspot_hooks: [
         { theme: '创作者如何使用 AI', hook: '把 AI 从代写工具转成复盘和资产化工具', reason: '贴合知乎创作者对 AI 辅助创作的真实讨论。' },
@@ -810,6 +888,7 @@ async function runPackagedDemoAnalysis() {
     const savedRecord = await saveToLibrary(article.body, analysis, article, { advanceOnboarding: false });
     if (savedRecord) hydrateChatContext('result', { record: savedRecord });
     maybeShowAnalyzeResultOnboardingStep();
+    showAnalyzeDoneToast();
   } catch (e) {
     showError(e.message || '示例分析失败');
   } finally {
@@ -1126,7 +1205,47 @@ async function finishPanelOnboarding(opts = {}) {
   }
   if (!opts.suppressThemeRecommendation && await shouldShowThemeRecommendationAfter(finishedSection, completedNormally)) {
     startPanelOnboarding(0, 'themeRecommendation');
+  } else if (completedNormally && (finishedSection === 'legacy' || finishedSection === 'themeRecommendation')) {
+    setTimeout(() => showAnalyzeOwnArticleHint(), 280);
   }
+}
+
+// ── 引导结束后:提示用户分析自己的文章 ─────────────────────
+function positionAnalyzeOwnArticleHint() {
+  const hint = document.getElementById('analyzeOwnHint');
+  const target = document.getElementById('recaptureBtn');
+  if (!hint || !target || hint.hidden) return;
+  const rect = target.getBoundingClientRect();
+  if (rect.width === 0 && rect.height === 0) return;
+  const hintWidth = hint.offsetWidth || 264;
+  const vw = window.innerWidth;
+  const margin = 10;
+  let left = rect.left + rect.width / 2 - hintWidth / 2;
+  left = Math.max(margin, Math.min(left, vw - hintWidth - margin));
+  hint.style.left = `${left}px`;
+  hint.style.top  = `${rect.bottom + 26}px`;
+  const arrow = hint.querySelector('.analyze-own-hint-arrow');
+  if (arrow) {
+    const btnCenter = rect.left + rect.width / 2;
+    const arrowLeft = Math.max(14, Math.min(btnCenter - left, hintWidth - 14));
+    arrow.style.left = `${arrowLeft}px`;
+  }
+}
+
+function showAnalyzeOwnArticleHint() {
+  const hint = document.getElementById('analyzeOwnHint');
+  const target = document.getElementById('recaptureBtn');
+  if (!hint || !target) return;
+  hint.hidden = false;
+  positionAnalyzeOwnArticleHint();
+  requestAnimationFrame(() => hint.classList.add('visible'));
+}
+
+function dismissAnalyzeOwnArticleHint() {
+  const hint = document.getElementById('analyzeOwnHint');
+  if (!hint || hint.hidden) return;
+  hint.classList.remove('visible');
+  setTimeout(() => { hint.hidden = true; }, 220);
 }
 
 // ── API Key 本地存储 ─────────────────────────────────────
@@ -1148,9 +1267,9 @@ async function getStoredApiKeys() {
 async function init() {
   await loadUiTheme();
   document.body.dataset.activeTab = 'analyze';
-  debugLog('[知识图鉴 panel] init 启动');
+  debugLog('[知乎创作图鉴 panel] init 启动');
   const { lastArticle } = await chrome.storage.local.get('lastArticle');
-  debugLog('[知识图鉴 panel] 当前 storage:', lastArticle ? lastArticle.title : '空');
+  debugLog('[知乎创作图鉴 panel] 当前 storage:', lastArticle ? lastArticle.title : '空');
   if (lastArticle) loadArticle(lastArticle);
   else showLastAnalysisHint();
 
@@ -1163,7 +1282,7 @@ async function init() {
       checkApiKey();
     }
     if (area === 'local' && changes.weekGoal) {
-      updateTopMetrics().catch(e => debugLog('[知识图鉴 panel] 周目标刷新失败:', e.message));
+      updateTopMetrics().catch(e => debugLog('[知乎创作图鉴 panel] 周目标刷新失败:', e.message));
     }
     if (area === 'local' && changes[UI_THEME_KEY]) {
       applyUiTheme(changes[UI_THEME_KEY].newValue);
@@ -1185,11 +1304,14 @@ async function init() {
   // 绑定按钮事件（CSP 不允许 onclick）
   document.getElementById('settingsBtn').addEventListener('click', () => chrome.runtime.openOptionsPage());
   document.getElementById('onboardingReplayBtn')?.addEventListener('click', () => {
-    dismissOnboardingEntryHint().catch(e => debugLog('[知识图鉴 panel] 关闭新手指引提示失败:', e.message));
-    replayPanelOnboarding(currentPanelTabName(), { ignoreResume: true }).catch(e => debugLog('[知识图鉴 panel] 重看新手引导失败:', e.message));
+    dismissOnboardingEntryHint().catch(e => debugLog('[知乎创作图鉴 panel] 关闭新手指引提示失败:', e.message));
+    replayPanelOnboarding(currentPanelTabName(), { ignoreResume: true }).catch(e => debugLog('[知乎创作图鉴 panel] 重看新手引导失败:', e.message));
   });
   document.getElementById('themeToggleBtn')?.addEventListener('click', toggleUiTheme);
   document.getElementById('recaptureBtn')?.addEventListener('click', recaptureCurrentPage);
+  document.getElementById('analyzeOwnHintCloseBtn')?.addEventListener('click', dismissAnalyzeOwnArticleHint);
+  window.addEventListener('resize', positionAnalyzeOwnArticleHint);
+  window.addEventListener('scroll', positionAnalyzeOwnArticleHint, true);
   document.getElementById('demoArticleBtn')?.addEventListener('click', loadPackagedDemoArticleForAnalysis);
   document.getElementById('toggleManual').addEventListener('click', switchToManual);
   document.getElementById('manualBtn').addEventListener('click', manualAnalyze);
@@ -1218,18 +1340,18 @@ async function init() {
   });
 
   await dbMigrateFromStorage()
-    .catch(e => console.warn('[知识图鉴 panel] storage 迁移失败:', e.message));
+    .catch(e => console.warn('[知乎创作图鉴 panel] storage 迁移失败:', e.message));
   await seedDemoDataIfEmpty()
-    .catch(e => console.warn('[知识图鉴 panel] 演示数据导入失败:', e.message));
+    .catch(e => console.warn('[知乎创作图鉴 panel] 演示数据导入失败:', e.message));
   await initProjects();
   initTabs();
   updateAssetCount();
   checkApiKey();
   initAssetsToolbar();
   autoGenerateWeeklyReportOnPanelOpen().catch(e =>
-    console.warn('[知识图鉴 panel] 自动周复盘生成失败:', e.message)
+    console.warn('[知乎创作图鉴 panel] 自动周复盘生成失败:', e.message)
   );
-  maybeStartPanelOnboarding().catch(e => debugLog('[知识图鉴 panel] 新手引导启动失败:', e.message));
+  maybeStartPanelOnboarding().catch(e => debugLog('[知乎创作图鉴 panel] 新手引导启动失败:', e.message));
 }
 
 // ── 项目管理 ─────────────────────────────────────────────
@@ -1341,6 +1463,7 @@ function loadArticle(article) {
 async function recaptureCurrentPage() {
   const btn = document.getElementById('recaptureBtn');
   if (btn?.disabled) return;
+  dismissAnalyzeOwnArticleHint();
   const oldTitle = btn?.getAttribute('title') || '重新抓取当前知乎页';
   try {
     if (btn) {
@@ -1360,7 +1483,7 @@ async function recaptureCurrentPage() {
         return;
       } catch (e) {
         directError = e.message || String(e);
-        debugLog('[知识图鉴 panel] 直接抓取失败，尝试后台兜底:', directError);
+        debugLog('[知乎创作图鉴 panel] 直接抓取失败，尝试后台兜底:', directError);
       }
     }
     const resp = await chrome.runtime.sendMessage({
@@ -1583,14 +1706,14 @@ async function getCurrentZhihuTabForCapture() {
       const [tab] = await chrome.tabs.query(query);
       if (tab?.id && isZhihuCaptureUrl(tab.url)) return tab;
     } catch (e) {
-      debugLog('[知识图鉴 panel] 查询当前知乎标签失败:', e.message);
+      debugLog('[知乎创作图鉴 panel] 查询当前知乎标签失败:', e.message);
     }
   }
   try {
     const tabs = await chrome.tabs.query({ url: ['https://www.zhihu.com/*', 'https://zhuanlan.zhihu.com/*'] });
     return pickBestZhihuCaptureTab(tabs);
   } catch (e) {
-    debugLog('[知识图鉴 panel] 查询全部知乎标签失败:', e.message);
+    debugLog('[知乎创作图鉴 panel] 查询全部知乎标签失败:', e.message);
   }
   return null;
 }
@@ -1630,7 +1753,7 @@ async function buildZhihuEnvironmentApiContext(articleSnapshot, text) {
       results: data.results,
     };
   } catch (e) {
-    debugLog('[知识图鉴 panel] 知乎环境参考获取失败:', e.message);
+    debugLog('[知乎创作图鉴 panel] 知乎环境参考获取失败:', e.message);
     return null;
   }
 }
@@ -1705,6 +1828,7 @@ async function analyze() {
     });
     const savedRecord = await saveToLibrary(text, result, articleSnapshot);
     hydrateChatContext('result', { record: savedRecord });
+    showAnalyzeDoneToast();
 
   } catch (e) {
     showError(e.message);
@@ -1747,7 +1871,7 @@ async function saveToLibrary(articleText, analysis, articleSnapshot, opts = {}) 
     if (opts.advanceOnboarding !== false) maybeShowAnalyzeSavedOnboardingStep();
     return record;
   } catch (e) {
-    console.warn('[知识图鉴] 入库失败:', e.message);
+    console.warn('[知乎创作图鉴] 入库失败:', e.message);
     return null;
   }
 }
@@ -1998,7 +2122,7 @@ function fallbackAssetCards(r = {}, sourceTitle = '当前作品', tagsHint = [])
     {
       type: '创作者优势判断',
       title: '这篇作品显示出的优势',
-      summary: r.creator_strength || '继续分析更多作品后，知识图鉴会更准确地判断你的稳定优势。',
+      summary: r.creator_strength || '继续分析更多作品后，知乎创作图鉴会更准确地判断你的稳定优势。',
       source: sourceTitle,
       keywords: compactTextList([...strengths, r.perspective]),
       whyReusable: '优势判断可以帮助创作者选择更适合继续深耕的表达路线。',
@@ -2086,7 +2210,7 @@ function cardCraftReview(r) {
 
   if (!praise && !quote && !summary) return '';
   return `<div class="card craft-review-card"><div class="card-label">写作技法</div>
-    ${praise ? `<div class="teacher-praise"><div class="craft-subtitle">知识图鉴夸你</div>${esc(praise)}</div>` : ''}
+    ${praise ? `<div class="teacher-praise"><div class="craft-subtitle">知乎创作图鉴夸你</div>${esc(praise)}</div>` : ''}
     ${quote ? `<div class="teacher-quote">${esc(quote)}</div>` : ''}
     ${summary ? `<div class="craft-summary"><span>整体气质</span>${esc(summary)}</div>` : ''}
   </div>`;
@@ -2359,6 +2483,7 @@ function cardChat(chatId, options = {}) {
   ).join('');
   return `<div class="card chat-card" data-chat-id="${esc(chatId)}">
     <div class="card-label">${esc(options.label || '问问这篇作品')}</div>
+    <div class="chat-mascot" aria-hidden="true" hidden title="知乎刘看山"></div>
     <div class="chat-templates">${buttons}</div>
     <div class="chat-history" aria-live="polite"></div>
     <div class="chat-status" role="status"></div>
@@ -2642,7 +2767,8 @@ async function sendChatQuestion(card, question, source = {}) {
 
   isChatting = true;
   setChatBusy(card, true);
-  setChatStatus(card, '正在追问 AI…');
+  hideChatMascot(card);
+  startChatLoadingMessages(card);
   const messages = buildChatMessages(session, question);
   session.history.push({
     id: makeClipId('chatq'),
@@ -2682,11 +2808,13 @@ async function sendChatQuestion(card, question, source = {}) {
     } else {
       setChatStatus(card, source.custom ? '这条对话可以选择是否入库。' : '回答已生成，可以按需保存到素材库或立意库。');
     }
+    showChatMascot(card);
   } catch (err) {
     setChatStatus(card, err.message || '追问失败，请稍后再试。', true);
   } finally {
     isChatting = false;
     setChatBusy(card, false);
+    stopChatLoadingMessages(card);
   }
 }
 
@@ -2706,8 +2834,90 @@ function setChatBusy(card, busy) {
 function setChatStatus(card, text, isError = false) {
   const status = card?.querySelector('.chat-status');
   if (!status) return;
+  if (card?._chatLoadingTimer) {
+    clearInterval(card._chatLoadingTimer);
+    card._chatLoadingTimer = null;
+  }
   status.textContent = text || '';
   status.classList.toggle('error', Boolean(isError));
+  status.classList.remove('is-loading');
+  status.classList.remove('fading');
+}
+
+function startChatLoadingMessages(card, pool = AUTHOR_CHAT_LOADING_MESSAGES) {
+  if (!card) return;
+  stopChatLoadingMessages(card);
+  const status = card.querySelector('.chat-status');
+  if (!status) return;
+  status.classList.remove('error');
+  status.classList.add('is-loading');
+  status.classList.remove('fading');
+  let prev = -1;
+  const renderAt = (i) => {
+    status.innerHTML = `<span class="chat-status-dot" aria-hidden="true"></span>${esc(pool[i])}`;
+  };
+  let idx = pickNextLoadingIndex(pool, prev);
+  prev = idx;
+  renderAt(idx);
+  card._chatLoadingTimer = setInterval(() => {
+    status.classList.add('fading');
+    setTimeout(() => {
+      idx = pickNextLoadingIndex(pool, prev);
+      prev = idx;
+      renderAt(idx);
+      status.classList.remove('fading');
+    }, 240);
+  }, 2600);
+}
+
+function stopChatLoadingMessages(card) {
+  if (!card) return;
+  if (card._chatLoadingTimer) {
+    clearInterval(card._chatLoadingTimer);
+    card._chatLoadingTimer = null;
+  }
+  const status = card.querySelector('.chat-status');
+  if (status) {
+    status.classList.remove('is-loading');
+    status.classList.remove('fading');
+  }
+}
+
+function showChatMascot(card) {
+  if (!card) return;
+  const mascot = card.querySelector('.chat-mascot');
+  if (!mascot) return;
+  mascot.hidden = false;
+  mascot.classList.remove('visible');
+  void mascot.offsetWidth;
+  mascot.classList.add('visible');
+}
+
+function hideChatMascot(card) {
+  if (!card) return;
+  const mascot = card.querySelector('.chat-mascot');
+  if (!mascot) return;
+  mascot.classList.remove('visible');
+  mascot.hidden = true;
+}
+
+let analyzeDoneToastTimer = null;
+function showAnalyzeDoneToast() {
+  const t = document.getElementById('analyzeDoneToast');
+  if (!t) return;
+  if (analyzeDoneToastTimer) {
+    clearTimeout(analyzeDoneToastTimer);
+    analyzeDoneToastTimer = null;
+  }
+  t.classList.remove('show');
+  t.hidden = false;
+  void t.offsetWidth;
+  t.classList.add('show');
+  analyzeDoneToastTimer = setTimeout(() => {
+    t.classList.remove('show');
+    t.hidden = true;
+    analyzeDoneToastTimer = null;
+  }, 2980);
 }
 
 function renderChatHistory(card, session) {
@@ -2943,7 +3153,7 @@ function switchTab(name, opts = {}) {
   if (name === 'author') loadAuthorAgent();
   if (opts.userTriggered && !opts.skipOnboarding) {
     setTimeout(() => {
-      maybeStartPanelOnboardingForSection(name).catch(e => debugLog('[知识图鉴 panel] 分区引导启动失败:', e.message));
+      maybeStartPanelOnboardingForSection(name).catch(e => debugLog('[知乎创作图鉴 panel] 分区引导启动失败:', e.message));
     }, 220);
   }
 }
@@ -2955,7 +3165,7 @@ async function updateAssetCount() {
     badge.textContent = count ? String(count) : '';
     badge.style.display = count ? 'inline-block' : 'none';
   }
-  updateTopMetrics().catch(e => debugLog('[知识图鉴 panel] top metrics 更新失败:', e));
+  updateTopMetrics().catch(e => debugLog('[知乎创作图鉴 panel] top metrics 更新失败:', e));
 }
 
 function formatMetricNumber(n) {
@@ -3349,7 +3559,7 @@ async function exportSelectedAssets() {
           .filter(clip => selectedArticleIds.has(clip.source_article_id))
       : [];
     const payload = buildSelectedAssetsExportPayload(items, linkedClips);
-    downloadJsonFile(`知识图鉴_已选资产_${new Date().toISOString().slice(0, 10)}.json`, payload);
+    downloadJsonFile(`知乎创作图鉴_已选资产_${new Date().toISOString().slice(0, 10)}.json`, payload);
   } catch (e) {
     alert(`导出失败：${e.message}`);
   } finally {
@@ -6143,7 +6353,7 @@ function renderUniverseView(articles, projects, container, mode = universeMode) 
   try {
     renderUniverseThreeView(articles, projects, container, mode);
   } catch (err) {
-    console.warn('[知识图鉴] 3D 宇宙渲染失败，回退到 SVG 宇宙:', err.message);
+    console.warn('[知乎创作图鉴] 3D 宇宙渲染失败，回退到 SVG 宇宙:', err.message);
     renderUniverseSvgFallbackView(articles, projects, container, mode);
   }
 }
@@ -7175,7 +7385,7 @@ function renderReviewDirectionMap(articles) {
   if (!domains.length) {
     return `<div class="tl-block">
       <div class="tl-block-title">方向地图</div>
-      <div class="tl-empty">还没有足够作品形成方向地图。先分析一篇文章，知识图鉴会开始识别大领域、子领域和具体知识点。</div>
+      <div class="tl-empty">还没有足够作品形成方向地图。先分析一篇文章，知乎创作图鉴会开始识别大领域、子领域和具体知识点。</div>
     </div>`;
   }
 
@@ -7210,7 +7420,7 @@ function renderReviewDirectionMap(articles) {
       <div class="direction-subdomain-list">${subHtml}</div>
       <div class="direction-growth">
         <div class="direction-growth-title">下一步成长抓手</div>
-        ${hints || '<div class="dashboard-muted">继续分析作品后，知识图鉴会给出更具体的成长抓手。</div>'}
+        ${hints || '<div class="dashboard-muted">继续分析作品后，知乎创作图鉴会给出更具体的成长抓手。</div>'}
       </div>
     </div>`;
   }).join('');
@@ -7385,7 +7595,7 @@ async function loadReviewGuidance(articles) {
     await chrome.storage.local.set({ [cacheKey]: parsed });
     updateReviewGuidance(parsed);
   } catch (e) {
-    debugLog('[知识图鉴 panel] review guidance fallback:', e.message);
+    debugLog('[知乎创作图鉴 panel] review guidance fallback:', e.message);
   }
 }
 
@@ -7546,7 +7756,7 @@ function normalizeWeeklyReport(report = {}, articles = [], now = new Date()) {
   const stats = reviewWeeklyStats(articles, now);
   return {
     week_label: String(report.week_label || reviewWeeklyLabel(now)).trim(),
-    highlight: formalizeProductName(String(report.highlight || `知识图鉴看了你这周写的 ${stats.count} 篇文章，最想提醒你的是：继续保留那些能把观察变成判断的段落。`).trim()),
+    highlight: formalizeProductName(String(report.highlight || `知乎创作图鉴看了你这周写的 ${stats.count} 篇文章，最想提醒你的是：继续保留那些能把观察变成判断的段落。`).trim()),
     blank: formalizeProductName(String(report.blank || '下周可以试着补一个反方视角，或者把本周最有潜力的一篇扩写成系列。').trim()),
     reading_plan: normalizeWeeklyReadingPlan(report.reading_plan || report.reading || report.weekend_books || [], stats.articles),
     stats: String(report.stats || stats.statsText).trim(),
@@ -7570,8 +7780,8 @@ function fallbackWeeklyReport(articles = [], now = new Date()) {
   if (!stats.count) {
     return {
       week_label: reviewWeeklyLabel(now),
-      highlight: '知识图鉴这周还没看到新的正式作品。先别急，哪怕只写一篇，也能给下周的地图点一颗星。',
-      blank: '可以先从最近最想反复解释的问题写起，写完再让知识图鉴帮你沉淀素材和立意。',
+      highlight: '知乎创作图鉴这周还没看到新的正式作品。先别急，哪怕只写一篇，也能给下周的地图点一颗星。',
+      blank: '可以先从最近最想反复解释的问题写起，写完再让知乎创作图鉴帮你沉淀素材和立意。',
       reading_plan: [],
       stats: stats.statsText,
       generatedAt: new Date().toISOString(),
@@ -7579,7 +7789,7 @@ function fallbackWeeklyReport(articles = [], now = new Date()) {
   }
   const best = stats.articles[0];
   return normalizeWeeklyReport({
-    highlight: `知识图鉴看了你这周写的 ${stats.count} 篇文章，先把《${best?.article?.title || '未命名'}》标出来：它最适合作为本周复盘的支点。`,
+    highlight: `知乎创作图鉴看了你这周写的 ${stats.count} 篇文章，先把《${best?.article?.title || '未命名'}》标出来：它最适合作为本周复盘的支点。`,
     blank: reviewBlankSpotFallback(articles),
     reading_plan: weeklyReadingPlanFallback(stats.articles),
   }, articles, now);
@@ -7704,7 +7914,7 @@ async function ensureWeeklyReport(articles, allArticles = articles, options = {}
     return;
   }
 
-  updateWeeklyReportCard(reports[key] || fallbackWeeklyReport(articles, now), reports, '知识图鉴正在写本周复盘…', key);
+  updateWeeklyReportCard(reports[key] || fallbackWeeklyReport(articles, now), reports, '知乎创作图鉴正在写本周复盘…', key);
   bindWeeklyReportCardInteractions(getWeeklyReportContainer(), allArticles, articles);
   try {
     const [settings, apiKeys] = await Promise.all([
@@ -7714,21 +7924,21 @@ async function ensureWeeklyReport(articles, allArticles = articles, options = {}
     const { provider, model } = resolveProviderModel(settings);
     const apiKey = getApiKeyForProvider(provider, apiKeys);
     if (!apiKey) {
-      updateWeeklyReportCard(fallbackWeeklyReport(articles, now), reports, '知识图鉴还没有 API Key，先显示本地复盘。', key);
+      updateWeeklyReportCard(fallbackWeeklyReport(articles, now), reports, '知乎创作图鉴还没有 API Key，先显示本地复盘。', key);
       bindWeeklyReportCardInteractions(getWeeklyReportContainer(), allArticles, articles);
       return;
     }
     const raw = await callLLM(apiKey, provider, model, [
-      { role: 'system', content: '你是知识图鉴，创作者的周复盘伙伴。只输出 JSON，不要 markdown。语气具体、亲近、像真的读过作品。' },
+      { role: 'system', content: '你是知乎创作图鉴，创作者的周复盘伙伴。只输出 JSON，不要 markdown。语气具体、亲近、像真的读过作品。' },
       { role: 'user', content: buildWeeklyReportPrompt(articles, allArticles, now) },
     ], 1800);
     const report = parseWeeklyReport(raw, articles, now) || fallbackWeeklyReport(articles, now);
     const nextReports = await saveWeeklyReport(key, report);
-    updateWeeklyReportCard(report, nextReports, '知识图鉴写好了本周复盘。', key);
+    updateWeeklyReportCard(report, nextReports, '知乎创作图鉴写好了本周复盘。', key);
     bindWeeklyReportCardInteractions(getWeeklyReportContainer(), allArticles, articles);
   } catch (e) {
-    debugLog('[知识图鉴 panel] weekly report fallback:', e.message);
-    updateWeeklyReportCard(fallbackWeeklyReport(articles, now), reports, `知识图鉴这次没写成周报：${e.message}`, key);
+    debugLog('[知乎创作图鉴 panel] weekly report fallback:', e.message);
+    updateWeeklyReportCard(fallbackWeeklyReport(articles, now), reports, `知乎创作图鉴这次没写成周报：${e.message}`, key);
     bindWeeklyReportCardInteractions(getWeeklyReportContainer(), allArticles, articles);
   }
 }
@@ -7925,12 +8135,12 @@ async function saveStyleFingerprint(fp) {
 }
 
 function renderStyleFingerprintCard(fp, status = '') {
-  const content = formalizeProductName(fp?.content || '知识图鉴还需要多读几篇，才能更准确地说出你的写作味道。');
+  const content = formalizeProductName(fp?.content || '知乎创作图鉴还需要多读几篇，才能更准确地说出你的写作味道。');
   return `<div class="style-fingerprint-card" id="styleFingerprintCard">
     <div class="style-fingerprint-top">
       <div>
         <div class="style-fingerprint-kicker">你的写作指纹</div>
-        <div class="style-fingerprint-title">知识图鉴读出来的“你”</div>
+        <div class="style-fingerprint-title">知乎创作图鉴读出来的“你”</div>
       </div>
       <button class="style-fingerprint-refresh" id="refreshStyleFingerprintBtn" type="button">刷新指纹</button>
     </div>
@@ -7958,7 +8168,7 @@ async function ensureStyleFingerprint(articles, options = {}) {
     return;
   }
 
-  updateStyleFingerprintCard(freshCached || fallback, '知识图鉴正在重新闻你的写作味道…');
+  updateStyleFingerprintCard(freshCached || fallback, '知乎创作图鉴正在重新闻你的写作味道…');
   bindStyleFingerprintActions(document.getElementById('fingerprintTab'), articles);
   try {
     const [settings, apiKeys] = await Promise.all([
@@ -7968,12 +8178,12 @@ async function ensureStyleFingerprint(articles, options = {}) {
     const { provider, model } = resolveProviderModel(settings);
     const apiKey = getApiKeyForProvider(provider, apiKeys);
     if (!apiKey) {
-      updateStyleFingerprintCard(fallback, '知识图鉴还没有 API Key，先显示本地指纹。');
+      updateStyleFingerprintCard(fallback, '知乎创作图鉴还没有 API Key，先显示本地指纹。');
       bindStyleFingerprintActions(document.getElementById('fingerprintTab'), articles);
       return;
     }
     const content = String(await callLLM(apiKey, provider, model, [
-      { role: 'system', content: '你是知识图鉴，创作者的长期写作观察伙伴。只基于作品记录输出写作指纹，不预测流量，不泛泛夸奖。只输出六行文本。' },
+      { role: 'system', content: '你是知乎创作图鉴，创作者的长期写作观察伙伴。只基于作品记录输出写作指纹，不预测流量，不泛泛夸奖。只输出六行文本。' },
       { role: 'user', content: buildStyleFingerprintPrompt(craftItems) },
     ], 950) || '').trim();
     const normalizedContent = hasStructuredStyleFingerprintContent(content) ? content : fallback.content;
@@ -7981,11 +8191,11 @@ async function ensureStyleFingerprint(articles, options = {}) {
       generatedAt: new Date().toISOString(),
       content: normalizedContent,
     });
-    updateStyleFingerprintCard(fp, '知识图鉴更新好了你的写作指纹。');
+    updateStyleFingerprintCard(fp, '知乎创作图鉴更新好了你的写作指纹。');
     bindStyleFingerprintActions(document.getElementById('fingerprintTab'), articles);
   } catch (e) {
-    debugLog('[知识图鉴 panel] style fingerprint fallback:', e.message);
-    updateStyleFingerprintCard(freshCached || fallback, `知识图鉴这次没闻准：${e.message}`);
+    debugLog('[知乎创作图鉴 panel] style fingerprint fallback:', e.message);
+    updateStyleFingerprintCard(freshCached || fallback, `知乎创作图鉴这次没闻准：${e.message}`);
     bindStyleFingerprintActions(document.getElementById('fingerprintTab'), articles);
   }
 }
@@ -8078,8 +8288,9 @@ function reviewChatPanel() {
   return `<div class="review-chat-entry">
     <button class="btn btn-secondary review-chat-open" type="button" id="openReviewChat">打开 AI 复盘对话</button>
     <div class="review-chat-panel" id="reviewChatPanel" hidden>
-      <div class="card chat-card review-chat-card">
+      <div class="card chat-card review-chat-card" id="reviewChatCard">
         <div class="card-label">AI 复盘对话</div>
+        <div class="chat-mascot" aria-hidden="true" hidden title="知乎刘看山"></div>
         <div class="chat-templates">${buttons}</div>
         <div class="chat-history" id="reviewChatHistory" aria-live="polite"></div>
         <div class="chat-status" id="reviewChatStatus" role="status"></div>
@@ -8166,7 +8377,9 @@ async function sendReviewChat(key) {
   }
   isReviewChatting = true;
   setReviewChatBusy(true);
-  setReviewChatStatus('正在生成复盘回答…');
+  const card = document.getElementById('reviewChatCard');
+  hideChatMascot(card);
+  startChatLoadingMessages(card, REVIEW_CHAT_LOADING_MESSAGES);
   reviewChatHistory.push({ role: 'user', content: tpl.label });
   renderReviewChatHistory();
 
@@ -8181,8 +8394,11 @@ async function sendReviewChat(key) {
     const answer = String(await callLLM(apiKey, provider, model, buildReviewChatMessages(reviewChatContext, tpl.prompt), 1600) || '').trim();
     reviewChatHistory.push({ role: 'assistant', content: answer || 'AI 没有返回可用内容。' });
     renderReviewChatHistory();
+    stopChatLoadingMessages(card);
     setReviewChatStatus('复盘回答已生成。');
+    showChatMascot(card);
   } catch (e) {
+    stopChatLoadingMessages(card);
     setReviewChatStatus(e.message || '复盘对话失败，请稍后再试。', true);
   } finally {
     isReviewChatting = false;
@@ -8537,7 +8753,7 @@ async function loadAuthorAgent() {
   const context = buildAuthorAgentContext(records);
 
   if (!context.articleCount) {
-    container.innerHTML = analysisGroup('作者分身', `<div class="asset-empty">还没有可提问的历史作品<br>先分析一篇文章，知识图鉴就能从旧文里回答你。</div>`);
+    container.innerHTML = analysisGroup('作者分身', `<div class="asset-empty">还没有可提问的历史作品<br>先分析一篇文章，知乎创作图鉴就能从旧文里回答你。</div>`);
     return;
   }
 
@@ -8565,7 +8781,7 @@ async function loadFingerprint() {
   const container = document.getElementById('fingerprintTab');
 
   if (!articles.length) {
-    container.innerHTML = `<div class="asset-empty">还没有正式作品<br>分析几篇文章后，这里会生成“知识图鉴读出的你”和本周资产复盘</div>`;
+    container.innerHTML = `<div class="asset-empty">还没有正式作品<br>分析几篇文章后，这里会生成“知乎创作图鉴读出的你”和本周资产复盘</div>`;
     return;
   }
 
@@ -8584,8 +8800,8 @@ async function loadFingerprint() {
 
   bindStyleFingerprintActions(container, articles);
   bindWeeklyReportCardInteractions(container, allRecords, articles);
-  ensureStyleFingerprint(articles).catch(e => debugLog('[知识图鉴 panel] style fingerprint load failed:', e.message));
-  ensureWeeklyReport(articles, allRecords).catch(e => debugLog('[知识图鉴 panel] weekly report load failed:', e.message));
+  ensureStyleFingerprint(articles).catch(e => debugLog('[知乎创作图鉴 panel] style fingerprint load failed:', e.message));
+  ensureWeeklyReport(articles, allRecords).catch(e => debugLog('[知乎创作图鉴 panel] weekly report load failed:', e.message));
 }
 
 // ── 复盘中心 ─────────────────────────────────────────────
@@ -8690,7 +8906,7 @@ async function deleteAssetRecord(rec, kind = '作品', btn = null) {
     await updateAssetCount();
     await loadCurrentAssetMode();
   } catch (e) {
-    alert(`知识图鉴删除失败：${e.message}`);
+    alert(`知乎创作图鉴删除失败：${e.message}`);
     if (btn) {
       btn.disabled = false;
       btn.textContent = oldText || (kind === '速记' ? '删除速记' : '删除作品');
@@ -9092,13 +9308,15 @@ function setKnowledgeLoadingMessage(text) {
 
 function startKnowledgeLoadingMessages() {
   stopKnowledgeLoadingMessages();
-  knowledgeLoadingIndex = Math.floor(Math.random() * KNOWLEDGE_LOADING_MESSAGES.length);
-  const next = () => {
+  let prev = -1;
+  knowledgeLoadingIndex = pickNextLoadingIndex(KNOWLEDGE_LOADING_MESSAGES, prev);
+  prev = knowledgeLoadingIndex;
+  setKnowledgeLoadingMessage(KNOWLEDGE_LOADING_MESSAGES[knowledgeLoadingIndex]);
+  knowledgeLoadingTimer = setInterval(() => {
+    knowledgeLoadingIndex = pickNextLoadingIndex(KNOWLEDGE_LOADING_MESSAGES, prev);
+    prev = knowledgeLoadingIndex;
     setKnowledgeLoadingMessage(KNOWLEDGE_LOADING_MESSAGES[knowledgeLoadingIndex]);
-    knowledgeLoadingIndex = (knowledgeLoadingIndex + 1) % KNOWLEDGE_LOADING_MESSAGES.length;
-  };
-  next();
-  knowledgeLoadingTimer = setInterval(next, 3000);
+  }, 3000);
 }
 
 function stopKnowledgeLoadingMessages() {
@@ -9110,7 +9328,7 @@ function stopKnowledgeLoadingMessages() {
 function setLoading(on) {
   document.getElementById('loading').style.display = on ? 'block' : 'none';
   document.getElementById('analyzeBtn').disabled = on;
-  document.getElementById('analyzeBtn').textContent = on ? '知识图鉴分析中…' : '开始分析';
+  document.getElementById('analyzeBtn').textContent = on ? '知乎创作图鉴分析中…' : '开始分析';
   if (on) startKnowledgeLoadingMessages();
   else stopKnowledgeLoadingMessages();
 }

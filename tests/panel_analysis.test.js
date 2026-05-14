@@ -92,7 +92,7 @@ test('groupCreatorFeedback: 渲染创作者优势、技法和文章优势', () =
   assert(html.includes('文章优势'), '应保留旧 strengths');
 });
 
-test('cardCraftReview: 新技法卡渲染知识图鉴夸奖和整体气质', () => {
+test('cardCraftReview: 新技法卡渲染知乎创作图鉴夸奖和整体气质', () => {
   const html = cardCraftReview({
     craft_review: {
       praise: '这段写得真好，最难得的是你没有急着下判断，而是先把现场摆出来。',
@@ -100,14 +100,14 @@ test('cardCraftReview: 新技法卡渲染知识图鉴夸奖和整体气质', () 
       summary: '清醒、具体，而且有一点温柔。',
     },
   });
-  assert(html.includes('知识图鉴夸你'), '应显示知识图鉴夸奖标题');
+  assert(html.includes('知乎创作图鉴夸你'), '应显示知乎创作图鉴夸奖标题');
   assert(html.includes('teacher-quote'), '应渲染红笔波浪线摘句');
   assert(html.includes('整体气质'), '应显示整体气质');
 });
 
 test('cardCraftReview: 旧 structure/diction/rhythm/elegance 记录可 fallback', () => {
   const html = cardCraftReview(ANALYSIS_FIXTURE);
-  assert(html.includes('知识图鉴夸你'), '旧记录也应汇总成夸奖卡');
+  assert(html.includes('知乎创作图鉴夸你'), '旧记录也应汇总成夸奖卡');
   assert(html.includes('先铺场景再提出判断'), '旧结构字段应进入 fallback 文案');
 });
 
@@ -158,7 +158,7 @@ test('renderResult: 旧记录缺少 D6 新字段时仍可渲染', () => {
   host.remove();
 });
 
-test('setLoading: 显示知识图鉴加载状态并清理轮换计时器', () => {
+test('setLoading: 显示知乎创作图鉴加载状态并清理轮换计时器', () => {
   const host = document.createElement('div');
   host.innerHTML = `
     <button id="analyzeBtn">开始分析</button>
@@ -171,7 +171,7 @@ test('setLoading: 显示知识图鉴加载状态并清理轮换计时器', () =>
   try {
     setLoading(true);
     assertEqual(document.getElementById('loading').style.display, 'block');
-    assertEqual(document.getElementById('analyzeBtn').textContent, '知识图鉴分析中…');
+    assertEqual(document.getElementById('analyzeBtn').textContent, '知乎创作图鉴分析中…');
     assert(knowledgeLoadingTimer, '开启 loading 时应启动加载文案轮换计时器');
 
     setLoading(false);

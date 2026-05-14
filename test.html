@@ -236,7 +236,7 @@
 
 <script>
   // ── 配置 ────────────────────────────────────────────
-  const API_KEY  = ''; // GitHub public build: fill a local key only for private testing.
+  const API_KEY  = 'e3055137361c447bb86864df3e5ec1f6.uzpQRQla7vuBHG3O';
   const MODEL    = 'glm-4-flash';
   const ENDPOINT = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
 
@@ -318,9 +318,6 @@ ${text}`;
     document.getElementById('errorBox').style.display = 'none';
 
     try {
-      if (!API_KEY) {
-        throw new Error('GitHub 公开版未内置 API Key。请在本地临时填写自己的 Key，或直接使用扩展设置页。');
-      }
       const token = await buildToken(API_KEY);
 
       const resp = await fetch(ENDPOINT, {

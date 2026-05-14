@@ -112,9 +112,9 @@ test('buildWeeklyReportPrompt/parseWeeklyReport: 周复盘 JSON 闭环', () => {
   assert(prompt.includes('细节推动判断'), 'prompt 应带 core_claim');
   assert(prompt.includes('能把观察转为判断'), 'prompt 应带 creator_strength');
 
-  const parsed = parseWeeklyReport('```json\n{"week_label":"2026 第 19 周","highlight":"知识图鉴看到了亮点","pattern":"结构意识稳定","blank":"下周补人物细读","stats":"本周 2 篇 / 120 字 / 涉及 1 个领域"}\n```', REVIEW_FIXTURE, now);
+  const parsed = parseWeeklyReport('```json\n{"week_label":"2026 第 19 周","highlight":"知乎创作图鉴看到了亮点","pattern":"结构意识稳定","blank":"下周补人物细读","stats":"本周 2 篇 / 120 字 / 涉及 1 个领域"}\n```', REVIEW_FIXTURE, now);
   assertEqual(parsed.week_label, '2026 第 19 周');
-  assertEqual(parsed.highlight, '知识图鉴看到了亮点');
+  assertEqual(parsed.highlight, '知乎创作图鉴看到了亮点');
   assertEqual(parsed.stats, '本周 2 篇 / 120 字 / 涉及 1 个领域');
 });
 
@@ -123,7 +123,7 @@ test('renderWeeklyReportCard: 渲染本周报告并保留全部周历史入口',
   const currentLabel = reviewWeeklyLabel();
   const report = normalizeWeeklyReport({
     week_label: currentLabel,
-    highlight: '知识图鉴看到了亮点',
+    highlight: '知乎创作图鉴看到了亮点',
     pattern: '结构稳定',
     blank: '补人物细读',
     stats: '本周 2 篇 / 120 字 / 涉及 1 个领域',

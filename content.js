@@ -114,7 +114,7 @@
     );
     const articleUrl = articleLink?.href || '';
 
-    debugLog(`[知识图鉴] 手动捕获: 类型=${contentType} 正文=${body.length}字 标题=${title.slice(0,20)}`);
+    debugLog(`[知乎创作图鉴] 手动捕获: 类型=${contentType} 正文=${body.length}字 标题=${title.slice(0,20)}`);
     return { type: contentType, title, body, author, url: articleUrl, source_id: '', published_at: publishedAt };
   }
 

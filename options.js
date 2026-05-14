@@ -47,19 +47,19 @@ async function loadUiTheme() {
 function optionsOnboardingSteps() {
   return [
     {
-      title: '这里是公开版设置页',
-      body: 'GitHub 公开版不内置 API Key。请先填写自己的 API Key，之后就可以分析、归库和点亮知识宇宙。\n\n比赛演示包才会内置一次性默认通道；源码公开版为了安全已经移除。',
+      title: '这里是可选设置页',
+      body: '比赛提交版已经内置默认分析通道，不填 API Key 也可以直接分析、归库和点亮知识宇宙。\n\n这个页面只是给你以后更换自己的 API、模型或知乎增强配置用。',
       primary: '下一步',
     },
     {
       title: '可以更换 AI 提供商',
-      body: '这里可以选择 AI 提供商。公开版需要你填写对应提供商的 API Key。\n\n如果你以后想换成 DeepSeek、Kimi、智谱或自己的其他模型，再从这里改。',
+      body: '这里可以选择 AI 提供商。比赛包默认已经使用智谱 AI，不需要你额外操作。\n\n如果你以后想换成 DeepSeek、Kimi 或自己的其他模型，再从这里改。',
       target: '#provider',
       primary: '下一步',
     },
     {
-      title: 'API Key 是公开版必填项',
-      body: '这个输入框用于填写你自己的 API Key。密钥只保存在本机 chrome.storage.local。\n\n如果你只是评审，请使用比赛下载包；公开源码版不会携带任何默认 Key。',
+      title: 'API Key 是覆盖选项',
+      body: '这个输入框可以填写你自己的 API Key，用来覆盖比赛包内置通道。\n\n如果你只是评审或第一次试用，可以保持空白，直接回到面板分析文章。',
       target: '#apiKey',
       primary: '知道了',
     },
@@ -71,13 +71,13 @@ function optionsOnboardingSteps() {
     },
     {
       title: '改过设置再保存',
-      body: '如果你更换了提供商、模型或填写了自己的 Key，就点“保存设置”。\n\n公开源码版没有默认分析通道，保存后再回到知识图鉴面板开始分析。',
+      body: '如果你更换了提供商、模型或填写了自己的 Key，就点“保存设置”。\n\n如果只是来看看，不需要保存，直接回到知乎创作图鉴面板就能继续使用默认分析通道。',
       target: '#saveBtn',
       primary: '我知道了',
     },
     {
       title: '回到面板，直接分析',
-      body: '现在回到知识图鉴面板。公开版配置好自己的 API Key 后即可使用。\n\n核心用法就是：载入一篇文章，点击开始分析，等它归库。',
+      body: '现在回到知乎创作图鉴面板。比赛包已经有默认 API，评审不需要配置任何 Key。\n\n核心用法就是：载入一篇文章，点击开始分析，等它归库。',
       primary: '回到面板继续',
       action: 'finish',
     },
@@ -218,7 +218,7 @@ function updateModelSelect(providerId) {
 function updateKeyHint(providerId) {
   const competition = getCompetitionDefaultConfig();
   const suffix = competition?.provider === providerId
-    ? '。GitHub 公开版不会携带默认 Key，请填写自己的 Key。'
+    ? '。比赛提交版已内置默认分析通道；也可以填写自己的 Key 覆盖。'
     : '';
   document.getElementById('keyHint').textContent = (PROVIDERS[providerId]?.keyHint || '') + suffix;
   document.getElementById('apiKey').placeholder   = PROVIDERS[providerId]?.keyHint || '';
@@ -306,7 +306,7 @@ async function testConnection() {
   const model    = document.getElementById('model').value;
   const storedKeys = await getStoredApiKeys();
   const apiKey   = document.getElementById('apiKey').value.trim() || getApiKeyForProvider(provider, storedKeys);
-  if (!apiKey) { showStatus('当前提供商没有 API Key，请填写自己的 API Key 后再测试。', 'err'); return; }
+  if (!apiKey) { showStatus('当前提供商没有内置 API，请填写自己的 API Key 后再测试。比赛默认智谱通道可直接使用。', 'err'); return; }
 
   const btn = document.getElementById('testBtn');
   btn.textContent = '测试中…';
@@ -344,6 +344,25 @@ document.getElementById('provider').addEventListener('change', async e => {
   document.getElementById('apiKey').value = apiKeys[pid] || '';
 });
 
+document.getElementById('useCompetitionKeyBtn')?.addEventListener('click', async () => {
+  const cfg = window.COMPETITION_DEFAULTS || {};
+  if (!cfg.apiKey || !cfg.provider) {
+    showStatus('当前包内未注入比赛专用密钥，请联系开发者。', 'err');
+    return;
+  }
+  document.getElementById('provider').value = cfg.provider;
+  updateModelSelect(cfg.provider);
+  updateKeyHint(cfg.provider);
+  if (cfg.model) document.getElementById('model').value = cfg.model;
+  document.getElementById('apiKey').value = cfg.apiKey;
+  try {
+    await saveSettings();
+    showStatus('✓ 已填入比赛专用密钥（GLM-4.5 Air），回到面板即可直接分析文章。', 'ok');
+  } catch (e) {
+    showStatus(`填入失败：${e.message}`, 'err');
+  }
+});
+
 document.getElementById('exportBtn').addEventListener('click', async () => {
   try {
     const data = await dbExportAll();
@@ -351,7 +370,7 @@ document.getElementById('exportBtn').addEventListener('click', async () => {
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
     a.href     = url;
-    a.download = `知识图鉴_备份_${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `知乎创作图鉴_备份_${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
     const viewCount = data.config?.asset_views?.length || 0;
@@ -478,7 +497,7 @@ buildProviderSelect();
 loadUiTheme();
 loadSettings();
 loadLocalFolder();
-maybeStartOptionsOnboarding().catch(e => console.warn('[知识图鉴 options] 新手引导启动失败:', e.message));
+maybeStartOptionsOnboarding().catch(e => console.warn('[知乎创作图鉴 options] 新手引导启动失败:', e.message));
 
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'local' && changes[UI_THEME_KEY]) {

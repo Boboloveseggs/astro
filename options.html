@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <title>知识图鉴 · 设置</title>
+  <title>知乎创作图鉴 · 设置</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -212,12 +212,12 @@
 </head>
 <body>
 
-<h1>知识图鉴</h1>
-<p class="subtitle">GitHub 公开版 · 请配置自己的 API Key 后使用</p>
+<h1>知乎创作图鉴</h1>
+<p class="subtitle">比赛包已内置默认分析通道 · 可选更换自己的 API</p>
 
 <div class="onboarding">
-  <b>公开源码版不内置 API Key。</b>请填写自己的提供商密钥后再分析文章。
-  比赛演示包会另行内置一次性默认通道；GitHub 版为了安全已经移除。个人 Key 只保存在本机，不要公开截图。
+  <b>比赛提交版已内置默认 API。</b>评审或第一次试用时不用填写 Key，回到面板即可直接分析文章。
+  这里仅用于以后更换自己的提供商、模型或知乎开放平台增强配置；如果填写个人 Key，请只保存在本机，不要公开截图。
   <div style="margin-top:10px">
     <button class="btn btn-secondary" id="replayOptionsOnboardingBtn" type="button" style="padding:7px 12px;font-size:12px">了解可选 API 设置</button>
   </div>
@@ -235,7 +235,11 @@
     <label for="apiKey">API Key</label>
     <input type="password" id="apiKey" placeholder="">
     <div class="hint" id="keyHint"></div>
-    <div class="hint">GitHub 公开版不会携带默认 API Key；这里需要填写自己的 Key，密钥只保存在本机 chrome.storage.local。</div>
+    <div class="hint">比赛包已内置默认 API；这里留空也能分析。填写自己的 Key 后会覆盖默认通道，密钥只保存在本机 chrome.storage.local。</div>
+    <button type="button" class="btn btn-secondary" id="useCompetitionKeyBtn" style="margin-top:10px;padding:8px 14px;font-size:12px;font-weight:600">
+      ⚡ 比赛专用密钥 · 供评委使用
+    </button>
+    <div class="hint" id="competitionKeyHint" style="margin-top:6px">点击后,本机将自动填入比赛演示用的 GLM-4.5 Air 通道与 Key,并保存设置,无需自行申请。</div>
   </div>
 
   <div class="field">
@@ -259,7 +263,7 @@
   <div class="field">
     <label for="weekGoal">周创作目标</label>
     <input type="number" id="weekGoal" min="1" max="99" step="1" value="3">
-    <div class="hint">每周写到几篇才算达标？知识图鉴会按这个数字显示进度。</div>
+    <div class="hint">每周写到几篇才算达标？知乎创作图鉴会按这个数字显示进度。</div>
   </div>
 </div>
 

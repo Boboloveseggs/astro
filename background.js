@@ -23,15 +23,15 @@ function rememberCaptureTab(tab) {
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false }).catch(() => {});
 
 chrome.action.onClicked.addListener((tab) => {
-  debugLog('[知识图鉴 bg] 图标点击, tab.id=', tab.id, ' url=', tab.url);
+  debugLog('[知乎创作图鉴 bg] 图标点击, tab.id=', tab.id, ' url=', tab.url);
   rememberCaptureTab(tab);
 
   chrome.sidePanel.open({ tabId: tab.id }).catch((e) =>
-    console.warn('[知识图鉴 bg] 开面板失败:', e.message)
+    console.warn('[知乎创作图鉴 bg] 开面板失败:', e.message)
   );
 
   if (!isZhihuUrl(tab.url)) {
-    debugLog('[知识图鉴 bg] 非知乎页面，跳过捕获');
+    debugLog('[知乎创作图鉴 bg] 非知乎页面，跳过捕获');
     return;
   }
   captureFromTab(tab.id);
@@ -74,7 +74,7 @@ async function resolveCaptureTab(msg = {}) {
       const tab = await chrome.tabs.get(msg.tabId);
       if (isZhihuUrl(tab?.url || msg.tabUrl)) return tab;
     } catch (e) {
-      debugLog('[知识图鉴 bg] 指定 tab 不可用:', e.message);
+      debugLog('[知乎创作图鉴 bg] 指定 tab 不可用:', e.message);
     }
   }
 
@@ -83,7 +83,7 @@ async function resolveCaptureTab(msg = {}) {
       const [tab] = await chrome.tabs.query(query);
       if (tab?.id && isZhihuUrl(tab.url)) return tab;
     } catch (e) {
-      debugLog('[知识图鉴 bg] 查询当前 tab 失败:', e.message);
+      debugLog('[知乎创作图鉴 bg] 查询当前 tab 失败:', e.message);
     }
   }
 
@@ -92,7 +92,7 @@ async function resolveCaptureTab(msg = {}) {
     const tab = pickBestZhihuTab(tabs);
     if (tab) return tab;
   } catch (e) {
-    debugLog('[知识图鉴 bg] 查询知乎 tab 失败:', e.message);
+    debugLog('[知乎创作图鉴 bg] 查询知乎 tab 失败:', e.message);
   }
 
   if (lastCaptureTabId) {
@@ -100,7 +100,7 @@ async function resolveCaptureTab(msg = {}) {
       const tab = await chrome.tabs.get(lastCaptureTabId);
       if (isZhihuUrl(tab?.url || lastCaptureTabUrl)) return tab;
     } catch (e) {
-      debugLog('[知识图鉴 bg] 最近捕获 tab 不可用:', e.message);
+      debugLog('[知乎创作图鉴 bg] 最近捕获 tab 不可用:', e.message);
     }
   }
 
@@ -135,14 +135,14 @@ async function captureFromTab(tabId) {
       func: grabPageContent,
     });
     const captured = results?.[0]?.result;
-    debugLog('[知识图鉴 bg] 捕获结果:',
+    debugLog('[知乎创作图鉴 bg] 捕获结果:',
       captured ? `类型=${captured.type} 标题=${captured.title?.slice(0, 20)} 正文=${captured.body?.length}字` : 'null'
     );
     if (isCapturedArticleValid(captured)) return saveCapturedArticle(captured, 'inject');
-    console.warn('[知识图鉴 bg] 内容太短或为空');
+    console.warn('[知乎创作图鉴 bg] 内容太短或为空');
     failures.push('注入抓取未返回足够正文');
   } catch (e) {
-    console.error('[知识图鉴 bg] 注入失败:', e.message);
+    console.error('[知乎创作图鉴 bg] 注入失败:', e.message);
     failures.push(e.message || String(e));
   }
 
@@ -164,7 +164,7 @@ function isCapturedArticleValid(article) {
 async function saveCapturedArticle(article, method) {
   const captured = { ...article, body: article.body.trim() };
   await chrome.storage.local.set({ lastArticle: captured });
-  debugLog('[知识图鉴 bg] 已写入 storage, method=', method);
+  debugLog('[知乎创作图鉴 bg] 已写入 storage, method=', method);
   return { ok: true, article: captured, method };
 }
 
@@ -231,7 +231,7 @@ function grabPageContent() {
         published_at: '',
       };
     }
-    console.warn('[知识图鉴 inject] 未找到任何有效内容块');
+    console.warn('[知乎创作图鉴 inject] 未找到任何有效内容块');
     return null;
   }
 

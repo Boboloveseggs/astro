@@ -16,3 +16,11 @@ node_modules/
 .DS_Store
 Thumbs.db
 
+
+# additional local exclusions
+web/.tools/
+*.lnk
+官方信息*.docx
+官方信息*.doc
+.tmp_competition_key_test/
+web/
