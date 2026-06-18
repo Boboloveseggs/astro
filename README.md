@@ -4,6 +4,16 @@
 
 这个版本包含知乎回答批量导出能力，并支持按回答创建日期筛选导出范围。
 
+## 产品预览
+
+| 侧边栏首页 | 在知乎页面里使用 |
+| --- | --- |
+| <img src="assets/previews/01-side-panel.png" width="320" alt="知识图鉴侧边栏首页"> | <img src="assets/previews/02-zhihu-side-panel.gif" width="520" alt="在知乎页面里打开知识图鉴"> |
+
+| 资产库 | 知识地图 |
+| --- | --- |
+| <img src="assets/previews/03-asset-library.gif" width="520" alt="知识图鉴资产库"> | <img src="assets/previews/04-knowledge-map.gif" width="520" alt="知识图鉴知识地图"> |
+
 ## 功能
 
 - 抓取知乎文章或手动粘贴内容。
