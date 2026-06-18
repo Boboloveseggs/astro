@@ -12,3 +12,6 @@
 先在同一个浏览器登录 https://www.zhihu.com/，再打开插件侧边栏里的“导出内容”，选择起始日期和结束日期后点击“导出回答”“导出文章”或“导出想法”。
 结束日期留空表示导出到现在，两个日期都留空表示导出对应类型的全部内容。
 不筛选日期时导出文件名为 zhihu_answers.json、zhihu_articles.json、zhihu_pins.json；按日期筛选时文件名为 zhihu_answers_起始日期_to_结束日期.json、zhihu_articles_起始日期_to_结束日期.json、zhihu_pins_起始日期_to_结束日期.json。
+
+批量分析：
+导出 JSON 后，回到插件“分析”页，在“批量分析历史内容”里选择一个或多个 JSON 文件，再点击“开始批量分析”。插件会逐条分析并保存到资产库，已经分析过的同 URL 内容会自动跳过。

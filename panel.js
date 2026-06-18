@@ -4,6 +4,15 @@ let capturedText  = '';
 let isAnalyzing   = false;
 let isChatting    = false;
 let activeProject = 'default';
+let batchAnalyzeState = {
+  items: [],
+  isRunning: false,
+  isPaused: false,
+  completed: 0,
+  failed: 0,
+  skipped: 0,
+  errors: [],
+};
 let earthSphereState = null;
 let earthSphereDemoFillEnabled = false;
 let universeSceneState = null;
@@ -630,6 +639,12 @@ async function init() {
   document.getElementById('manualBtn').addEventListener('click', manualAnalyze);
   document.getElementById('analyzeBtn').addEventListener('click', analyze);
   document.getElementById('quickSaveBtn').addEventListener('click', saveQuickIdea);
+  document.getElementById('batchAnalyzePickBtn')?.addEventListener('click', () => {
+    document.getElementById('batchAnalyzeFileInput')?.click();
+  });
+  document.getElementById('batchAnalyzeFileInput')?.addEventListener('change', handleBatchAnalyzeFiles);
+  document.getElementById('batchAnalyzeStartBtn')?.addEventListener('click', startBatchAnalyze);
+  document.getElementById('batchAnalyzePauseBtn')?.addEventListener('click', toggleBatchAnalyzePause);
 
   // 结果区按钮用事件委托（renderResult 后动态生成）
   document.getElementById('result').addEventListener('click', (e) => {
@@ -1052,11 +1067,322 @@ function manualAnalyze() {
   analyze();
 }
 
+function batchAnalyzeEls() {
+  return {
+    file: document.getElementById('batchAnalyzeFileInput'),
+    pick: document.getElementById('batchAnalyzePickBtn'),
+    start: document.getElementById('batchAnalyzeStartBtn'),
+    pause: document.getElementById('batchAnalyzePauseBtn'),
+    status: document.getElementById('batchAnalyzeStatus'),
+    fill: document.getElementById('batchAnalyzeProgressFill'),
+    list: document.getElementById('batchAnalyzeList'),
+  };
+}
+
+function batchAnalyzeSleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function setBatchAnalyzeStatus(message, tone = '') {
+  const { status } = batchAnalyzeEls();
+  if (!status) return;
+  status.textContent = message || '';
+  status.style.color = tone === 'error'
+    ? 'var(--danger)'
+    : tone === 'ok'
+      ? 'var(--green)'
+      : tone === 'active'
+        ? 'var(--gold)'
+        : 'var(--text-3)';
+}
+
+function setBatchAnalyzeRunningUi(on) {
+  const { pick, start, pause } = batchAnalyzeEls();
+  if (pick) pick.disabled = on;
+  if (start) start.disabled = on || !batchAnalyzeState.items.length;
+  if (pause) {
+    pause.disabled = !on;
+    pause.textContent = batchAnalyzeState.isPaused ? '继续' : '暂停';
+  }
+}
+
+function updateBatchAnalyzeProgress(message = '') {
+  const { fill } = batchAnalyzeEls();
+  const total = batchAnalyzeState.items.length;
+  const done = batchAnalyzeState.completed + batchAnalyzeState.failed + batchAnalyzeState.skipped;
+  const percent = total ? Math.min(100, Math.round(done / total * 100)) : 0;
+  if (fill) fill.style.width = `${percent}%`;
+  if (message) setBatchAnalyzeStatus(message, batchAnalyzeState.isRunning ? 'active' : '');
+}
+
+function renderBatchAnalyzeList() {
+  const { list } = batchAnalyzeEls();
+  if (!list) return;
+  const items = batchAnalyzeState.items || [];
+  if (!items.length) {
+    list.innerHTML = '';
+    return;
+  }
+  const preview = items.slice(0, 6).map((item, index) => {
+    const status = item.status ? ` · ${item.status}` : '';
+    return `<div>${index + 1}. ${esc(item.title || '（无标题）')}${status}</div>`;
+  }).join('');
+  const more = items.length > 6 ? `<div>还有 ${items.length - 6} 条…</div>` : '';
+  list.innerHTML = preview + more;
+}
+
+function htmlExportToText(value) {
+  if (!value) return '';
+  const box = document.createElement('div');
+  box.innerHTML = String(value);
+  return (box.textContent || box.innerText || '')
+    .replace(/\s+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function timestampToIso(value) {
+  const n = Number(value || 0);
+  if (!Number.isFinite(n) || n <= 0) return '';
+  return new Date((n > 1e12 ? n : n * 1000)).toISOString();
+}
+
+function simpleHash(text) {
+  let hash = 0;
+  const input = String(text || '');
+  for (let i = 0; i < input.length; i += 1) {
+    hash = ((hash << 5) - hash + input.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash).toString(36);
+}
+
+function normalizeBatchAnalyzeItem(raw, kind, sourceFile) {
+  const item = raw || {};
+  const type = kind === 'pins' ? 'pin' : kind === 'answers' ? 'answer' : 'article';
+  const contentText = String(
+    item.content_text
+    || htmlExportToText(item.content_html)
+    || htmlExportToText(item.content)
+    || item.excerpt
+    || item.title
+    || ''
+  ).trim();
+  const title = String(
+    item.title
+    || item.question_title
+    || item.excerpt
+    || contentText.slice(0, 42)
+    || '（无标题）'
+  ).trim();
+  const publishedAt = item.created_at || timestampToIso(item.created_time || item.created || item.createdAt);
+  const sourceId = String(item.id || '');
+  const url = String(item.url || item.question_url || '').trim();
+  return {
+    id: `${type}:${sourceId || url || simpleHash(`${title}\n${contentText}`)}`,
+    source_id: sourceId,
+    source_file: sourceFile,
+    type,
+    title,
+    author: item.author || item.author_name || '',
+    url,
+    published_at: publishedAt,
+    body: contentText,
+  };
+}
+
+function extractBatchAnalyzeItems(data, sourceFile) {
+  const format = String(data?.export_format || '');
+  if (!format.startsWith('zhihu_')) {
+    throw new Error(`${sourceFile} 不是“导出内容”生成的知乎 JSON`);
+  }
+
+  const groups = [
+    ['answers', data.answers],
+    ['articles', data.articles],
+    ['pins', data.pins],
+  ];
+  const items = [];
+  for (const [kind, list] of groups) {
+    if (!Array.isArray(list)) continue;
+    for (const raw of list) {
+      const item = normalizeBatchAnalyzeItem(raw, kind, sourceFile);
+      if (item.body || item.title) items.push(item);
+    }
+  }
+  return items;
+}
+
+function dedupeBatchAnalyzeItems(items) {
+  const seen = new Set();
+  const deduped = [];
+  for (const item of items) {
+    const key = item.url || item.id || simpleHash(`${item.title}\n${item.body}`);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(item);
+  }
+  return deduped;
+}
+
+async function handleBatchAnalyzeFiles(e) {
+  const files = Array.from(e.target.files || []);
+  if (!files.length || batchAnalyzeState.isRunning) return;
+  try {
+    const allItems = [];
+    for (const file of files) {
+      const data = JSON.parse(await file.text());
+      allItems.push(...extractBatchAnalyzeItems(data, file.name));
+    }
+    const items = dedupeBatchAnalyzeItems(allItems);
+    batchAnalyzeState = {
+      items,
+      isRunning: false,
+      isPaused: false,
+      completed: 0,
+      failed: 0,
+      skipped: 0,
+      errors: [],
+    };
+    setBatchAnalyzeRunningUi(false);
+    updateBatchAnalyzeProgress('');
+    renderBatchAnalyzeList();
+    setBatchAnalyzeStatus(
+      items.length ? `已载入 ${items.length} 条内容，可以开始批量分析` : '没有找到可分析内容',
+      items.length ? 'ok' : 'error'
+    );
+  } catch (error) {
+    batchAnalyzeState.items = [];
+    renderBatchAnalyzeList();
+    setBatchAnalyzeRunningUi(false);
+    setBatchAnalyzeStatus(`读取失败：${error.message}`, 'error');
+  } finally {
+    e.target.value = '';
+  }
+}
+
+function toggleBatchAnalyzePause() {
+  if (!batchAnalyzeState.isRunning) return;
+  batchAnalyzeState.isPaused = !batchAnalyzeState.isPaused;
+  const { pause } = batchAnalyzeEls();
+  if (pause) pause.textContent = batchAnalyzeState.isPaused ? '继续' : '暂停';
+  setBatchAnalyzeStatus(batchAnalyzeState.isPaused ? '已暂停' : '继续批量分析…', 'active');
+}
+
+async function waitIfBatchPaused() {
+  while (batchAnalyzeState.isRunning && batchAnalyzeState.isPaused) {
+    await batchAnalyzeSleep(250);
+  }
+}
+
+async function startBatchAnalyze() {
+  if (batchAnalyzeState.isRunning) return;
+  if (isAnalyzing) {
+    setBatchAnalyzeStatus('当前单篇分析还没结束', 'error');
+    return;
+  }
+  if (!batchAnalyzeState.items.length) {
+    setBatchAnalyzeStatus('请先选择导出的知乎 JSON', 'error');
+    return;
+  }
+
+  const [settings, apiKeys] = await Promise.all([
+    chrome.storage.sync.get(['provider', 'model']),
+    getStoredApiKeys(),
+  ]);
+  const { provider, model } = resolveProviderModel(settings);
+  const apiKey = getApiKeyForProvider(provider, apiKeys);
+  if (!apiKey) {
+    setBatchAnalyzeStatus('请先在扩展设置中填入 API Key', 'error');
+    return;
+  }
+
+  const existing = await dbGetAllArticles({ project: activeProject }).catch(() => []);
+  const existingUrls = new Set(existing.map(rec => rec.url || rec.article?.url || '').filter(Boolean));
+
+  batchAnalyzeState.isRunning = true;
+  batchAnalyzeState.isPaused = false;
+  batchAnalyzeState.completed = 0;
+  batchAnalyzeState.failed = 0;
+  batchAnalyzeState.skipped = 0;
+  batchAnalyzeState.errors = [];
+  setBatchAnalyzeRunningUi(true);
+  updateBatchAnalyzeProgress('批量分析启动中…');
+
+  try {
+    for (let index = 0; index < batchAnalyzeState.items.length; index += 1) {
+      await waitIfBatchPaused();
+      const item = batchAnalyzeState.items[index];
+      if (!batchAnalyzeState.isRunning) break;
+
+      if (item.url && existingUrls.has(item.url)) {
+        item.status = '已跳过';
+        batchAnalyzeState.skipped += 1;
+        updateBatchAnalyzeProgress(`已跳过重复内容：${item.title || '（无标题）'}`);
+        renderBatchAnalyzeList();
+        continue;
+      }
+
+      if (String(item.body || '').trim().length < 30) {
+        item.status = '太短';
+        batchAnalyzeState.skipped += 1;
+        updateBatchAnalyzeProgress(`已跳过正文太短：${item.title || '（无标题）'}`);
+        renderBatchAnalyzeList();
+        continue;
+      }
+
+      item.status = '分析中';
+      updateBatchAnalyzeProgress(`正在分析 ${index + 1}/${batchAnalyzeState.items.length}：${item.title || '（无标题）'}`);
+      renderBatchAnalyzeList();
+
+      try {
+        const messages = [
+          { role: 'system', content: SYSTEM },
+          { role: 'user', content: makeUserPrompt(item.body) },
+        ];
+        const raw = await callLLM(apiKey, provider, model, messages, 3500);
+        const { result } = parseAndValidate(raw);
+        const saved = await saveToLibrary(item.body, result, {
+          title: item.title,
+          author: item.author,
+          url: item.url,
+          type: item.type,
+          published_at: item.published_at,
+          source_id: item.source_id,
+          source_file: item.source_file,
+        });
+        if (!saved) throw new Error('入库失败');
+        item.status = '已完成';
+        item.saved_record_id = saved.id;
+        if (item.url) existingUrls.add(item.url);
+        batchAnalyzeState.completed += 1;
+      } catch (error) {
+        item.status = '失败';
+        item.error = error.message || '分析失败';
+        batchAnalyzeState.failed += 1;
+        batchAnalyzeState.errors.push(`${item.title || '（无标题）'}：${item.error}`);
+      }
+
+      updateBatchAnalyzeProgress(`已处理 ${index + 1}/${batchAnalyzeState.items.length}`);
+      renderBatchAnalyzeList();
+      if (index < batchAnalyzeState.items.length - 1) await batchAnalyzeSleep(700);
+    }
+  } finally {
+    batchAnalyzeState.isRunning = false;
+    batchAnalyzeState.isPaused = false;
+    setBatchAnalyzeRunningUi(false);
+    updateAssetCount();
+    new BroadcastChannel('zhijing_updates').postMessage({ type: 'data_changed' });
+    const summary = `完成 ${batchAnalyzeState.completed} 条，跳过 ${batchAnalyzeState.skipped} 条，失败 ${batchAnalyzeState.failed} 条`;
+    setBatchAnalyzeStatus(summary, batchAnalyzeState.failed ? 'error' : 'ok');
+    renderBatchAnalyzeList();
+  }
+}
+
 // callLLM / buildToken / SYSTEM / makeUserPrompt / parseAndValidate 均由 analyzer.js 提供
 
 // ── 主流程 ───────────────────────────────────────────────
 async function analyze() {
-  if (isAnalyzing) return;
+  if (isAnalyzing || batchAnalyzeState.isRunning) return;
   const text = capturedText || document.getElementById('articleInput').value.trim();
   if (!text || text.length < 50) { showError('请先粘贴文章内容，或在知乎文章页打开侧边栏'); return; }
   isAnalyzing = true;
@@ -1126,6 +1452,9 @@ async function saveToLibrary(articleText, analysis, articleSnapshot) {
       record.article.author = articleSnapshot.author || '';
       record.article.url    = articleSnapshot.url    || '';
       record.article.type   = articleSnapshot.type   || 'unknown';
+      record.article.published_at = articleSnapshot.published_at || articleSnapshot.created_at || '';
+      record.article.source_id = articleSnapshot.source_id || '';
+      record.article.source_file = articleSnapshot.source_file || '';
       record.url            = articleSnapshot.url    || '';
     }
     if (!record.article.title) {

@@ -335,6 +335,30 @@
       display: none; color: var(--green); font-size: 11px;
       margin-top: 8px; line-height: 1.5;
     }
+    .batch-analyze-panel {
+      margin-top: 14px; padding-top: 13px; border-top: 1px solid var(--border);
+    }
+    .batch-analyze-title {
+      font-size: 12px; font-weight: 700; color: var(--text-1); margin-bottom: 8px;
+    }
+    .batch-analyze-actions {
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;
+    }
+    .batch-analyze-status {
+      margin-top: 9px; min-height: 18px; font-size: 11px; line-height: 1.5; color: var(--text-3);
+    }
+    .batch-analyze-progress {
+      margin-top: 8px; height: 6px; border-radius: 3px; background: var(--bg-card); overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .batch-analyze-progress-fill {
+      height: 100%; width: 0%; background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+      transition: width .25s ease;
+    }
+    .batch-analyze-list {
+      margin-top: 8px; font-size: 10px; line-height: 1.5; color: var(--text-3);
+      max-height: 88px; overflow: auto;
+    }
     .btn-secondary {
       background: var(--bg-card); color: var(--gold); border: 1px solid var(--border-mid);
     }
@@ -2072,6 +2096,21 @@
     <button class="btn btn-secondary" id="quickSaveBtn">保存速记</button>
   </div>
   <div class="quick-status" id="quickStatus"></div>
+</div>
+
+<div class="batch-analyze-panel" id="batchAnalyzePanel">
+  <div class="batch-analyze-title">批量分析历史内容</div>
+  <input id="batchAnalyzeFileInput" type="file" accept=".json,application/json" multiple style="display:none">
+  <div class="batch-analyze-actions">
+    <button class="btn btn-secondary" id="batchAnalyzePickBtn" type="button">选择 JSON</button>
+    <button class="btn" id="batchAnalyzeStartBtn" type="button" disabled>开始批量分析</button>
+    <button class="btn btn-secondary" id="batchAnalyzePauseBtn" type="button" disabled>暂停</button>
+  </div>
+  <div class="batch-analyze-status" id="batchAnalyzeStatus">尚未选择导出文件</div>
+  <div class="batch-analyze-progress" aria-hidden="true">
+    <div class="batch-analyze-progress-fill" id="batchAnalyzeProgressFill"></div>
+  </div>
+  <div class="batch-analyze-list" id="batchAnalyzeList"></div>
 </div>
 
 <button class="btn" id="analyzeBtn" style="display:none;margin-top:12px">开始分析</button>
