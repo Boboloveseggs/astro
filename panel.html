@@ -2044,7 +2044,7 @@
   <button class="tab-btn" data-tab="review">复盘</button>
   <button class="tab-btn" data-tab="map">地图</button>
   <button class="tab-btn" data-tab="fingerprint">总复盘报告</button>
-  <button class="tab-btn" data-tab="exportAnswers">导出回答</button>
+  <button class="tab-btn" data-tab="exportAnswers">导出内容</button>
 </div>
 
 <div id="analyzeTab">
@@ -2139,9 +2139,13 @@
       </label>
     </div>
     <div style="margin-bottom: 12px; font-size: 11px; color: var(--text-3); line-height: 1.6;">
-      结束日期留空表示一直导到现在；两个日期都留空则导出全部回答。
+      结束日期留空表示一直导到现在；两个日期都留空则导出全部内容。
     </div>
-    <button class="btn" id="exportAnswersStartBtn">批量导出我的回答</button>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 10px;">
+      <button class="btn" id="exportAnswersStartBtn" data-export-kind="answers">导出回答</button>
+      <button class="btn-secondary" id="exportArticlesStartBtn" data-export-kind="articles" style="padding: 9px 10px;">导出文章</button>
+      <button class="btn-secondary" id="exportPinsStartBtn" data-export-kind="pins" style="padding: 9px 10px;">导出想法</button>
+    </div>
     <div id="exportAnswersStatus" style="display:none; margin-top: 12px; font-size: 12px; color: var(--text-2);">
       <div style="margin-bottom: 8px;">
         <span id="exportAnswersProgressLabel">准备中…</span>

@@ -1,7 +1,12 @@
 'use strict';
 
-// 批量导出知乎回答：面板只负责控制和显示进度；实际请求在已登录的 www.zhihu.com 标签页中执行。
-const ZHIHU_ANSWERS_EXPORT_CONTROL_KEY = 'zhihuAnswersExportControl';
+const ZHIHU_CONTENT_EXPORT_CONTROL_KEY = 'zhihuContentExportControl';
+const EXPORT_KIND_CONFIGS = {
+  answers: { key: 'answers', label: '回答', buttonId: 'exportAnswersStartBtn' },
+  articles: { key: 'articles', label: '文章', buttonId: 'exportArticlesStartBtn' },
+  pins: { key: 'pins', label: '想法', buttonId: 'exportPinsStartBtn' },
+};
+const EXPORT_START_BUTTON_IDS = Object.values(EXPORT_KIND_CONFIGS).map(item => item.buttonId);
 
 let exportAnswersState = {
   isRunning: false,
@@ -11,6 +16,7 @@ let exportAnswersState = {
   wired: false,
   listenerWired: false,
   lastSummary: null,
+  lastKind: 'answers',
 };
 
 function getExportButton(id) {
@@ -30,6 +36,14 @@ function setExportDisplay(id, display) {
 function setExportDisabled(id, disabled) {
   const el = getExportButton(id);
   if (el) el.disabled = disabled;
+}
+
+function getExportKindConfig(kind) {
+  return EXPORT_KIND_CONFIGS[kind] || EXPORT_KIND_CONFIGS.answers;
+}
+
+function setExportStartButtonsDisabled(disabled) {
+  EXPORT_START_BUTTON_IDS.forEach(id => setExportDisabled(id, disabled));
 }
 
 function updateExportProgress(current, total, message = '') {
@@ -57,6 +71,8 @@ function showExportStatus() {
   setExportDisplay('exportAnswersComplete', 'none');
   setExportDisplay('exportAnswersError', 'none');
   setExportDisplay('exportAnswersRetryBtn', 'none');
+  const completeInfo = document.getElementById('exportAnswersCompleteInfo');
+  if (completeInfo) completeInfo.textContent = '';
 }
 
 function showExportComplete(summary = {}) {
@@ -64,15 +80,16 @@ function showExportComplete(summary = {}) {
   const infoEl = document.getElementById('exportAnswersCompleteInfo');
   const total = Number(summary.total_count || 0);
   const failed = Number(summary.failed_count || 0);
-  const filename = summary.filename || 'zhihu_answers.json';
+  const filename = summary.filename || 'zhihu_export.json';
   const filterLabel = summary.date_filter?.label || '';
+  const itemLabel = summary.item_label || '内容';
 
   setExportDisplay('exportAnswersStatus', failed > 0 ? 'block' : 'none');
   setExportDisplay('exportAnswersPauseBtn', 'none');
   if (completeEl) completeEl.style.display = 'block';
   if (infoEl) {
     infoEl.innerHTML = [
-      `<div>共导出 ${total} 条回答</div>`,
+      `<div>共导出 ${total} 条${itemLabel}</div>`,
       filterLabel ? `<div style="margin-top: 4px; font-size: 10px;">范围：${filterLabel}</div>` : '',
       `<div style="margin-top: 4px; font-size: 10px;">文件名：${filename}${failed ? `；失败 ${failed} 条，可点重试` : ''}</div>`,
     ].join('');
@@ -91,8 +108,7 @@ function showExportError(message) {
 
 function setExportRunningUi(on) {
   exportAnswersState.isRunning = on;
-  setExportDisabled('exportAnswersStartBtn', on);
-  setExportDisplay('exportAnswersStartBtn', on ? 'none' : 'inline-block');
+  setExportStartButtonsDisabled(on);
   setExportDisplay('exportAnswersPauseBtn', on ? 'inline-block' : 'none');
   if (!on) {
     exportAnswersState.isPaused = false;
@@ -127,9 +143,9 @@ async function getZhihuAnswersExportTab() {
 async function setExportControl(patch) {
   if (typeof chrome === 'undefined') return;
   if (!chrome.storage?.local) return;
-  const current = (await chrome.storage.local.get(ZHIHU_ANSWERS_EXPORT_CONTROL_KEY))[ZHIHU_ANSWERS_EXPORT_CONTROL_KEY] || {};
+  const current = (await chrome.storage.local.get(ZHIHU_CONTENT_EXPORT_CONTROL_KEY))[ZHIHU_CONTENT_EXPORT_CONTROL_KEY] || {};
   await chrome.storage.local.set({
-    [ZHIHU_ANSWERS_EXPORT_CONTROL_KEY]: { ...current, ...patch },
+    [ZHIHU_CONTENT_EXPORT_CONTROL_KEY]: { ...current, ...patch },
   });
 }
 
@@ -170,9 +186,12 @@ function readExportDateFilter() {
   return { startDate, endDate };
 }
 
-async function startZhihuAnswersExport() {
+async function startZhihuAnswersExport(kind = 'answers') {
   if (exportAnswersState.isRunning) return;
   ensureExportMessageListener();
+
+  const config = getExportKindConfig(kind);
+  exportAnswersState.lastKind = config.key;
 
   let dateFilter = {};
   try {
@@ -191,7 +210,7 @@ async function startZhihuAnswersExport() {
     return;
   }
 
-  const jobId = `zhihu-answers-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const jobId = `zhihu-${config.key}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   exportAnswersState.jobId = jobId;
   exportAnswersState.tabId = tab.id;
   exportAnswersState.lastSummary = null;
@@ -199,15 +218,15 @@ async function startZhihuAnswersExport() {
 
   setExportRunningUi(true);
   await chrome.storage.local.set({
-    [ZHIHU_ANSWERS_EXPORT_CONTROL_KEY]: { jobId, paused: false, cancelled: false },
+    [ZHIHU_CONTENT_EXPORT_CONTROL_KEY]: { jobId, paused: false, cancelled: false },
   });
 
   try {
-    updateExportProgress(0, 0, '正在知乎登录页内启动导出...');
+    updateExportProgress(0, 0, `正在知乎登录页内启动${config.label}导出...`);
     const results = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       func: runZhihuAnswersExporterInPage,
-      args: [jobId, dateFilter],
+      args: [jobId, { ...dateFilter, kind: config.key }],
     });
     const result = results?.[0]?.result;
     if (!result?.ok) throw new Error(result?.error || '导出没有返回成功状态');
@@ -215,7 +234,7 @@ async function startZhihuAnswersExport() {
     showExportComplete(exportAnswersState.lastSummary);
   } catch (error) {
     showExportError(error.message || '导出失败');
-    console.error('[知识图鉴] 批量导出知乎回答失败:', error);
+    console.error('[知识图鉴] 批量导出知乎内容失败:', error);
   } finally {
     await setExportControl({ cancelled: true, paused: false }).catch(() => {});
     setExportRunningUi(false);
@@ -232,13 +251,13 @@ async function toggleExportPause() {
   });
   setExportText('exportAnswersPauseBtn', exportAnswersState.isPaused ? '继续' : '暂停');
   const msgEl = document.getElementById('exportAnswersMessage');
-  if (msgEl) msgEl.textContent = exportAnswersState.isPaused ? '已暂停，点击「继续」恢复' : '继续导出...';
+  if (msgEl) msgEl.textContent = exportAnswersState.isPaused ? '已暂停，点击“继续”恢复' : '继续导出...';
 }
 
 function retryZhihuAnswersExport() {
   setExportDisplay('exportAnswersError', 'none');
   setExportDisplay('exportAnswersRetryBtn', 'none');
-  startZhihuAnswersExport().catch(error => {
+  startZhihuAnswersExport(exportAnswersState.lastKind || 'answers').catch(error => {
     showExportError(error.message || '重试失败');
   });
 }
@@ -247,13 +266,16 @@ function initExportAnswersUI() {
   ensureExportMessageListener();
   if (exportAnswersState.wired) return;
 
-  const startBtn = document.getElementById('exportAnswersStartBtn');
+  document.querySelectorAll('[data-export-kind]').forEach(button => {
+    button.addEventListener('click', () => {
+      const kind = button.getAttribute('data-export-kind') || 'answers';
+      startZhihuAnswersExport(kind).catch(error => showExportError(error.message || '导出失败'));
+    });
+  });
+
   const pauseBtn = document.getElementById('exportAnswersPauseBtn');
   const retryBtn = document.getElementById('exportAnswersRetryBtn');
 
-  if (startBtn) startBtn.addEventListener('click', () => {
-    startZhihuAnswersExport().catch(error => showExportError(error.message || '导出失败'));
-  });
   if (pauseBtn) pauseBtn.addEventListener('click', () => {
     toggleExportPause().catch(error => showExportError(error.message || '暂停状态切换失败'));
   });
@@ -263,14 +285,13 @@ function initExportAnswersUI() {
   exportAnswersState.wired = true;
 }
 
-// 这个函数会被 chrome.scripting.executeScript 注入到 www.zhihu.com 页面中运行。
 async function runZhihuAnswersExporterInPage(jobId, options = {}) {
-  const CONTROL_KEY = 'zhihuAnswersExportControl';
+  const CONTROL_KEY = 'zhihuContentExportControl';
   const PAGE_SIZE = 20;
   const MIN_DELAY = 2000;
   const MAX_DELAY = 5000;
   const MAX_RETRIES = 3;
-  const DETAIL_INCLUDE = [
+  const ANSWER_DETAIL_INCLUDE = [
     'content',
     'excerpt',
     'question',
@@ -281,6 +302,17 @@ async function runZhihuAnswersExporterInPage(jobId, options = {}) {
     'created_time',
     'updated_time',
     'url',
+  ].join(',');
+  const ARTICLE_DETAIL_INCLUDE = [
+    'content',
+    'excerpt',
+    'author',
+    'voteup_count',
+    'comment_count',
+    'created',
+    'updated',
+    'url',
+    'title',
   ].join(',');
 
   const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -313,14 +345,28 @@ async function runZhihuAnswersExporterInPage(jobId, options = {}) {
 
   const dateFilter = createDateFilter(options);
 
-  function getCreatedTimestamp(answer) {
-    const value = Number(answer?.created_time || answer?.createdTime || 0);
-    return Number.isFinite(value) && value > 0 ? value : 0;
+  function normalizeTimestamp(value) {
+    if (value === undefined || value === null || value === '') return 0;
+    if (typeof value === 'string' && !/^\d+(\.\d+)?$/.test(value.trim())) {
+      const parsed = Date.parse(value);
+      return Number.isFinite(parsed) ? Math.floor(parsed / 1000) : 0;
+    }
+    const n = Number(value);
+    if (!Number.isFinite(n) || n <= 0) return 0;
+    return n > 1e12 ? Math.floor(n / 1000) : Math.floor(n);
   }
 
-  function getDateDecision(answer) {
+  function getCreatedTimestamp(item) {
+    return normalizeTimestamp(item?.created_time ?? item?.created ?? item?.created_at ?? item?.createdAt);
+  }
+
+  function getUpdatedTimestamp(item) {
+    return normalizeTimestamp(item?.updated_time ?? item?.updated ?? item?.updated_at ?? item?.updatedAt);
+  }
+
+  function getDateDecision(item) {
     if (!dateFilter.active) return { include: true, beforeStart: false, afterEnd: false };
-    const createdTime = getCreatedTimestamp(answer);
+    const createdTime = getCreatedTimestamp(item);
     if (!createdTime) return { include: true, beforeStart: false, afterEnd: false };
     if (dateFilter.startTimestamp && createdTime < dateFilter.startTimestamp) {
       return { include: false, beforeStart: true, afterEnd: false };
@@ -331,9 +377,9 @@ async function runZhihuAnswersExporterInPage(jobId, options = {}) {
     return { include: true, beforeStart: false, afterEnd: false };
   }
 
-  function buildExportFilename() {
-    if (!dateFilter.active) return 'zhihu_answers.json';
-    return `zhihu_answers_${dateFilter.startDate || 'begin'}_to_${dateFilter.endDate || 'now'}.json`;
+  function buildExportFilename(target) {
+    if (!dateFilter.active) return `${target.filenamePrefix}.json`;
+    return `${target.filenamePrefix}_${dateFilter.startDate || 'begin'}_to_${dateFilter.endDate || 'now'}.json`;
   }
 
   async function postMessage(payload) {
@@ -341,7 +387,7 @@ async function runZhihuAnswersExporterInPage(jobId, options = {}) {
       const maybePromise = chrome.runtime?.sendMessage?.({ ...payload, jobId });
       if (maybePromise && typeof maybePromise.catch === 'function') maybePromise.catch(() => {});
     } catch (e) {
-      // 进度消息失败不影响本地导出。
+      // Progress messages are best-effort; download still works if one is missed.
     }
   }
 
@@ -434,8 +480,8 @@ async function runZhihuAnswersExporterInPage(jobId, options = {}) {
   }
 
   function toIsoTime(value) {
-    const n = Number(value);
-    if (!Number.isFinite(n) || n <= 0) return '';
+    const n = normalizeTimestamp(value);
+    if (!n) return '';
     return new Date(n * 1000).toISOString();
   }
 
@@ -454,11 +500,33 @@ async function runZhihuAnswersExporterInPage(jobId, options = {}) {
     return fallback || url;
   }
 
+  function collectText(value, depth = 0) {
+    if (depth > 4 || value === undefined || value === null) return '';
+    if (typeof value === 'string') return htmlToText(value);
+    if (typeof value === 'number' || typeof value === 'boolean') return '';
+    if (Array.isArray(value)) return value.map(item => collectText(item, depth + 1)).filter(Boolean).join('\n');
+    if (typeof value === 'object') {
+      return ['text', 'content', 'title', 'excerpt', 'excerpt_title', 'description']
+        .map(key => collectText(value[key], depth + 1))
+        .filter(Boolean)
+        .join('\n');
+    }
+    return '';
+  }
+
+  function normalizeAuthor(author = {}) {
+    return {
+      name: author.name || '',
+      url_token: author.url_token || author.urlToken || '',
+      id: author.id || '',
+    };
+  }
+
   function normalizeAnswer(raw) {
     const answer = raw || {};
     const id = String(answer.id || '');
     const question = answer.question || {};
-    const author = answer.author || {};
+    const author = normalizeAuthor(answer.author || {});
     const questionId = question.id ? String(question.id) : '';
     const fallbackUrl = questionId && id
       ? `${location.origin}/question/${questionId}/answer/${id}`
@@ -466,6 +534,8 @@ async function runZhihuAnswersExporterInPage(jobId, options = {}) {
     const contentHtml = String(answer.content || '');
     const excerptText = htmlToText(answer.excerpt || answer.excerpt_new || '');
     const contentText = htmlToText(contentHtml) || excerptText;
+    const created = getCreatedTimestamp(answer);
+    const updated = getUpdatedTimestamp(answer);
 
     return {
       id,
@@ -478,15 +548,113 @@ async function runZhihuAnswersExporterInPage(jobId, options = {}) {
       content_html: contentHtml,
       content_text: contentText,
       excerpt: excerptText,
-      created_time: answer.created_time || '',
-      created_at: toIsoTime(answer.created_time),
-      updated_time: answer.updated_time || '',
-      updated_at: toIsoTime(answer.updated_time),
+      created_time: created || '',
+      created_at: toIsoTime(created),
+      updated_time: updated || '',
+      updated_at: toIsoTime(updated),
       voteup_count: answer.voteup_count || 0,
       comment_count: answer.comment_count || 0,
       thanks_count: answer.thanks_count || 0,
-      author: author.name || '',
-      author_url_token: author.url_token || '',
+      author: author.name,
+      author_url_token: author.url_token,
+    };
+  }
+
+  function normalizeArticle(raw) {
+    const article = raw || {};
+    const id = String(article.id || '');
+    const author = normalizeAuthor(article.author || {});
+    const contentHtml = String(article.content || '');
+    const excerptText = htmlToText(article.excerpt || article.excerpt_title || article.summary || '');
+    const contentText = htmlToText(contentHtml) || excerptText;
+    const created = getCreatedTimestamp(article);
+    const updated = getUpdatedTimestamp(article);
+    const fallbackUrl = id ? `https://zhuanlan.zhihu.com/p/${id}` : '';
+
+    return {
+      id,
+      title: article.title || article.excerpt_title || '',
+      url: absoluteUrl(article.url || article.link, fallbackUrl),
+      content: contentHtml || contentText,
+      content_html: contentHtml,
+      content_text: contentText,
+      excerpt: excerptText,
+      created_time: created || '',
+      created_at: toIsoTime(created),
+      updated_time: updated || '',
+      updated_at: toIsoTime(updated),
+      voteup_count: article.voteup_count || article.voting || 0,
+      comment_count: article.comment_count || 0,
+      author: author.name,
+      author_url_token: author.url_token,
+    };
+  }
+
+  function normalizePin(raw) {
+    const pin = raw || {};
+    const id = String(pin.id || '');
+    const author = normalizeAuthor(pin.author || pin.member || {});
+    const contentText = collectText(pin.content || pin.excerpt || pin.summary || pin.title);
+    const created = getCreatedTimestamp(pin);
+    const updated = getUpdatedTimestamp(pin);
+    const fallbackUrl = id ? `${location.origin}/pin/${id}` : '';
+
+    return {
+      id,
+      title: pin.title || contentText.slice(0, 80),
+      url: absoluteUrl(pin.url || pin.link, fallbackUrl),
+      content: typeof pin.content === 'string' ? pin.content : contentText,
+      content_text: contentText,
+      excerpt: contentText.slice(0, 300),
+      created_time: created || '',
+      created_at: toIsoTime(created),
+      updated_time: updated || '',
+      updated_at: toIsoTime(updated),
+      like_count: pin.like_count || pin.voteup_count || 0,
+      comment_count: pin.comment_count || 0,
+      author: author.name,
+      author_url_token: author.url_token,
+      raw_type: pin.type || pin.content_type || '',
+    };
+  }
+
+  function hasExportableContent(item) {
+    return Boolean(item?.content || item?.content_text || item?.excerpt || item?.title || item?.question_title);
+  }
+
+  function makeTargets(urlToken) {
+    const encodedToken = encodeURIComponent(urlToken);
+    return {
+      answers: {
+        key: 'answers',
+        label: '回答',
+        filenamePrefix: 'zhihu_answers',
+        exportFormat: 'zhihu_answers_v1',
+        resultKey: 'answers',
+        listUrl: `/api/v4/members/${encodedToken}/answers?offset=0&limit=${PAGE_SIZE}&sort_by=created`,
+        detailUrl: id => `/api/v4/answers/${encodeURIComponent(id)}?include=${encodeURIComponent(ANSWER_DETAIL_INCLUDE)}`,
+        normalize: normalizeAnswer,
+      },
+      articles: {
+        key: 'articles',
+        label: '文章',
+        filenamePrefix: 'zhihu_articles',
+        exportFormat: 'zhihu_articles_v1',
+        resultKey: 'articles',
+        listUrl: `/api/v4/members/${encodedToken}/articles?offset=0&limit=${PAGE_SIZE}&sort_by=created`,
+        detailUrl: id => `/api/v4/articles/${encodeURIComponent(id)}?include=${encodeURIComponent(ARTICLE_DETAIL_INCLUDE)}`,
+        normalize: normalizeArticle,
+      },
+      pins: {
+        key: 'pins',
+        label: '想法',
+        filenamePrefix: 'zhihu_pins',
+        exportFormat: 'zhihu_pins_v1',
+        resultKey: 'pins',
+        listUrl: `/api/v4/members/${encodedToken}/pins?offset=0&limit=${PAGE_SIZE}`,
+        detailUrl: id => `/api/v4/pins/${encodeURIComponent(id)}`,
+        normalize: normalizePin,
+      },
     };
   }
 
@@ -515,10 +683,13 @@ async function runZhihuAnswersExporterInPage(jobId, options = {}) {
     const urlToken = me.url_token || me.urlToken;
     if (!urlToken) throw new Error('没有读取到知乎用户标识，请确认已经登录知乎');
 
+    const targets = makeTargets(urlToken);
+    const target = targets[String(options.kind || 'answers')] || targets.answers;
+
     await pauseAwareDelay(randomDelay(), '等待下一次请求...');
 
     const summaries = new Map();
-    let nextUrl = `/api/v4/members/${encodeURIComponent(urlToken)}/answers?offset=0&limit=${PAGE_SIZE}&sort_by=created`;
+    let nextUrl = target.listUrl;
     let knownTotal = 0;
     let skippedBeforeStart = 0;
     let skippedAfterEnd = 0;
@@ -530,13 +701,13 @@ async function runZhihuAnswersExporterInPage(jobId, options = {}) {
         current: summaries.size,
         total: dateFilter.active ? 0 : knownTotal,
         message: dateFilter.active
-          ? `正在获取回答列表，已发现 ${summaries.size} 条符合日期范围...`
-          : `正在获取回答列表，已发现 ${summaries.size} 条...`,
+          ? `正在获取${target.label}列表，已发现 ${summaries.size} 条符合日期范围...`
+          : `正在获取${target.label}列表，已发现 ${summaries.size} 条...`,
       });
-      const list = await fetchJsonWithRetry(nextUrl, '获取回答列表', {
+      const list = await fetchJsonWithRetry(nextUrl, `获取${target.label}列表`, {
         current: summaries.size,
         total: dateFilter.active ? 0 : knownTotal,
-        message: '正在获取回答列表...',
+        message: `正在获取${target.label}列表...`,
       });
       const items = Array.isArray(list.data) ? list.data : [];
       for (const item of items) {
@@ -552,68 +723,73 @@ async function runZhihuAnswersExporterInPage(jobId, options = {}) {
         }
       }
       const paging = list.paging || {};
-      knownTotal = Number(paging.totals || list.totals || knownTotal || summaries.size) || 0;
+      knownTotal = Number(paging.totals || paging.total || list.totals || knownTotal || summaries.size) || 0;
       if (stoppedAtStartBoundary) break;
       if (paging.is_end || !paging.next || !items.length) break;
       nextUrl = normalizeApiUrl(paging.next);
       await pauseAwareDelay(randomDelay(), '等待下一页列表请求...');
     }
 
-    const answerIds = Array.from(summaries.keys());
-    const answers = [];
+    const itemIds = Array.from(summaries.keys());
+    const exportedItems = [];
     const failedItems = [];
 
-    for (let index = 0; index < answerIds.length; index += 1) {
-      const answerId = answerIds[index];
+    for (let index = 0; index < itemIds.length; index += 1) {
+      const itemId = itemIds[index];
       await postMessage({
         type: 'zhihuAnswersExportProgress',
         current: index,
-        total: answerIds.length,
-        message: `正在导出回答 ${index + 1}/${answerIds.length}...`,
+        total: itemIds.length,
+        message: `正在导出${target.label} ${index + 1}/${itemIds.length}...`,
       });
 
+      const summaryItem = summaries.get(itemId);
       try {
-        const detailUrl = `/api/v4/answers/${encodeURIComponent(answerId)}?include=${encodeURIComponent(DETAIL_INCLUDE)}`;
-        const detail = await fetchJsonWithRetry(detailUrl, `获取回答 ${answerId}`, {
-          current: index,
-          total: answerIds.length,
-          message: `正在导出回答 ${index + 1}/${answerIds.length}...`,
-        });
-        const normalized = normalizeAnswer({ ...summaries.get(answerId), ...detail });
+        let detail = {};
+        if (typeof target.detailUrl === 'function') {
+          detail = await fetchJsonWithRetry(target.detailUrl(itemId), `获取${target.label} ${itemId}`, {
+            current: index,
+            total: itemIds.length,
+            message: `正在导出${target.label} ${index + 1}/${itemIds.length}...`,
+          });
+        }
+        const normalized = target.normalize({ ...summaryItem, ...detail });
         const decision = getDateDecision(normalized);
         if (decision.include) {
-          answers.push(normalized);
+          exportedItems.push(normalized);
         } else if (decision.beforeStart) {
           skippedBeforeStart += 1;
         } else if (decision.afterEnd) {
           skippedAfterEnd += 1;
         }
       } catch (error) {
-        const fallback = normalizeAnswer(summaries.get(answerId));
-        if (fallback.content || fallback.excerpt || fallback.question_title) {
+        const fallback = target.normalize(summaryItem);
+        if (hasExportableContent(fallback)) {
           fallback.partial = true;
           fallback.partial_reason = error.message;
-          answers.push(fallback);
+          exportedItems.push(fallback);
         } else {
-          failedItems.push({ answer_id: answerId, error: error.message });
+          failedItems.push({ item_id: itemId, content_type: target.key, error: error.message });
         }
       }
 
-      if (index < answerIds.length - 1) {
-        await pauseAwareDelay(randomDelay(), '等待下一条回答请求...');
+      if (index < itemIds.length - 1) {
+        await pauseAwareDelay(randomDelay(), `等待下一条${target.label}请求...`);
       }
     }
 
+    const filename = buildExportFilename(target);
     await postMessage({
       type: 'zhihuAnswersExportProgress',
-      current: answerIds.length,
-      total: answerIds.length,
-      message: '正在生成 zhihu_answers.json...',
+      current: itemIds.length,
+      total: itemIds.length,
+      message: `正在生成 ${filename}...`,
     });
 
-    const filename = buildExportFilename();
     const exportData = {
-      export_format: 'zhihu_answers_v1',
+      export_format: target.exportFormat,
+      content_type: target.key,
+      content_label: target.label,
       exported_at: new Date().toISOString(),
       source: 'www.zhihu.com logged-in browser',
       request_interval_ms: { min: MIN_DELAY, max: MAX_DELAY },
@@ -626,15 +802,17 @@ async function runZhihuAnswersExporterInPage(jobId, options = {}) {
         skipped_before_start: skippedBeforeStart,
         skipped_after_end: skippedAfterEnd,
       },
-      total_count: answers.length,
+      total_count: exportedItems.length,
       failed_count: failedItems.length,
       failed_items: failedItems,
-      answers,
+      [target.resultKey]: exportedItems,
     };
     downloadJson(filename, exportData);
 
     const summary = {
-      total_count: answers.length,
+      content_type: target.key,
+      item_label: target.label,
+      total_count: exportedItems.length,
       failed_count: failedItems.length,
       failed_items: failedItems,
       filename,

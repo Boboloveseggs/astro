@@ -4,7 +4,7 @@
 3. 打开“开发者模式”。
 4. 点击“加载已解压的扩展程序”，选择解压后的这个文件夹。
 
-知乎回答导出：
-先在同一个浏览器登录 https://www.zhihu.com/，再打开插件侧边栏里的“导出回答”，选择起始日期和结束日期后点击“批量导出我的回答”。
-结束日期留空表示导出到现在，两个日期都留空表示导出全部回答。
-不筛选日期时导出文件名为 zhihu_answers.json；按日期筛选时文件名为 zhihu_answers_起始日期_to_结束日期.json。
+知乎内容导出：
+先在同一个浏览器登录 https://www.zhihu.com/，再打开插件侧边栏里的“导出内容”，选择起始日期和结束日期后点击“导出回答”“导出文章”或“导出想法”。
+结束日期留空表示导出到现在，两个日期都留空表示导出对应类型的全部内容。
+不筛选日期时导出文件名为 zhihu_answers.json、zhihu_articles.json、zhihu_pins.json；按日期筛选时文件名为 zhihu_answers_起始日期_to_结束日期.json、zhihu_articles_起始日期_to_结束日期.json、zhihu_pins_起始日期_to_结束日期.json。

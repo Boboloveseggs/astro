@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "知识图鉴",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "知识图鉴：把每一次创作编译成下一次的资产",
   "minimum_chrome_version": "114",
   "permissions": [
