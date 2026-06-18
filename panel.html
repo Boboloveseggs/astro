@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <title>知乎创作图鉴 - 作品资产库与写作指纹系统</title>
+  <title>知识图鉴</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -335,39 +335,6 @@
       display: none; color: var(--green); font-size: 11px;
       margin-top: 8px; line-height: 1.5;
     }
-    .zhihu-story-card {
-      margin-top: 13px; padding: 13px;
-      background: linear-gradient(180deg, var(--gold-glow2), transparent), var(--bg-card);
-      border: 1px solid var(--border-mid); border-radius: 10px;
-    }
-    .zhihu-story-head {
-      display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
-      margin-bottom: 10px;
-    }
-    .zhihu-story-title {
-      font-size: 12px; color: var(--gold-light); font-weight: 700;
-      letter-spacing: .04em;
-    }
-    .zhihu-story-desc {
-      margin-top: 3px; font-size: 11px; line-height: 1.55; color: var(--text-3);
-    }
-    .zhihu-story-row { display: flex; gap: 8px; align-items: center; }
-    .zhihu-story-select {
-      flex: 1; min-width: 0; height: 34px;
-      background: var(--bg-panel); border: 1px solid var(--border-mid);
-      border-radius: 8px; color: var(--text-1); font-size: 12px;
-      padding: 0 9px; outline: none; font-family: inherit;
-    }
-    .zhihu-story-mini {
-      flex: 0 0 auto; width: auto; padding: 8px 10px; font-size: 12px;
-      white-space: nowrap;
-    }
-    .zhihu-story-status {
-      display: none; margin-top: 8px; font-size: 11px; line-height: 1.55;
-      color: var(--text-3);
-    }
-    .zhihu-story-status.ok { color: var(--green); }
-    .zhihu-story-status.err { color: var(--danger); }
     .btn-secondary {
       background: var(--bg-card); color: var(--gold); border: 1px solid var(--border-mid);
     }
@@ -843,31 +810,6 @@
     .weekly-report-block p {
       color: var(--text-2); font-size: 12px; line-height: 1.7;
     }
-    .weekly-report-reading {
-      grid-column: 1 / -1;
-    }
-    .weekly-reading-item {
-      margin-top: 8px; padding: 9px 10px; border-radius: 8px;
-      border: 1px solid var(--border); background: var(--bg-card);
-    }
-    .weekly-reading-title {
-      color: var(--text-1); font-size: 12px; font-weight: 700; line-height: 1.55;
-      margin-bottom: 6px;
-    }
-    .weekly-reading-line {
-      display: flex; gap: 7px; align-items: flex-start;
-      color: var(--text-2); font-size: 11px; line-height: 1.6;
-    }
-    .weekly-reading-line b {
-      flex: 0 0 auto; color: var(--gold); font-weight: 700;
-    }
-    .weekly-reading-points {
-      display: flex; flex-wrap: wrap; gap: 5px; margin: 7px 0 2px;
-    }
-    .weekly-reading-points span {
-      border: 1px solid var(--border); border-radius: 999px;
-      padding: 2px 7px; color: var(--text-2); font-size: 10px; background: var(--bg-panel);
-    }
     .weekly-report-status {
       color: var(--gold); font-size: 11px; margin-top: 9px;
     }
@@ -891,56 +833,6 @@
       color: var(--text-2); font-weight: 400; text-align: right;
     }
     .weekly-report-history-row.active b { color: var(--gold-light); }
-    html.theme-light .weekly-report-title {
-      color: #0f2138;
-    }
-    html.theme-light .weekly-report-kicker,
-    html.theme-light .weekly-report-status {
-      color: #0f64d8;
-    }
-    html.theme-light .weekly-report-stats,
-    html.theme-light .weekly-report-history-row,
-    html.theme-light .weekly-report-history-row b {
-      color: #405772;
-    }
-    html.theme-light .weekly-report-nav-btn,
-    html.theme-light .weekly-report-week-select {
-      background: #ffffff;
-      color: #12365f;
-      border-color: rgba(23,114,246,.34);
-      box-shadow: 0 1px 0 rgba(23,114,246,.08);
-    }
-    html.theme-light .weekly-report-nav-btn:not(:disabled),
-    html.theme-light .weekly-report-week-select {
-      color: #0e4f9f;
-      font-weight: 650;
-    }
-    html.theme-light .weekly-report-nav-btn:hover:not(:disabled),
-    html.theme-light .weekly-report-week-select:hover {
-      color: #063f91;
-      background: #eaf3ff;
-      border-color: rgba(23,114,246,.54);
-    }
-    html.theme-light .weekly-report-nav-btn:disabled {
-      opacity: 1;
-      color: #8092a8;
-      background: #f2f6fc;
-      border-color: rgba(86,126,175,.24);
-    }
-    html.theme-light .weekly-report-week-select {
-      min-width: 126px;
-    }
-    html.theme-light .weekly-report-history-row:hover {
-      background: rgba(23,114,246,.08);
-      color: #0f2138;
-    }
-    html.theme-light .weekly-report-history-row.active {
-      background: rgba(23,114,246,.12);
-      color: #0d5ecf;
-    }
-    html.theme-light .weekly-report-history-row.active b {
-      color: #0d5ecf;
-    }
     .style-fingerprint-card {
       background:
         linear-gradient(135deg, rgba(200,164,74,.12), transparent 44%),
@@ -970,7 +862,6 @@
     .style-fingerprint-body {
       color: var(--text-2); font-family: 'Noto Serif SC', serif;
       font-size: 14px; line-height: 1.85;
-      white-space: pre-line;
     }
     .style-fingerprint-status {
       margin-top: 8px; color: var(--gold-dim); font-size: 11px;
@@ -1043,72 +934,6 @@
       border-left: 3px solid var(--gold-dim); border-radius: 7px;
       padding: 10px 11px; font-size: 12px; line-height: 1.75;
       overflow-wrap: anywhere;
-    }
-    .direction-map-note {
-      color: var(--text-2); background: var(--bg-panel);
-      border: 1px solid var(--border); border-radius: 8px;
-      padding: 9px 10px; font-size: 11px; line-height: 1.7; margin-bottom: 10px;
-    }
-    .direction-domain-list { display: flex; flex-direction: column; gap: 10px; }
-    .direction-domain-card {
-      background: var(--bg-panel); border: 1px solid var(--border);
-      border-radius: 8px; padding: 11px; min-width: 0;
-    }
-    .direction-domain-head {
-      display: flex; justify-content: space-between; align-items: flex-start;
-      gap: 10px; margin-bottom: 9px;
-    }
-    .direction-domain-name {
-      color: var(--text-1); font-size: 13px; font-weight: 700; line-height: 1.35;
-      overflow-wrap: anywhere;
-    }
-    .direction-domain-meta {
-      margin-top: 3px; color: var(--text-3); font-size: 10px; line-height: 1.45;
-    }
-    .direction-subdomain-list { display: flex; flex-direction: column; gap: 8px; }
-    .direction-subdomain {
-      border-top: 1px solid var(--border); padding-top: 8px;
-    }
-    .direction-sub-head {
-      display: flex; justify-content: space-between; align-items: center;
-      gap: 8px; margin-bottom: 7px;
-    }
-    .direction-sub-name {
-      color: var(--gold); font-size: 12px; font-weight: 600;
-      overflow-wrap: anywhere;
-    }
-    .direction-sub-count {
-      color: var(--text-3); font-size: 10px; flex-shrink: 0;
-    }
-    .direction-points,
-    .direction-works {
-      display: flex; flex-wrap: wrap; gap: 5px;
-    }
-    .direction-point,
-    .direction-work {
-      color: var(--text-2); background: var(--bg-card);
-      border: 1px solid var(--border); border-radius: 999px;
-      padding: 3px 7px; font-size: 10px; line-height: 1.35;
-      max-width: 100%; overflow-wrap: anywhere;
-    }
-    .direction-point { color: var(--text-1); border-color: var(--gold-dim); }
-    .direction-point.muted { color: var(--text-3); border-color: var(--border); }
-    .direction-works { margin-top: 7px; }
-    .direction-work { border-radius: 6px; }
-    .direction-claim {
-      margin-top: 7px; color: var(--text-2); font-size: 11px;
-      line-height: 1.65; overflow-wrap: anywhere;
-    }
-    .direction-growth {
-      margin-top: 10px; border-top: 1px solid var(--border); padding-top: 9px;
-    }
-    .direction-growth-title {
-      color: var(--text-3); font-size: 10px; margin-bottom: 6px;
-    }
-    .direction-growth-item {
-      color: var(--text-2); font-size: 11px; line-height: 1.7;
-      border-left: 3px solid var(--gold-dim); padding-left: 9px;
-      margin-top: 6px; overflow-wrap: anywhere;
     }
 
     .domain-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
@@ -1815,110 +1640,7 @@
     .clip-source:hover { color: var(--gold); }
 
     /* chat */
-    /* 主分析完成 toast */
-    .analyze-done-toast {
-      position: fixed; right: 16px; bottom: 22px; z-index: 13000;
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 16px 10px 10px;
-      background: var(--bg-panel);
-      border: 1.5px solid var(--gold); border-radius: 14px;
-      box-shadow: 0 14px 38px rgba(0,0,0,.5), 0 0 0 1px var(--gold-glow), 0 0 24px rgba(200,164,74,.32);
-      opacity: 0; transform: translateY(28px) scale(0.85);
-      pointer-events: none;
-    }
-    .analyze-done-toast[hidden] { display: none; }
-    .analyze-done-toast.show {
-      animation:
-        analyzeDoneToastIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
-        analyzeDoneToastOut 0.45s ease 2.5s forwards;
-    }
-    @keyframes analyzeDoneToastIn {
-      0%   { opacity: 0; transform: translateY(28px) scale(0.7); }
-      60%  { opacity: 1; transform: translateY(-6px) scale(1.06); }
-      100% { opacity: 1; transform: translateY(0) scale(1); }
-    }
-    @keyframes analyzeDoneToastOut {
-      0%   { opacity: 1; transform: translateY(0) scale(1); }
-      100% { opacity: 0; transform: translateY(-10px) scale(0.92); }
-    }
-    .analyze-done-toast .adt-mascot {
-      width: 48px; height: 52px; flex-shrink: 0;
-      background: url('icons/liukanshan.png') center/contain no-repeat;
-      filter: drop-shadow(0 3px 8px rgba(0,0,0,.28));
-      transform-origin: 50% 100%;
-      animation: liukanshanWag 0.95s ease-in-out 0.55s infinite alternate;
-    }
-    @keyframes liukanshanWag {
-      0%   { transform: rotate(-5deg) translateY(0); }
-      100% { transform: rotate(5deg) translateY(-2px); }
-    }
-    .analyze-done-toast .adt-text {
-      font-size: 12.5px; line-height: 1.45; color: var(--text-1);
-    }
-    .analyze-done-toast .adt-title {
-      display: block; font-weight: 700; font-size: 14.5px;
-      color: var(--gold-light); margin-bottom: 1px;
-      letter-spacing: 0.5px;
-    }
-    html.theme-light .analyze-done-toast {
-      box-shadow: 0 14px 38px rgba(28,54,94,.2), 0 0 0 1px rgba(200,164,74,.18), 0 0 24px rgba(200,164,74,.22);
-    }
-
-    .chat-card { display: flex; flex-direction: column; gap: 10px; position: relative; }
-    .chat-mascot {
-      position: absolute; bottom: 50px; right: 8px;
-      width: 52px; height: 56px;
-      background: url('icons/liukanshan.png') center/contain no-repeat;
-      opacity: 0; pointer-events: none; z-index: 5;
-      filter: drop-shadow(0 4px 10px rgba(0,0,0,.32));
-      transform-origin: 50% 100%;
-    }
-    .chat-mascot[hidden] { display: none; }
-    .chat-mascot.visible {
-      animation: liukanshanPop 0.62s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-    }
-    .chat-mascot.visible::before {
-      content: "答好啦";
-      position: absolute; top: 4px; right: 100%;
-      margin-right: 6px; padding: 3px 7px;
-      background: var(--gold); color: var(--bg);
-      border-radius: 10px; font-size: 10px; font-weight: 700;
-      white-space: nowrap; line-height: 1.2;
-      box-shadow: 0 4px 12px rgba(200,164,74,.45);
-      animation: liukanshanBubble 0.45s ease 0.42s both;
-      opacity: 0;
-    }
-    @keyframes liukanshanBubble {
-      0%   { opacity: 0; transform: translateY(-3px) scale(0.7); }
-      100% { opacity: 1; transform: translateY(0) scale(1); }
-    }
-    html.theme-light .chat-mascot { filter: drop-shadow(0 3px 8px rgba(28,54,94,.22)); }
-    @keyframes liukanshanPop {
-      0%   { opacity: 0; transform: translateY(34px) scale(0.45) rotate(-12deg); }
-      55%  { opacity: 1; transform: translateY(-8px) scale(1.12) rotate(4deg); }
-      78%  { transform: translateY(3px) scale(0.96) rotate(-2deg); }
-      100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
-    }
-    .chat-status.is-loading {
-      color: var(--gold-light);
-      transition: opacity 0.28s ease;
-    }
-    .chat-status.is-loading.fading { opacity: 0; }
-    .chat-status .chat-status-dot {
-      display: inline-block; vertical-align: middle;
-      width: 6px; height: 6px; margin-right: 6px; border-radius: 50%;
-      background: var(--gold);
-      box-shadow: 0 0 6px var(--gold-glow);
-      animation: chatStatusDot 1.1s ease-in-out infinite;
-    }
-    @keyframes chatStatusDot {
-      0%, 100% { transform: scale(1); opacity: 0.85; }
-      50%      { transform: scale(1.45); opacity: 1; }
-    }
-    .chat-card.chat-card-attention {
-      border-color: var(--border-bright);
-      box-shadow: 0 0 0 1px var(--gold-glow), 0 0 22px rgba(216, 176, 96, 0.18);
-    }
+    .chat-card { display: flex; flex-direction: column; gap: 10px; }
     .chat-templates {
       display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 7px;
@@ -1937,9 +1659,6 @@
     .chat-template-btn:hover:not(:disabled),
     .chat-send-btn:hover:not(:disabled),
     .chat-save-actions button:hover:not(:disabled) {
-      color: var(--gold-light); border-color: var(--border-bright); background: var(--gold-glow);
-    }
-    .chat-template-btn.asset-remix-sent {
       color: var(--gold-light); border-color: var(--border-bright); background: var(--gold-glow);
     }
     .chat-template-btn:disabled,
@@ -2201,7 +1920,7 @@
       padding: 16px 16px 14px; color: var(--text-1);
       max-height: min(42vh, 390px); overflow-y: auto;
       pointer-events: auto;
-      transition: none;
+      transition: left .22s ease, top .22s ease;
       scrollbar-width: none;
       -ms-overflow-style: none;
     }
@@ -2268,86 +1987,12 @@
       text-align: center; text-shadow: 0 2px 12px var(--gold-glow);
     }
     .onboarding-arrow.visible { display: block; }
-
-    /* 引导结束后的"分析自己文章"提示气泡 */
-    .analyze-own-hint {
-      position: fixed; z-index: 12500;
-      width: min(264px, calc(100vw - 20px));
-      padding: 24px 14px 13px;
-      border: 1.5px solid var(--gold); border-radius: 12px;
-      background: var(--bg-panel); color: var(--text-1);
-      box-shadow: 0 18px 48px rgba(0,0,0,.5), 0 0 0 1px var(--gold-glow), 0 0 24px rgba(200,164,74,.32);
-      opacity: 0; transform: translateY(-8px); pointer-events: none;
-      transition: opacity .22s ease, transform .22s ease;
-      text-align: center;
-    }
-    .analyze-own-hint[hidden] { display: none; }
-    .analyze-own-hint.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
-    .analyze-own-hint-arrow {
-      position: absolute; top: -14px; left: 50%;
-      width: 20px; height: 20px;
-      transform: translateX(-50%);
-      pointer-events: none;
-      animation: analyzeOwnHintBounce 1.1s ease-in-out infinite;
-      filter: drop-shadow(0 0 8px rgba(200,164,74,.85)) drop-shadow(0 0 2px rgba(255,220,140,.9));
-    }
-    .analyze-own-hint-arrow::before {
-      content: ""; position: absolute; inset: 0;
-      background: var(--gold);
-      clip-path: polygon(50% 0%, 100% 55%, 70% 55%, 70% 100%, 30% 100%, 30% 55%, 0% 55%);
-    }
-    @keyframes analyzeOwnHintBounce {
-      0%, 100% { transform: translateX(-50%) translateY(0); }
-      50%      { transform: translateX(-50%) translateY(-5px); }
-    }
-    .analyze-own-hint-title {
-      font-size: 13.5px; color: var(--text-1); line-height: 1.55; font-weight: 500;
-    }
-    .own-emphasis {
-      display: inline-block;
-      font-size: 18px;
-      font-weight: 800;
-      color: #ffd96b;
-      text-shadow:
-        0 0 10px rgba(255,217,107,.75),
-        0 0 3px rgba(255,237,160,1),
-        0 1px 0 rgba(0,0,0,.55);
-      padding: 0 4px;
-      letter-spacing: 0.5px;
-    }
-    html.theme-light .own-emphasis {
-      color: #b8860b;
-      text-shadow:
-        0 0 6px rgba(184,134,11,.35),
-        0 1px 0 rgba(255,255,255,.6);
-    }
-    .analyze-own-hint-body {
-      margin-top: 8px;
-      font-size: 11.5px; color: var(--text-2); line-height: 1.55;
-    }
-    .analyze-own-hint-warn {
-      margin-top: 10px; padding: 6px 8px;
-      border: 1px dashed var(--gold-dim); border-radius: 6px;
-      font-size: 10.5px; line-height: 1.5;
-      color: var(--gold); background: var(--gold-glow);
-    }
-    .analyze-own-hint-close {
-      position: absolute; top: 3px; right: 5px;
-      background: none; border: none;
-      color: var(--text-3); font-size: 16px; line-height: 1;
-      padding: 4px 7px; border-radius: 4px;
-      cursor: pointer; font-family: inherit;
-    }
-    .analyze-own-hint-close:hover { color: var(--gold); background: var(--bg-card); }
-    html.theme-light .analyze-own-hint {
-      box-shadow: 0 18px 48px rgba(28,54,94,.18), 0 0 0 1px rgba(200,164,74,.18), 0 0 24px rgba(200,164,74,.2);
-    }
   </style>
 </head>
 <body>
 
 <div class="header">
-  <h1>知乎创作图鉴</h1>
+  <h1>知识图鉴</h1>
   <div class="project-bar">
     <select id="projectSelect" class="project-select"></select>
     <button id="recaptureBtn" class="project-capture-btn" type="button" title="重新抓取当前知乎页" aria-label="重新抓取当前知乎页">
@@ -2357,11 +2002,11 @@
   </div>
   <button class="onboarding-replay-btn" id="onboardingReplayBtn" type="button" title="新手指引" aria-label="新手指引">?</button>
   <div class="onboarding-entry-hint" id="onboardingEntryHint" hidden>
-    <div class="onboarding-entry-title">首次引导在这里</div>
-    <div class="onboarding-entry-body">第一次先跑通 API 设置和第一篇文章；其他区点开后再出现对应引导。</div>
+    <div class="onboarding-entry-title">新手指引在这里</div>
+    <div class="onboarding-entry-body">想跟着教程走，就点问号；想自由探索，直接忽略也可以。</div>
     <div class="onboarding-entry-actions">
       <button type="button" id="onboardingEntryDismissBtn">知道了</button>
-      <button type="button" class="primary" id="onboardingEntryStartBtn">开始当前区引导</button>
+      <button type="button" class="primary" id="onboardingEntryStartBtn">开始指引</button>
     </div>
   </div>
   <button class="theme-toggle-btn" id="themeToggleBtn" type="button" title="开灯模式" aria-label="开灯模式">☀</button>
@@ -2390,7 +2035,7 @@
       <option value="30">30篇</option>
     </select>
   </div>
-  <div class="top-period-hint" id="topPeriodHint">通过作品，看见创作者自己 · 今日 0 篇 · 本月 0 篇</div>
+  <div class="top-period-hint" id="topPeriodHint">今日 0 篇 · 本月 0 篇</div>
 </div>
 
 <div class="tab-nav" id="tabNav">
@@ -2398,15 +2043,15 @@
   <button class="tab-btn" data-tab="assets">资产<span class="count-badge" id="assetCount"></span></button>
   <button class="tab-btn" data-tab="review">复盘</button>
   <button class="tab-btn" data-tab="map">地图</button>
-  <button class="tab-btn" data-tab="fingerprint">读出的你</button>
-  <button class="tab-btn" data-tab="author">分身</button>
+  <button class="tab-btn" data-tab="fingerprint">总复盘报告</button>
+  <button class="tab-btn" data-tab="exportAnswers">导出回答</button>
 </div>
 
 <div id="analyzeTab">
 
 <!-- 自动检测到的知乎内容 -->
 <div class="detected-card" id="detectedCard">
-  <div class="detected-label" id="detectedLabel">已检测到作品</div>
+  <div class="detected-label" id="detectedLabel">已检测到文章</div>
   <div class="detected-title" id="detectedTitle"></div>
   <div class="detected-meta" id="detectedMeta"></div>
 </div>
@@ -2414,12 +2059,12 @@
 
 <!-- 等待状态 -->
 <div id="waitingSection">
-  <div class="waiting-hint">导入知乎作品，让旧文章继续为下一篇创作工作</div>
-  <button class="btn btn-secondary" id="demoArticleBtn" type="button" style="margin-top:10px">载入示例文章</button>
+  <div class="waiting-hint">在知乎页面点击扩展图标，内容将自动出现</div>
   <div class="divider">或手动粘贴</div>
   <textarea id="articleInput" placeholder="把文章 / 回答内容粘贴进来……" style="height:130px"></textarea>
   <button class="btn" id="manualBtn" style="margin-top:10px">粘贴内容并分析</button>
 </div>
+
 <div class="quick-capture">
   <input id="quickTitleInput" class="quick-input" type="text" placeholder="灵感标题">
   <textarea id="quickBodyInput" placeholder="写下一个想法、问题或选题……" style="height:84px"></textarea>
@@ -2468,8 +2113,8 @@
       <circle class="knowledge-loader-core" cx="60" cy="60" r="13" fill="url(#knowledgeCoreGlow)" filter="url(#knowledgeSoftGlow)"/>
     </svg>
   </div>
-  <div class="loading-text">知乎创作图鉴正在拆成作品资产…</div>
-  <div class="knowledge-loading-message" id="knowledgeLoadingMessage">知乎创作图鉴正在整理观点资产</div>
+  <div class="loading-text">知识图鉴正在解析…</div>
+  <div class="knowledge-loading-message" id="knowledgeLoadingMessage">知识图鉴正在整理文章线索</div>
 </div>
 
 <div class="error-box" id="errorBox"></div>
@@ -2481,26 +2126,50 @@
   <div id="assetsToolbar"></div>
   <div id="assetsList"></div>
 </div>
+<div id="exportAnswersTab" style="display:none">
+  <div style="padding: 16px 0;">
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px;">
+      <label style="display: flex; flex-direction: column; gap: 5px; font-size: 11px; color: var(--text-2);">
+        起始日期
+        <input id="exportAnswersStartDate" type="date" value="2026-05-17" style="width: 100%; box-sizing: border-box; padding: 7px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-1);">
+      </label>
+      <label style="display: flex; flex-direction: column; gap: 5px; font-size: 11px; color: var(--text-2);">
+        结束日期
+        <input id="exportAnswersEndDate" type="date" style="width: 100%; box-sizing: border-box; padding: 7px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-1);">
+      </label>
+    </div>
+    <div style="margin-bottom: 12px; font-size: 11px; color: var(--text-3); line-height: 1.6;">
+      结束日期留空表示一直导到现在；两个日期都留空则导出全部回答。
+    </div>
+    <button class="btn" id="exportAnswersStartBtn">批量导出我的回答</button>
+    <div id="exportAnswersStatus" style="display:none; margin-top: 12px; font-size: 12px; color: var(--text-2);">
+      <div style="margin-bottom: 8px;">
+        <span id="exportAnswersProgressLabel">准备中…</span>
+      </div>
+      <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+        <div style="flex: 1;">
+          <div style="height: 6px; background: var(--bg-card); border-radius: 3px; overflow: hidden; margin-bottom: 4px;">
+            <div id="exportAnswersProgressBar" style="height: 100%; background: linear-gradient(90deg, var(--gold-dim), var(--gold)); width: 0%; transition: width 0.3s ease;"></div>
+          </div>
+          <div id="exportAnswersProgressText" style="font-size: 11px; color: var(--text-3);">0/0</div>
+        </div>
+        <div style="display: flex; gap: 6px;">
+          <button id="exportAnswersPauseBtn" class="btn-secondary" style="padding: 6px 10px; font-size: 11px; min-width: 60px;">暂停</button>
+          <button id="exportAnswersRetryBtn" class="btn-secondary" style="padding: 6px 10px; font-size: 11px; min-width: 60px; display:none;">重试</button>
+        </div>
+      </div>
+      <div id="exportAnswersMessage" style="color: var(--gold); margin-bottom: 8px; min-height: 18px;"></div>
+      <div id="exportAnswersError" style="color: var(--danger); margin-bottom: 8px; min-height: 18px; display:none;"></div>
+    </div>
+    <div id="exportAnswersComplete" style="display:none; margin-top: 12px; padding: 12px; background: var(--green-bg); border: 1px solid var(--green); border-radius: 8px; color: var(--green); font-size: 12px;">
+      <div style="margin-bottom: 8px;">✓ 导出完成</div>
+      <div id="exportAnswersCompleteInfo" style="font-size: 11px; color: var(--text-2); line-height: 1.6;"></div>
+    </div>
+  </div>
+</div>
 <div id="reviewTab" style="display:none"></div>
 <div id="mapTab"    style="display:none"></div>
 <div id="fingerprintTab" style="display:none"></div>
-<div id="authorTab" style="display:none"></div>
-
-<div class="analyze-done-toast" id="analyzeDoneToast" role="status" aria-live="polite" hidden>
-  <div class="adt-mascot" aria-hidden="true"></div>
-  <div class="adt-text">
-    <span class="adt-title">答好啦!</span>
-    来看看你这篇的分析结果
-  </div>
-</div>
-
-<div class="analyze-own-hint" id="analyzeOwnHint" role="dialog" aria-live="polite" hidden>
-  <button type="button" class="analyze-own-hint-close" id="analyzeOwnHintCloseBtn" aria-label="关闭提示">×</button>
-  <div class="analyze-own-hint-arrow" aria-hidden="true"></div>
-  <div class="analyze-own-hint-title">现在就来分析一篇<span class="own-emphasis">自己</span>的文章吧</div>
-  <div class="analyze-own-hint-body">打开你自己的知乎文章页,然后点上方按钮抓取当前页。</div>
-  <div class="analyze-own-hint-warn">⚠ 请只分析您本人创作的内容,尊重创作者知识产权</div>
-</div>
 
 <div class="onboarding-layer" id="onboardingLayer" aria-live="polite">
   <div class="onboarding-arrow" id="onboardingArrow" aria-hidden="true"></div>
@@ -2509,7 +2178,7 @@
     <div class="onboarding-title" id="onboardingTitle"></div>
     <div class="onboarding-body" id="onboardingBody"></div>
     <div class="onboarding-actions">
-      <button class="onboarding-btn onboarding-skip" id="onboardingSkipBtn" type="button">跳过本区引导</button>
+      <button class="onboarding-btn onboarding-skip" id="onboardingSkipBtn" type="button">退出新手引导</button>
       <button class="onboarding-btn" id="onboardingBackBtn" type="button">上一步</button>
       <button class="onboarding-btn primary" id="onboardingNextBtn" type="button">下一步</button>
     </div>
@@ -2520,9 +2189,9 @@
 <script src="map_math.js"></script>
 <script src="providers.js"></script>
 <script src="competition_defaults.js"></script>
-<script src="zhihu_content_api.js"></script>
 <script src="analyzer.js"></script>
 <script src="db.js"></script>
+<script src="export_zhihu_answers.js"></script>
 <script src="panel.js"></script>
 </body>
 </html>

@@ -4,9 +4,6 @@ let capturedText  = '';
 let isAnalyzing   = false;
 let isChatting    = false;
 let activeProject = 'default';
-let packagedDemoArticleLoaded = false;
-let guidedDemoArticle = null;
-let guidedDemoAnalysis = null;
 let earthSphereState = null;
 let earthSphereDemoFillEnabled = false;
 let universeSceneState = null;
@@ -32,128 +29,26 @@ const UI_THEME_KEY = 'uiTheme';
 const ONBOARDING_DONE_KEY = 'onboardingComplete';
 const ONBOARDING_OPTIONS_PENDING_KEY = 'onboardingOptionsPending';
 const ONBOARDING_RESUME_INDEX_KEY = 'onboardingResumeIndex';
-const ONBOARDING_RESUME_SECTION_KEY = 'onboardingResumeSection';
 const ONBOARDING_HINT_SEEN_KEY = 'onboardingHintSeen';
-const THEME_RECOMMEND_DONE_KEY = 'themeRecommendDone';
-const MAP_LIGHT_HINT_DONE_KEY = 'mapLightHintDone';
-const ANALYZE_OWN_HINT_DONE_KEY = 'analyzeOwnHintDone_v1';
 const DEMO_SEED_KEY = 'demoSeededFromPackage20260511';
-const DEMO_DATA_PATH = 'demo_data/知乎创作图鉴_演示数据_当前库.json';
+const DEMO_DATA_PATH = 'demo_data/知识图鉴_演示数据_当前库.json';
 const NODE_HOVER_SHOW_DELAY = 1000;
 let nodeHoverShowTimer = null;
 let nodeHoverHideTimer = null;
 let nodeHoverPending   = null;
-let onboardingState = { active: false, index: 0, section: 'analyze', wired: false };
+let onboardingState = { active: false, index: 0, wired: false };
 
 const KNOWLEDGE_LOADING_MESSAGES = [
-  '正在给旧观点松松筋…',
-  '正在把散落灵感捡回仓库…',
-  '正在给这篇文章量骨相…',
-  '正在从句子里掏小火花…',
-  '正在把随手一写变成资产…',
-  '正在确认这不是普通碎碎念…',
-  '正在给观点贴回家门牌…',
-  '正在让素材按用途排队…',
-  '正在审问标题：你想干嘛…',
-  '正在给知识节点找邻居…',
-  '正在把老文章擦亮再上架…',
-  '正在闻一闻你的写作指纹…',
-  '正在拆论证链的螺丝钉…',
-  '正在从沙发缝里抠灵感…',
-  '正在给下一篇递小纸条…',
-  '正在检查观点有没有偷懒…',
-  '正在把重复写过的事升级成母题…',
-  '正在给冷门素材开灯…',
-  '正在把知识星星擦到发亮…',
-  '正在问旧文章：你还能干点啥…',
-  '正在把金句从草稿堆里拎出来…',
-  '正在给你的优势画重点…',
-  '正在把文章送进宇宙户口本…',
-  '正在给素材办理长期居住证…',
-  '正在把思路揉成可复用面团…',
-  '正在检测哪句话最有后劲…',
-  '正在把观点从抽屉里请出来…',
-  '正在给知识宇宙补一颗灯泡…',
-  '正在看你到底总在惦记什么…',
-  '正在从旧文里挖未来方向…',
+  '知识图鉴正在拆解文章结构…',
+  '知识图鉴正在校准知识节点…',
+  '知识图鉴正在提炼可复用素材…',
+  '知识图鉴正在梳理创作立意…',
+  '知识图鉴正在把判断放回地图…',
+  '知识图鉴正在寻找相邻领域…',
+  '知识图鉴正在复核关键概念…',
+  '知识图鉴正在整理文章线索…',
+  '知识图鉴正在生成学习路径…',
 ];
-
-const AUTHOR_CHAT_LOADING_MESSAGES = [
-  ...KNOWLEDGE_LOADING_MESSAGES,
-  '正在翻你以前写过的那几页…',
-  '正在请过去的你出来说几句…',
-  '正在让旧文章站到一起照镜子…',
-  '正在数你最爱回到的那些话题…',
-  '正在从抽屉里翻你以前的素材…',
-  '正在让上一篇和下一篇牵起手…',
-  '正在让历史的你回答一下…',
-  '正在比对你以前怎么说这件事…',
-  '正在请旧观点自己开口…',
-  '正在让记忆翻到你写过的那一页…',
-  '正在把过去的金句请上台…',
-  '正在让旧观点对你点点头…',
-  '正在把以前的判断重新读一遍…',
-  '正在请你的写作风格做自我介绍…',
-  '正在偷听旧文里的小声嘀咕…',
-  '正在让历史观点穿越到现在…',
-  '正在请上一个版本的你回答…',
-  '正在翻箱倒柜找能复用的段落…',
-  '正在和过去的你对照笔记…',
-  '正在让旧素材跑出来排队…',
-  '正在让节点串成一根思路…',
-  '正在让旧文给新方向递棒…',
-  '正在让旧标题和新选题握手…',
-  '正在请你的写作指纹来认领…',
-  '正在让旧作品给你打小报告…',
-  '正在让历史里的你陪你想下一篇…',
-  '正在让以前的判断重新发光…',
-  '正在让旧文章为新句子伸援手…',
-  '正在请历史的你点头说"就这么写"…',
-  '正在把你的老话题再揉一遍…',
-];
-
-const REVIEW_CHAT_LOADING_MESSAGES = [
-  '正在数一数你这一周写了什么…',
-  '正在把本周作品摆成一排看比例…',
-  '正在和上周的你对比变化…',
-  '正在挑本周哪一篇最值得放大…',
-  '正在看你最近写得最稳的是什么…',
-  '正在给本周创作打个轻轻的分…',
-  '正在找你本周还没说完的话…',
-  '正在揉揉本周写作的小肩膀…',
-  '正在看你本周的笔有没有偷懒…',
-  '正在偷瞄你这周最亮的金句…',
-  '正在数你这周点亮了几片星区…',
-  '正在把本周话题做成小清单…',
-  '正在替下周列三个新方向…',
-  '正在算你这周写作的小连胜…',
-  '正在看你最近常回到的几个词…',
-  '正在把本周文章按情绪分类…',
-  '正在闻一闻本周写作的气味…',
-  '正在标出本周值得保留的写法…',
-  '正在挑本周想写却没写的事…',
-  '正在替你回看本周的小高峰…',
-  '正在数本周创作走过的几个弯…',
-  '正在看本周素材有没有用上…',
-  '正在把本周节奏画成小心电图…',
-  '正在记下本周创作的小转折点…',
-  '正在帮你看本周写得最自由的那一段…',
-  '正在替你拉出下周可以接着写的线索…',
-  '正在为本周作品颁一个迷你奖…',
-  '正在记一笔本周成长的台阶…',
-  '正在看本周的你是不是更敢写了…',
-  '正在替你把本周笔记串起来…',
-];
-
-function pickNextLoadingIndex(arr, prev) {
-  if (!arr || arr.length === 0) return 0;
-  if (arr.length === 1) return 0;
-  let next = prev;
-  while (next === prev) {
-    next = Math.floor(Math.random() * arr.length);
-  }
-  return next;
-}
 
 const CHAT_ARTICLE_LIMIT = 7000;
 const CHAT_ANALYSIS_LIMIT = 3200;
@@ -195,23 +90,8 @@ const REVIEW_CHAT_TEMPLATES = {
   },
 };
 
-const AUTHOR_AGENT_TEMPLATES = {
-  position: {
-    label: '我以前怎么看位置决定命运？',
-    prompt: '请回答：我以前怎么看“位置决定命运”？请先概括历史作品中的核心判断，再列出相关旧文、可复用素材和下一篇可写方向。',
-  },
-  reuse: {
-    label: '帮我找能复用的旧素材',
-    prompt: '请从我的历史作品资产中找出最适合复用的旧素材，按观点、素材、金句和知识节点分组，并说明各自适合写到什么新文章里。',
-  },
-  next: {
-    label: '基于旧文生成下一篇方向',
-    prompt: '请基于我的历史作品资产，生成一篇新的知乎文章方向。必须包含标题、核心观点、开头、大纲、可复用旧素材和可能反驳点。',
-  },
-};
-
 function formalizeProductName(text) {
-  return String(text || '').replace(/\u7403\u7403/g, '知乎创作图鉴');
+  return String(text || '').replace(/\u7403\u7403/g, '知识图鉴');
 }
 
 function debugLog(...args) {
@@ -233,8 +113,8 @@ function applyUiTheme(theme) {
 }
 
 async function loadUiTheme() {
-  if (typeof chrome === 'undefined' || !chrome.storage?.local) return applyUiTheme('light');
-  const { [UI_THEME_KEY]: theme = 'light' } = await chrome.storage.local.get(UI_THEME_KEY);
+  if (typeof chrome === 'undefined' || !chrome.storage?.local) return applyUiTheme('dark');
+  const { [UI_THEME_KEY]: theme = 'dark' } = await chrome.storage.local.get(UI_THEME_KEY);
   return applyUiTheme(theme);
 }
 
@@ -246,265 +126,26 @@ async function toggleUiTheme() {
   }
 }
 
-const PANEL_ONBOARDING_SECTIONS = {
-  analyze: {
-    label: '分析区引导',
-    steps: [
-      {
-        title: '第一步：默认分析通道已准备好',
-        body: '比赛提交版已经内置默认 API，可以直接开始分析，不需要先去设置。\n\n右上角小齿轮只是给你以后更换自己的 API 或模型用。现在我们先跑通核心流程：分析一篇文章，然后看它归库。',
-        target: '#settingsBtn',
-        tab: 'analyze',
-        primary: '直接开始',
-      },
-      {
-        title: '第二步：载入示例文章',
-        body: '先用一篇示例文章跑通完整流程。\n\n点下面的按钮，知乎创作图鉴会载入一篇已经准备好的文章。标题出现后，引导会自动进入下一步。',
-        target: '#demoArticleBtn',
-        tab: 'analyze',
-        action: 'loadDemoArticle',
-        primary: '载入示例文章',
-      },
-      {
-        title: '第三步：开始分析',
-        body: '点“开始分析”，知乎创作图鉴会把这篇作品拆成核心观点、可复用素材、写作指纹和下一篇知乎选题，并写入你的资产库。\n\n这一步完成后，你就能看到一篇旧文章如何继续为下一次创作工作。',
-        target: '#analyzeBtn',
-        tab: 'analyze',
-        requiresTarget: '#analyzeBtn',
-        waitMessage: '先载入示例文章',
-        action: 'runDemoAnalysis',
-        primary: '开始分析',
-      },
-      {
-        title: '第四步：查看分析结果',
-        body: '分析结果已经出现。\n\n这里只保留三类真正能继续写的东西：可复用素材与立意、相邻领域与书单、下一篇知乎问题方向。确认看见结果后继续即可。',
-        target: '#result',
-        tab: 'analyze',
-        requiresTarget: '#result',
-        waitMessage: '先点开始分析',
-        primary: '下一步',
-      },
-      {
-        title: '第五步：这篇文章已经归库',
-        body: '看到“已保存到资产库”，就说明第一篇文章已经成功归库。\n\n第一次引导到这里就结束。资产、复盘、地图和“读出的你”这些功能，等你点开对应区域时，再出现对应的小引导块。',
-        target: '#savedBanner',
-        tab: 'analyze',
-        requiresTarget: '#savedBanner',
-        waitMessage: '分析完成后会自动继续',
-        action: 'articleSaved',
-        primary: '完成核心引导',
-      },
-    ],
-  },
-  themeRecommendation: {
-    label: '关灯体验推荐',
-    steps: [
-      {
-        title: '强烈推荐：关灯感受一次知识宇宙',
-        body: '你已经完成最初的教程，第一篇文章也成功归库了。\n\n强烈建议你等下点一下右上角的月亮按钮，切到关灯模式感受知识宇宙。暗色模式下，地图、星球、节点和写作指纹会更像一片真正被点亮的个人知识宇宙。',
-        target: '#themeToggleBtn',
-        primary: '知道了',
-        skipText: '继续亮灯',
-        action: 'ackThemeRecommendation',
-      },
-    ],
-  },
-  mapLightHint: {
-    label: '星球关灯提示',
-    steps: [
-      {
-        title: '这颗星球，关灯会更亮',
-        body: '你已经点进知识星球了。\n\n如果现在是蓝白亮灯背景，星球的光会被冲淡。建议点一下右上角的月亮按钮，切到关灯模式再看一次：星球、节点和连线会更像一片真正被点亮的知识宇宙。\n\n这只是观看建议，不影响继续使用。',
-        target: '#themeToggleBtn',
-        tab: 'map',
-        primary: '知道了',
-        skipText: '继续亮灯',
-        action: 'ackMapLightHint',
-      },
-    ],
-  },
-  assets: {
-    label: '资产区引导',
-    steps: [
-      {
-        title: '资产：你的文章会被放进这里',
-        body: '这一段只讲资产区。\n\n这里不是普通收藏夹。分析过的作品、观点资产、可复用素材和立意都会在这里，之后写下一篇不用再从空白页开始。',
-        target: '.tab-btn[data-tab="assets"]',
-        tab: 'assets',
-        primary: '下一步',
-      },
-      {
-        title: '完整分析报告，在“作品”里找',
-        body: '资产页上面有“素材 / 立意 / 作品”三个入口。\n\n每次分析完一篇文章，完整报告都会放进“作品”里；素材和立意，是知乎创作图鉴从作品里拆出来的可复用资产。',
-        target: '.asset-mode[data-asset-mode="assets"]',
-        tab: 'assets',
-        primary: '完成本区引导',
-      },
-    ],
-  },
-  review: {
-    label: '复盘区引导',
-    steps: [
-      {
-        title: '复盘：看最近的创作走势',
-        body: '这一段只讲复盘区。\n\n它会帮你看最近哪些作品正在形成方向，哪些主题反复出现，哪些旧素材还能继续生长，像是把一周的资产摊开看清楚。',
-        target: '.tab-btn[data-tab="review"]',
-        tab: 'review',
-        primary: '下一步',
-      },
-      {
-        title: '创作方向：看你最近在往哪里走',
-        body: '“创作方向”会帮你看见：最近点亮了哪些主题，哪些视角已经出现，哪些方向还空着。\n\n它不是催你写更多，而是帮你知道自己已经走到了哪里。',
-        target: '#review-direction .review-section-title',
-        tab: 'review',
-        reviewSection: 'direction',
-        primary: '下一步',
-      },
-      {
-        title: '高频节点：哪些东西一直在回来',
-        body: '“高频节点”会把反复出现的概念、人物、问题和写法列出来。\n\n如果一个节点经常出现，说明它可能已经是你的长期关注。',
-        target: '#review-nodes .review-section-title',
-        tab: 'review',
-        reviewSection: 'nodes',
-        primary: '下一步',
-      },
-      {
-        title: '时间轴和 AI 复盘',
-        body: '“时间轴”会把你的文章按时间排成卡片；“AI 复盘”可以结合这一周作品回答下一步该写什么。\n\n以后想回头找某一周的变化，就来这里。',
-        target: '#review-timeline .review-section-title',
-        tab: 'review',
-        reviewSection: 'timeline',
-        primary: '完成本区引导',
-      },
-    ],
-  },
-  map: {
-    label: '地图区引导',
-    steps: [
-      {
-        title: '地图：这里是你的知识宇宙',
-        body: '这一段只讲地图区。\n\n它会把你的文章、主题、节点和项目慢慢变成一片知识宇宙。每分析一篇文章，都会在这里点亮一点光。',
-        target: '.tab-btn[data-tab="map"]',
-        tab: 'map',
-        primary: '下一步',
-      },
-      {
-        title: '把插件框往左拉，先看宇宙全貌',
-        body: '现在这个窄面板只能露出知识宇宙的一部分。\n\n把鼠标放到插件框左边缘，按住往左拉宽面板。面板拉开以后，星区、星球和连线会完整很多，再点星星会更容易看见知识宇宙的层次和美感。',
-        target: '#universeCanvasWrap',
-        tab: 'map',
-        primary: '下一步',
-      },
-      {
-        title: '点一颗星星，看它背后的内容',
-        body: '宇宙画面里的小亮点不是装饰，而是你的知识星球。\n\n鼠标移到星星上会出现名字；点一次锁定视角，再点同一颗进入内部。',
-        target: '#universeCanvasWrap',
-        tab: 'map',
-        primary: '下一步',
-      },
-      {
-        title: '星球会随着积累变完整',
-        body: '当一个领域被你持续点亮，它会越来越像一颗真正的知识星球。\n\n文章越多、观点越多、素材越多，星球上的节点和连接就会越密。',
-        target: '.universe-tools',
-        tab: 'map',
-        primary: '完成本区引导',
-      },
-    ],
-  },
-  fingerprint: {
-    label: '读出的你引导',
-    steps: [
-      {
-        title: '读出的你：每周看一次就够',
-        body: '这一段只讲“知乎创作图鉴读出的你”。\n\n它会告诉你本周新增了多少作品资产、哪些主题变亮、哪些素材最值得继续写，以及你的写作指纹正在往哪里长。',
-        target: '.tab-btn[data-tab="fingerprint"]',
-        tab: 'fingerprint',
-        primary: '下一步',
-      },
-      {
-        title: '上面这里可以设定目标',
-        body: '看顶部的目标达成。你可以设定每周几篇算达标。\n\n每完成一次分析，就像给自己的知识宇宙添了一点光，不用一次做很多。',
-        target: '#weekProgWrap',
-        tab: 'fingerprint',
-        primary: '完成本区引导',
-      },
-    ],
-  },
-  author: {
-    label: '作者分身引导',
-    steps: [
-      {
-        title: '问问过去的我',
-        body: '这里不是通用聊天，而是向自己的历史作品提问。\n\n它只基于已经入库的旧文、观点卡、素材卡和知识节点回答，适合演示“旧文章继续为下一篇创作工作”。',
-        target: '.tab-btn[data-tab="author"]',
-        tab: 'author',
-        primary: '完成本区引导',
-      },
-    ],
-  },
-};
-
-function normalizeOnboardingSection(section) {
-  return PANEL_ONBOARDING_SECTIONS[section] ? section : 'analyze';
-}
-
-function panelOnboardingSection(section = onboardingState.section) {
-  return PANEL_ONBOARDING_SECTIONS[normalizeOnboardingSection(section)];
-}
-
-function panelOnboardingSteps(section = onboardingState.section) {
-  return panelOnboardingSection(section).steps;
-}
-
-function onboardingSectionDoneKey(section) {
-  return `onboardingSectionDone_${normalizeOnboardingSection(section)}`;
-}
-
-async function isOnboardingSectionDone(section) {
-  if (typeof chrome === 'undefined' || !chrome.storage?.local) return false;
-  const key = onboardingSectionDoneKey(section);
-  const result = await chrome.storage.local.get(key);
-  return !!result[key];
-}
-
-async function markOnboardingSectionDone(section) {
-  if (typeof chrome === 'undefined' || !chrome.storage?.local) return;
-  const normalized = normalizeOnboardingSection(section);
-  const payload = {
-    [onboardingSectionDoneKey(normalized)]: true,
-    [ONBOARDING_HINT_SEEN_KEY]: true,
-  };
-  if (normalized === 'themeRecommendation') payload[THEME_RECOMMEND_DONE_KEY] = true;
-  if (normalized === 'mapLightHint') payload[MAP_LIGHT_HINT_DONE_KEY] = true;
-  await chrome.storage.local.set(payload);
-}
-
-async function maybeStartPanelOnboardingForSection(section, opts = {}) {
-  const normalized = normalizeOnboardingSection(section);
-  setupPanelOnboardingEvents();
-  if (onboardingState.active && !opts.force) return;
-  if (!opts.force && await isOnboardingSectionDone(normalized)) return;
-  await dismissOnboardingEntryHint();
-  startPanelOnboarding(0, normalized);
-}
-
-function legacyPanelOnboardingSteps() {
+function panelOnboardingSteps() {
   return [
     {
-      title: '欢迎来到知乎创作图鉴',
-      body: '这里是面向知乎创作者的作品资产库、写作指纹系统与个人知识宇宙。\n\n知乎创作图鉴会通过作品，看见创作者自己；也会让旧文章继续为下一篇创作工作。你不用一下子学会所有按钮，我们先跑通第一篇文章。',
+      title: '欢迎来到知识图鉴',
+      body: '以后你读过的文章、产生过的理解、积累过的素材，都会慢慢住进这里。\n\n你不用一下子学会所有按钮。我们先从设置 API Key、分析第一篇文章、看资产、看复盘、看知识宇宙开始。你照着点就行。',
       primary: '下一步',
     },
     {
-      title: '第一件事：默认分析通道已准备好',
-      body: '比赛提交版已经内置默认 API，可以直接开始分析，不需要先去设置。\n\n右上角小齿轮只是给你以后更换自己的 API 或模型用。现在我们先跑通第一篇文章。',
+      title: '第一件事：先放好分析钥匙',
+      body: '看右上角这个小齿轮。点它会进入设置页。\n\n到了设置页以后，我会继续一步一步教你去官方平台创建自己的 API Key，再把它粘贴进插件。注意：API Key 不要发给别人，不要截图公开，也不要写进公开代码。',
       target: '#settingsBtn',
-      primary: '直接开始',
+      primary: '去设置 API Key',
+      action: 'openOptions',
     },
     {
-      title: '先载入一篇示例文章',
-      body: '先用示例文章跑通第一遍流程。\n\n载入文章后，下面会出现标题，然后继续点开始分析。',
-      primary: '下一步',
+      title: '分析第一篇文章前，先打开知乎正文',
+      titleHtml: '分析第一篇文章前，先打开<span class="onboarding-em-gold">知乎</span>正文',
+      body: '现在请打开自己的知乎主页，挑一篇想整理的文章，点进文章详情页。\n\n等正文完整显示出来，再回到知识图鉴。这里说的是“读取当前页面内容”和“分析当前文章”，你只需要打开那一篇就可以。',
+      bodyHtml: '现在请打开<span class="onboarding-em-strong">自己的<span class="onboarding-em-gold">知乎</span>主页</span>，挑一篇想整理的文章，点进文章详情页。\n\n等正文完整显示出来，再回到知识图鉴。这里说的是“读取当前页面内容”和“分析当前文章”，你只需要打开那一篇就可以。',
+      primary: '文章已经打开',
     },
     {
       title: '点这里，重新读取当前文章',
@@ -514,7 +155,7 @@ function legacyPanelOnboardingSteps() {
     },
     {
       title: '点开始分析',
-      body: '看到“开始分析”以后，点它一下。\n\n知乎创作图鉴会把这篇文章拆成核心观点、可复用素材、写作指纹证据、下一篇知乎选题和创作者优势。分析完成后，这篇文章会进入你的知识资产。',
+      body: '看到“开始分析”以后，点它一下。\n\n知识图鉴会把这篇文章拆成核心观点、文章结构、可复用素材、可迁移写法、延展选题和知识节点。分析完成后，这篇文章会进入你的知识资产。',
       target: '#analyzeBtn',
       primary: '下一步',
     },
@@ -527,14 +168,14 @@ function legacyPanelOnboardingSteps() {
     },
     {
       title: '资产：你的文章会被放进这里',
-      body: '点“资产”。\n\n这里不是普通收藏夹。分析过的文章、可复用素材、立意和作品都会在这里。以后想写下一篇，可以先从自己的旧文章资产里继续往前走。',
+      body: '点“资产”。\n\n这里不是普通收藏夹。分析过的文章、可复用素材、立意和作品都会在这里。以后想找某个素材，不用翻聊天记录，也不用靠记忆硬想。',
       target: '.tab-btn[data-tab="assets"]',
       tab: 'assets',
       primary: '打开资产',
     },
     {
       title: '完整分析报告，在“作品”里找',
-      body: '资产页上面有“素材 / 立意 / 作品”三个小入口。\n\n每次分析完一篇文章，完整报告都会放进“作品”里；素材和立意，是知乎创作图鉴从报告里帮你拆出来的可复用片段。以后想回看一篇文章的完整解析，就先点“作品”。',
+      body: '资产页上面有“素材 / 立意 / 作品”三个小入口。\n\n每次分析完一篇文章，完整报告都会放进“作品”里；素材和立意，是知识图鉴从报告里帮你拆出来的可复用片段。以后想回看一篇文章的完整解析，就先点“作品”。',
       target: '.asset-mode[data-asset-mode="assets"]',
       tab: 'assets',
       primary: '我知道去作品里找',
@@ -590,17 +231,10 @@ function legacyPanelOnboardingSteps() {
     },
     {
       title: '地图：这里是你的知识宇宙',
-      body: '点“地图”。\n\n这一块是知乎创作图鉴最重要的地方之一：它不是列表，也不是普通收藏夹，而是把你的文章、主题、节点和项目慢慢变成一片知识宇宙。\n\n你每分析一篇文章，都会在这里点亮一点光。某个领域写得越多、读得越多，那片星区就会越来越亮。一开始只是一颗小点，后来会变成一片星云。',
+      body: '点“地图”。\n\n这一块是知识图鉴最重要的地方之一：它不是列表，也不是普通收藏夹，而是把你的文章、主题、节点和项目慢慢变成一片知识宇宙。\n\n你每分析一篇文章，都会在这里点亮一点光。某个领域写得越多、读得越多，那片星区就会越来越亮。一开始只是一颗小点，后来会变成一片星云。',
       target: '.tab-btn[data-tab="map"]',
       tab: 'map',
       primary: '去看看知识地图',
-    },
-    {
-      title: '把插件框往左拉，先看宇宙全貌',
-      body: '现在这个窄面板只能露出知识宇宙的一部分。\n\n把鼠标放到插件框左边缘，按住往左拉宽面板。面板拉开以后，星区、星球和连线会完整很多，再点星星会更容易看见知识宇宙的层次和美感。',
-      target: '#universeCanvasWrap',
-      tab: 'map',
-      primary: '下一步',
     },
     {
       title: '点一颗星星，看它背后的内容',
@@ -617,11 +251,11 @@ function legacyPanelOnboardingSteps() {
       primary: '下一步',
     },
     {
-      title: '读出的你：每周看一次就够',
-      body: '点“读出的你”。\n\n这里会告诉你本周分析了多少篇文章、哪些主题变亮、哪些素材最值得继续写、哪些领域正在积累，以及知乎创作图鉴从作品里读出了怎样的你。',
+      title: '总复盘报告：每周看一次就够',
+      body: '点“总复盘报告”。\n\n这里会告诉你本周分析了多少篇文章、哪些主题变亮、哪些素材最值得继续写、哪些领域正在积累、下周可以优先写什么。',
       target: '.tab-btn[data-tab="fingerprint"]',
       tab: 'fingerprint',
-      primary: '打开读出的你',
+      primary: '打开总复盘报告',
     },
     {
       title: '上面这里可以设定目标',
@@ -637,7 +271,7 @@ function legacyPanelOnboardingSteps() {
     },
     {
       title: '把插件固定到浏览器右上角',
-      body: '如果你还没有固定插件：\n\n1. 找浏览器右上角的拼图图标。\n2. 点开它，找到“知乎创作图鉴”。\n3. 点旁边的小图钉。\n4. 图钉变亮后，它就会一直待在右上角。\n\n以后不用再到插件列表里找它。',
+      body: '如果你还没有固定插件：\n\n1. 找浏览器右上角的拼图图标。\n2. 点开它，找到“知识图鉴”。\n3. 点旁边的小图钉。\n4. 图钉变亮后，它就会一直待在右上角。\n\n以后不用再到插件列表里找它。',
       primary: '我知道了',
     },
     {
@@ -655,10 +289,10 @@ function setupPanelOnboardingEvents() {
   onboardingState.wired = true;
   document.getElementById('onboardingNextBtn')?.addEventListener('click', nextPanelOnboarding);
   document.getElementById('onboardingBackBtn')?.addEventListener('click', backPanelOnboarding);
-  document.getElementById('onboardingSkipBtn')?.addEventListener('click', () => finishPanelOnboarding({ completedNormally: false }));
+  document.getElementById('onboardingSkipBtn')?.addEventListener('click', finishPanelOnboarding);
   document.getElementById('onboardingEntryStartBtn')?.addEventListener('click', async () => {
     await dismissOnboardingEntryHint();
-    await replayPanelOnboarding(currentPanelTabName(), { ignoreResume: true });
+    await replayPanelOnboarding();
   });
   document.getElementById('onboardingEntryDismissBtn')?.addEventListener('click', dismissOnboardingEntryHint);
   window.addEventListener('resize', positionOnboardingArrow);
@@ -667,7 +301,6 @@ function setupPanelOnboardingEvents() {
 
 async function maybeStartPanelOnboarding() {
   setupPanelOnboardingEvents();
-  if (await resumePanelOnboardingIfPending()) return;
   await maybeShowOnboardingEntryHint();
 }
 
@@ -713,218 +346,26 @@ async function seedDemoDataIfEmpty() {
   return true;
 }
 
-async function readPackagedDemoRecord() {
-  if (typeof chrome === 'undefined' || !chrome.runtime?.getURL) {
-    throw new Error('当前环境无法读取示例文章');
-  }
-  const resp = await fetch(chrome.runtime.getURL(DEMO_DATA_PATH));
-  if (!resp.ok) throw new Error(`示例文章读取失败：${resp.status}`);
-  const data = await resp.json();
-  const record = Array.isArray(data?.articles) ? data.articles[0] : null;
-  if (!record) throw new Error('示例文章不存在');
-  return record;
-}
-
-function articleFromPackagedDemoRecord(record) {
-  const article = record?.article || {};
-  const body = String(article.body || '').trim();
-  if (!body) throw new Error('示例文章内容为空');
-  return {
-    title: article.title || '示例文章',
-    author: article.author || '',
-    body,
-    url: article.url || record?.url || '',
-    type: article.type || 'answer',
-    published_at: article.published_at || (record?.savedAt || '').slice(0, 10),
-    source: 'packaged_demo',
-  };
-}
-
-async function readPackagedDemoArticle() {
-  return articleFromPackagedDemoRecord(await readPackagedDemoRecord());
-}
-
-function buildGuidedDemoAnalysis(article, sourceAnalysis = null) {
-  if (sourceAnalysis && Object.keys(sourceAnalysis).length) return sourceAnalysis;
-  const labels = Array.isArray(article.labels) ? article.labels : [];
-  const labelText = labels.length ? labels.join(' / ') : '知乎开放故事';
-  return {
-    domain: '知乎开放内容',
-    sub_domain: labelText,
-    perspective: '创作者素材复盘',
-    core_claim: `《${article.title || '知乎开放故事'}》可以作为创作者练习结构拆解、素材提炼和选题延展的演示文本。`,
-    creator_strength: '你可以把一篇知乎内容快速转成可复用资产：先抓主线，再拆素材，再把下一篇选题从文本里长出来。',
-    craft_review: {
-      praise: '这篇内容适合展示知乎创作图鉴的核心能力：把一次阅读转化为结构复盘、素材库和后续创作线索。',
-      praise_quote: article.title || '知乎开放故事',
-      summary: '从知乎内容到创作资产的演示链路',
-    },
-    strengths: [
-      { dimension: '结构识别', evidence: '从标题、导语和正文中抽取核心主题，形成可回看的分析报告。' },
-      { dimension: '素材沉淀', evidence: '把故事内容转换成素材、立意和知识节点，方便后续复用。' },
-    ],
-    nodes_hit: [
-      { name: '示例素材', type: 'work', role: 'primary', contribution: '作为示例内容进入知乎创作图鉴分析链路。' },
-      { name: '创作者资产化', type: 'concept', role: 'primary', contribution: '把阅读内容沉淀为下一次创作的素材与方向。' },
-      { name: labelText, type: 'concept', role: 'secondary', contribution: '作为本次演示文本的主题标签。' },
-    ],
-    reusable_clips: [
-      { content: (article.body || '').slice(0, 180), why_reusable: '可作为开篇背景、故事引子或选题素材。' },
-      { content: article.title || '知乎开放故事', why_reusable: '标题本身可作为选题复盘和表达训练的入口。' },
-    ],
-    essence_insights: [
-      { viewpoint: '创作者不只需要读内容，还需要把内容变成可检索、可复盘、可继续写的资产。', why_essential: '这是知乎创作图鉴与知乎内容生态结合的主线。' },
-    ],
-    new_concepts: ['知乎开放内容', '创作者资产化', '素材复盘'],
-    connections: ['知乎知识', '故事素材', '选题延展'],
-    next_suggestions: [
-      { type: '延伸', suggestion: '围绕这篇开放故事继续写一篇结构分析', reason: '从故事主线切入，容易展示观点与素材复用能力', theory_ref: '叙事结构分析' },
-      { type: '跨域', suggestion: '把故事主题和当前知乎热点做一次连接', reason: '可以把开放内容转化为更贴近社区讨论的创作方向', theory_ref: '选题迁移' },
-    ],
-    zhihu_environment_advice: {
-      question_contexts: [
-        { question_type: '这类故事内容可以如何变成创作者自己的结构分析？', why_fit: '它天然适合展示从阅读内容到作品资产的转换过程。' },
-      ],
-      community_difference: '这篇示例不只是被摘要，而是被放进创作者自己的素材库、知识节点和下一篇选题里。',
-      search_keywords: ['知乎开放内容', '素材复盘', '选题延展', labelText],
-      next_zhihu_topics: [
-        { title: '为什么好内容不该只被读完一次？', angle: '从内容资产化切入', reason: '能直接说明知乎创作图鉴如何让旧内容继续产生创作价值。' },
-      ],
-      hotspot_hooks: [
-        { theme: '创作者如何使用 AI', hook: '把 AI 从代写工具转成复盘和资产化工具', reason: '贴合知乎创作者对 AI 辅助创作的真实讨论。' },
-      ],
-    },
-    map_position: '知乎开放内容 -> 创作者素材库 -> 下一篇选题',
-    insight: '这条演示链路证明：知乎内容可以从一次性阅读变成创作者自己的长期知识资产。',
-  };
-}
-
-async function readGuidedDemoArticleAndAnalysis() {
-  const record = await readPackagedDemoRecord();
-  const article = articleFromPackagedDemoRecord(record);
-  return {
-    article,
-    analysis: buildGuidedDemoAnalysis(article, record.analysis || {}),
-  };
-}
-
-function setDemoAnalyzeButtonReady(ready) {
-  packagedDemoArticleLoaded = !!ready;
-}
-
-function maybeShowAnalyzeStartOnboardingStep() {
-  if (!onboardingState.active || onboardingState.section !== 'analyze') return;
-  const steps = panelOnboardingSteps('analyze');
-  const demoIndex = steps.findIndex(s => s.target === '#demoArticleBtn');
-  const analyzeIndex = steps.findIndex(s => s.target === '#analyzeBtn');
-  if (demoIndex < 0 || analyzeIndex < 0) return;
-  if (onboardingState.index > demoIndex) return;
-  onboardingState.index = analyzeIndex;
-  renderPanelOnboarding();
-}
-
-function maybeShowAnalyzeResultOnboardingStep() {
-  if (!onboardingState.active || onboardingState.section !== 'analyze') return;
-  const steps = panelOnboardingSteps('analyze');
-  const analyzeIndex = steps.findIndex(s => s.target === '#analyzeBtn');
-  const resultIndex = steps.findIndex(s => s.target === '#result');
-  if (analyzeIndex < 0 || resultIndex < 0) return;
-  if (onboardingState.index > analyzeIndex) return;
-  onboardingState.index = resultIndex;
-  renderPanelOnboarding();
-}
-
-async function loadPackagedDemoArticleForAnalysis() {
-  const btn = document.getElementById('demoArticleBtn');
-  const originalText = btn?.textContent || '载入示例文章';
-  try {
-    if (btn) {
-      btn.disabled = true;
-      btn.textContent = '载入中…';
-    }
-    const { article, analysis } = await readGuidedDemoArticleAndAnalysis();
-    guidedDemoArticle = article;
-    guidedDemoAnalysis = analysis;
-    await chrome.storage.local.set({ lastArticle: article });
-    switchTab('analyze', { skipOnboarding: true });
-    loadArticle(article);
-    setDemoAnalyzeButtonReady(true);
-    maybeShowAnalyzeStartOnboardingStep();
-  } catch (e) {
-    showError(e.message || '示例文章载入失败');
-  } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = originalText;
-    }
-  }
-}
-
-async function runPackagedDemoAnalysis() {
-  if (isAnalyzing) return;
-  const btn = document.getElementById('analyzeBtn');
-  try {
-    isAnalyzing = true;
-    setLoading(true);
-    if (!guidedDemoArticle || !guidedDemoAnalysis) {
-      const demo = await readGuidedDemoArticleAndAnalysis();
-      guidedDemoArticle = demo.article;
-      guidedDemoAnalysis = demo.analysis;
-    }
-    const article = guidedDemoArticle;
-    const analysis = guidedDemoAnalysis || {};
-    if (!Object.keys(analysis).length) throw new Error('示例分析结果为空');
-
-    await chrome.storage.local.set({ lastArticle: article });
-    switchTab('analyze', { skipOnboarding: true });
-    loadArticle(article);
-    setDemoAnalyzeButtonReady(true);
-    document.getElementById('errorBox').style.display = 'none';
-    renderResult(analysis, JSON.stringify(analysis, null, 2), 'result', {
-      articleText: article.body,
-      articleTitle: article.title || '',
-      articleUrl: article.url || '',
-    });
-    const savedRecord = await saveToLibrary(article.body, analysis, article, { advanceOnboarding: false });
-    if (savedRecord) hydrateChatContext('result', { record: savedRecord });
-    maybeShowAnalyzeResultOnboardingStep();
-    showAnalyzeDoneToast();
-  } catch (e) {
-    showError(e.message || '示例分析失败');
-  } finally {
-    isAnalyzing = false;
-    setLoading(false);
-    showResetBtn();
-  }
-}
-
-function startPanelOnboarding(index = 0, section = onboardingState.section) {
-  const steps = panelOnboardingSteps(section);
-  const safeIndex = clampNumber(Number.isInteger(index) ? index : 0, 0, Math.max(steps.length - 1, 0));
+function startPanelOnboarding(index = 0) {
   onboardingState.active = true;
-  onboardingState.section = normalizeOnboardingSection(section);
-  onboardingState.index = safeIndex;
+  onboardingState.index = index;
   renderPanelOnboarding();
 }
 
-async function resumePanelOnboardingIfPending() {
-  if (typeof chrome === 'undefined' || !chrome.storage?.local) return false;
-  const {
-    [ONBOARDING_RESUME_INDEX_KEY]: resumeIndex,
-    [ONBOARDING_RESUME_SECTION_KEY]: resumeSection,
-  } = await chrome.storage.local.get([ONBOARDING_RESUME_INDEX_KEY, ONBOARDING_RESUME_SECTION_KEY]);
-  if (!Number.isInteger(resumeIndex)) return false;
-  await chrome.storage.local.remove([ONBOARDING_RESUME_INDEX_KEY, ONBOARDING_RESUME_SECTION_KEY]);
-  startPanelOnboarding(resumeIndex, resumeSection || 'analyze');
-  return true;
-}
-
-async function replayPanelOnboarding(section = currentPanelTabName(), opts = {}) {
+async function replayPanelOnboarding() {
   setupPanelOnboardingEvents();
-  if (!opts.ignoreResume && await resumePanelOnboardingIfPending()) {
-    return;
+  if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+    const {
+      [ONBOARDING_DONE_KEY]: done,
+      [ONBOARDING_RESUME_INDEX_KEY]: resumeIndex,
+    } = await chrome.storage.local.get([ONBOARDING_DONE_KEY, ONBOARDING_RESUME_INDEX_KEY]);
+    if (!done && Number.isInteger(resumeIndex)) {
+      await chrome.storage.local.remove(ONBOARDING_RESUME_INDEX_KEY);
+      startPanelOnboarding(resumeIndex);
+      return;
+    }
   }
-  startPanelOnboarding(0, section);
+  startPanelOnboarding(0);
 }
 
 function clearOnboardingHighlight() {
@@ -949,7 +390,7 @@ function navigatePanelOnboardingStep(step) {
   if (!step.tab) return;
 
   if (currentTab !== step.tab) {
-    switchTab(step.tab, { skipOnboarding: true });
+    switchTab(step.tab);
     return;
   }
 
@@ -982,12 +423,6 @@ function findPanelOnboardingTarget(step, allowFallback = false) {
   if (!target && step.tab === 'assets') {
     target = document.querySelector('.tab-btn[data-tab="assets"]');
   }
-  if (!target && step.tab === 'fingerprint') {
-    target = document.querySelector('.tab-btn[data-tab="fingerprint"]');
-  }
-  if (!target && step.tab === 'author') {
-    target = document.querySelector('.tab-btn[data-tab="author"]');
-  }
   return target;
 }
 
@@ -1003,39 +438,10 @@ function highlightPanelOnboardingTarget(step, attempt = 0) {
   if (target) {
     target.classList.add('onboarding-highlight');
     if (!isOnboardingTargetVisible(target) && typeof target.scrollIntoView === 'function') {
-      target.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
+      target.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
     }
   }
   setTimeout(positionOnboardingArrow, target ? 180 : 0);
-}
-
-function nudgeOnboardingNextButton(message) {
-  const btn = document.getElementById('onboardingNextBtn');
-  if (!btn) return;
-  const original = btn.textContent;
-  btn.textContent = message;
-  btn.disabled = true;
-  setTimeout(() => {
-    btn.disabled = false;
-    btn.textContent = original;
-  }, 1300);
-}
-
-function isOnboardingRequiredTargetReady(selector) {
-  const el = selector ? document.querySelector(selector) : null;
-  if (!el || el.hidden) return false;
-  if ('disabled' in el && el.disabled) return false;
-  const style = typeof getComputedStyle === 'function' ? getComputedStyle(el) : null;
-  return !style || (style.display !== 'none' && style.visibility !== 'hidden');
-}
-
-function maybeShowAnalyzeSavedOnboardingStep() {
-  if (!onboardingState.active || onboardingState.section !== 'analyze') return;
-  const steps = panelOnboardingSteps('analyze');
-  const savedIndex = steps.findIndex(s => s.action === 'articleSaved');
-  if (savedIndex < 0 || onboardingState.index >= savedIndex) return;
-  onboardingState.index = savedIndex;
-  renderPanelOnboarding();
 }
 
 function clampNumber(value, min, max) {
@@ -1045,7 +451,6 @@ function clampNumber(value, min, max) {
 function renderPanelOnboarding() {
   const steps = panelOnboardingSteps();
   const step = steps[onboardingState.index];
-  const section = panelOnboardingSection();
   const layer = document.getElementById('onboardingLayer');
   if (!layer || !step) return;
 
@@ -1054,7 +459,7 @@ function renderPanelOnboarding() {
   layer.classList.toggle('peek', !!step.peek);
   layer.classList.toggle('compact', !!step.compact);
   document.body?.classList.toggle('onboarding-result-guide', !!step.showResultGuide);
-  document.getElementById('onboardingMeta').textContent = `${section.label} · 第 ${onboardingState.index + 1} 步 / 共 ${steps.length} 步`;
+  document.getElementById('onboardingMeta').textContent = `第 ${onboardingState.index + 1} 步 / 共 ${steps.length} 步`;
   const titleEl = document.getElementById('onboardingTitle');
   const bodyEl = document.getElementById('onboardingBody');
   if (step.titleHtml) titleEl.innerHTML = step.titleHtml;
@@ -1062,8 +467,6 @@ function renderPanelOnboarding() {
   if (step.bodyHtml) bodyEl.innerHTML = step.bodyHtml;
   else bodyEl.textContent = step.body;
   document.getElementById('onboardingBackBtn').style.display = onboardingState.index ? '' : 'none';
-  const skipBtn = document.getElementById('onboardingSkipBtn');
-  if (skipBtn) skipBtn.textContent = step.skipText || '跳过本区引导';
   document.getElementById('onboardingNextBtn').textContent = step.primary || (onboardingState.index === steps.length - 1 ? '完成引导' : '下一步');
 
   highlightPanelOnboardingTarget(step);
@@ -1123,37 +526,16 @@ function positionOnboardingArrow() {
 async function nextPanelOnboarding() {
   const steps = panelOnboardingSteps();
   const step = steps[onboardingState.index];
-  if (step?.action === 'ackThemeRecommendation') {
-    if (typeof chrome !== 'undefined' && chrome.storage?.local) {
-      await chrome.storage.local.set({ [THEME_RECOMMEND_DONE_KEY]: true });
-    }
-    await finishPanelOnboarding({ suppressThemeRecommendation: true });
-    return;
-  }
   if (step?.action === 'openOptions') {
     if (typeof chrome !== 'undefined' && chrome.storage?.local) {
       await chrome.storage.local.set({
         [ONBOARDING_OPTIONS_PENDING_KEY]: true,
-        [ONBOARDING_RESUME_SECTION_KEY]: onboardingState.section,
         [ONBOARDING_RESUME_INDEX_KEY]: Math.min(onboardingState.index + 1, steps.length - 1),
       });
     }
     chrome.runtime.openOptionsPage();
     onboardingState.index = Math.min(onboardingState.index + 1, steps.length - 1);
     renderPanelOnboarding();
-    return;
-  }
-  if (step?.action === 'loadDemoArticle') {
-    await loadPackagedDemoArticleForAnalysis();
-    return;
-  }
-  if (step?.action === 'runDemoAnalysis') {
-    await runPackagedDemoAnalysis();
-    return;
-  }
-  const nextStep = steps[onboardingState.index + 1];
-  if (nextStep?.requiresTarget && !isOnboardingRequiredTargetReady(nextStep.requiresTarget)) {
-    nudgeOnboardingNextButton(nextStep.waitMessage || '先完成当前步骤');
     return;
   }
   if (step?.action === 'finish' || onboardingState.index >= steps.length - 1) {
@@ -1170,28 +552,7 @@ function backPanelOnboarding() {
   renderPanelOnboarding();
 }
 
-async function shouldShowThemeRecommendationAfter(section, completedNormally = true) {
-  if (!completedNormally || normalizeOnboardingSection(section) !== 'analyze') return false;
-  if (document.documentElement.dataset.theme === 'dark') return false;
-  if (typeof chrome === 'undefined' || !chrome.storage?.local) return false;
-  const doneKey = onboardingSectionDoneKey('themeRecommendation');
-  const stored = await chrome.storage.local.get([THEME_RECOMMEND_DONE_KEY, doneKey]);
-  return !stored?.[THEME_RECOMMEND_DONE_KEY] && !stored?.[doneKey];
-}
-
-async function maybeShowMapLightModeHint() {
-  if (document.documentElement.dataset.theme === 'dark') return;
-  if (onboardingState.active) return;
-  if (typeof chrome === 'undefined' || !chrome.storage?.local) return;
-  const doneKey = onboardingSectionDoneKey('mapLightHint');
-  const stored = await chrome.storage.local.get([MAP_LIGHT_HINT_DONE_KEY, doneKey]);
-  if (stored?.[MAP_LIGHT_HINT_DONE_KEY] || stored?.[doneKey]) return;
-  startPanelOnboarding(0, 'mapLightHint');
-}
-
-async function finishPanelOnboarding(opts = {}) {
-  const finishedSection = onboardingState.section;
-  const completedNormally = opts.completedNormally !== false;
+async function finishPanelOnboarding() {
   onboardingState.active = false;
   const layer = document.getElementById('onboardingLayer');
   layer?.classList.remove('visible');
@@ -1200,52 +561,9 @@ async function finishPanelOnboarding(opts = {}) {
   document.body?.classList.remove('onboarding-result-guide');
   clearOnboardingHighlight();
   if (typeof chrome !== 'undefined' && chrome.storage?.local) {
-    await markOnboardingSectionDone(finishedSection);
-    await chrome.storage.local.remove([ONBOARDING_RESUME_INDEX_KEY, ONBOARDING_RESUME_SECTION_KEY]);
+    await chrome.storage.local.set({ [ONBOARDING_DONE_KEY]: true, [ONBOARDING_HINT_SEEN_KEY]: true });
+    await chrome.storage.local.remove(ONBOARDING_RESUME_INDEX_KEY);
   }
-  if (!opts.suppressThemeRecommendation && await shouldShowThemeRecommendationAfter(finishedSection, completedNormally)) {
-    startPanelOnboarding(0, 'themeRecommendation');
-  } else if (completedNormally && (finishedSection === 'legacy' || finishedSection === 'themeRecommendation')) {
-    setTimeout(() => showAnalyzeOwnArticleHint(), 280);
-  }
-}
-
-// ── 引导结束后:提示用户分析自己的文章 ─────────────────────
-function positionAnalyzeOwnArticleHint() {
-  const hint = document.getElementById('analyzeOwnHint');
-  const target = document.getElementById('recaptureBtn');
-  if (!hint || !target || hint.hidden) return;
-  const rect = target.getBoundingClientRect();
-  if (rect.width === 0 && rect.height === 0) return;
-  const hintWidth = hint.offsetWidth || 264;
-  const vw = window.innerWidth;
-  const margin = 10;
-  let left = rect.left + rect.width / 2 - hintWidth / 2;
-  left = Math.max(margin, Math.min(left, vw - hintWidth - margin));
-  hint.style.left = `${left}px`;
-  hint.style.top  = `${rect.bottom + 26}px`;
-  const arrow = hint.querySelector('.analyze-own-hint-arrow');
-  if (arrow) {
-    const btnCenter = rect.left + rect.width / 2;
-    const arrowLeft = Math.max(14, Math.min(btnCenter - left, hintWidth - 14));
-    arrow.style.left = `${arrowLeft}px`;
-  }
-}
-
-function showAnalyzeOwnArticleHint() {
-  const hint = document.getElementById('analyzeOwnHint');
-  const target = document.getElementById('recaptureBtn');
-  if (!hint || !target) return;
-  hint.hidden = false;
-  positionAnalyzeOwnArticleHint();
-  requestAnimationFrame(() => hint.classList.add('visible'));
-}
-
-function dismissAnalyzeOwnArticleHint() {
-  const hint = document.getElementById('analyzeOwnHint');
-  if (!hint || hint.hidden) return;
-  hint.classList.remove('visible');
-  setTimeout(() => { hint.hidden = true; }, 220);
 }
 
 // ── API Key 本地存储 ─────────────────────────────────────
@@ -1267,9 +585,9 @@ async function getStoredApiKeys() {
 async function init() {
   await loadUiTheme();
   document.body.dataset.activeTab = 'analyze';
-  debugLog('[知乎创作图鉴 panel] init 启动');
+  debugLog('[知识图鉴 panel] init 启动');
   const { lastArticle } = await chrome.storage.local.get('lastArticle');
-  debugLog('[知乎创作图鉴 panel] 当前 storage:', lastArticle ? lastArticle.title : '空');
+  debugLog('[知识图鉴 panel] 当前 storage:', lastArticle ? lastArticle.title : '空');
   if (lastArticle) loadArticle(lastArticle);
   else showLastAnalysisHint();
 
@@ -1282,7 +600,7 @@ async function init() {
       checkApiKey();
     }
     if (area === 'local' && changes.weekGoal) {
-      updateTopMetrics().catch(e => debugLog('[知乎创作图鉴 panel] 周目标刷新失败:', e.message));
+      updateTopMetrics().catch(e => debugLog('[知识图鉴 panel] 周目标刷新失败:', e.message));
     }
     if (area === 'local' && changes[UI_THEME_KEY]) {
       applyUiTheme(changes[UI_THEME_KEY].newValue);
@@ -1298,21 +616,16 @@ async function init() {
     else if (active === 'review') loadReview();
     else if (active === 'map') loadMap();
     else if (active === 'fingerprint') loadFingerprint();
-    else if (active === 'author') loadAuthorAgent();
   };
 
   // 绑定按钮事件（CSP 不允许 onclick）
   document.getElementById('settingsBtn').addEventListener('click', () => chrome.runtime.openOptionsPage());
   document.getElementById('onboardingReplayBtn')?.addEventListener('click', () => {
-    dismissOnboardingEntryHint().catch(e => debugLog('[知乎创作图鉴 panel] 关闭新手指引提示失败:', e.message));
-    replayPanelOnboarding(currentPanelTabName(), { ignoreResume: true }).catch(e => debugLog('[知乎创作图鉴 panel] 重看新手引导失败:', e.message));
+    dismissOnboardingEntryHint().catch(e => debugLog('[知识图鉴 panel] 关闭新手指引提示失败:', e.message));
+    replayPanelOnboarding().catch(e => debugLog('[知识图鉴 panel] 重看新手引导失败:', e.message));
   });
   document.getElementById('themeToggleBtn')?.addEventListener('click', toggleUiTheme);
   document.getElementById('recaptureBtn')?.addEventListener('click', recaptureCurrentPage);
-  document.getElementById('analyzeOwnHintCloseBtn')?.addEventListener('click', dismissAnalyzeOwnArticleHint);
-  window.addEventListener('resize', positionAnalyzeOwnArticleHint);
-  window.addEventListener('scroll', positionAnalyzeOwnArticleHint, true);
-  document.getElementById('demoArticleBtn')?.addEventListener('click', loadPackagedDemoArticleForAnalysis);
   document.getElementById('toggleManual').addEventListener('click', switchToManual);
   document.getElementById('manualBtn').addEventListener('click', manualAnalyze);
   document.getElementById('analyzeBtn').addEventListener('click', analyze);
@@ -1332,26 +645,20 @@ async function init() {
   document.getElementById('assetsTab').addEventListener('keydown', (e) => {
     handleChatKeydown(e);
   });
-  document.getElementById('authorTab')?.addEventListener('click', (e) => {
-    if (!handleAuthorAgentClick(e)) handleResultClick(e);
-  });
-  document.getElementById('authorTab')?.addEventListener('keydown', (e) => {
-    handleChatKeydown(e);
-  });
 
   await dbMigrateFromStorage()
-    .catch(e => console.warn('[知乎创作图鉴 panel] storage 迁移失败:', e.message));
+    .catch(e => console.warn('[知识图鉴 panel] storage 迁移失败:', e.message));
   await seedDemoDataIfEmpty()
-    .catch(e => console.warn('[知乎创作图鉴 panel] 演示数据导入失败:', e.message));
+    .catch(e => console.warn('[知识图鉴 panel] 演示数据导入失败:', e.message));
   await initProjects();
   initTabs();
   updateAssetCount();
   checkApiKey();
   initAssetsToolbar();
   autoGenerateWeeklyReportOnPanelOpen().catch(e =>
-    console.warn('[知乎创作图鉴 panel] 自动周复盘生成失败:', e.message)
+    console.warn('[知识图鉴 panel] 自动周复盘生成失败:', e.message)
   );
-  maybeStartPanelOnboarding().catch(e => debugLog('[知乎创作图鉴 panel] 新手引导启动失败:', e.message));
+  maybeStartPanelOnboarding().catch(e => debugLog('[知识图鉴 panel] 新手引导启动失败:', e.message));
 }
 
 // ── 项目管理 ─────────────────────────────────────────────
@@ -1377,7 +684,6 @@ async function initProjects() {
       else if (active === 'review') loadReview();
       else if (active === 'fingerprint') loadFingerprint();
       else if (active === 'map') loadMap();
-      else if (active === 'author') loadAuthorAgent();
     } catch (e) {
       alert(e.message);
     }
@@ -1414,7 +720,6 @@ async function onProjectChange(e) {
   else if (active === 'review') loadReview();
   else if (active === 'fingerprint') loadFingerprint();
   else if (active === 'map') loadMap();
-  else if (active === 'author') loadAuthorAgent();
 }
 
 async function checkApiKey() {
@@ -1438,9 +743,8 @@ async function checkApiKey() {
 }
 
 function loadArticle(article) {
-  const typeLabel = { article: '专栏文章', answer: '问答回答', pin: '想法', zhihu_story: '知乎开放故事' };
+  const typeLabel = { article: '专栏文章', answer: '问答回答', pin: '想法' };
   capturedText = article.body || '';
-  setDemoAnalyzeButtonReady(article.source === 'packaged_demo');
 
   // 检测到新文章时清除旧分析结果，避免新旧内容叠显
   document.getElementById('result').style.display = 'none';
@@ -1463,7 +767,6 @@ function loadArticle(article) {
 async function recaptureCurrentPage() {
   const btn = document.getElementById('recaptureBtn');
   if (btn?.disabled) return;
-  dismissAnalyzeOwnArticleHint();
   const oldTitle = btn?.getAttribute('title') || '重新抓取当前知乎页';
   try {
     if (btn) {
@@ -1483,7 +786,7 @@ async function recaptureCurrentPage() {
         return;
       } catch (e) {
         directError = e.message || String(e);
-        debugLog('[知乎创作图鉴 panel] 直接抓取失败，尝试后台兜底:', directError);
+        debugLog('[知识图鉴 panel] 直接抓取失败，尝试后台兜底:', directError);
       }
     }
     const resp = await chrome.runtime.sendMessage({
@@ -1706,14 +1009,14 @@ async function getCurrentZhihuTabForCapture() {
       const [tab] = await chrome.tabs.query(query);
       if (tab?.id && isZhihuCaptureUrl(tab.url)) return tab;
     } catch (e) {
-      debugLog('[知乎创作图鉴 panel] 查询当前知乎标签失败:', e.message);
+      debugLog('[知识图鉴 panel] 查询当前知乎标签失败:', e.message);
     }
   }
   try {
     const tabs = await chrome.tabs.query({ url: ['https://www.zhihu.com/*', 'https://zhuanlan.zhihu.com/*'] });
     return pickBestZhihuCaptureTab(tabs);
   } catch (e) {
-    debugLog('[知乎创作图鉴 panel] 查询全部知乎标签失败:', e.message);
+    debugLog('[知识图鉴 panel] 查询全部知乎标签失败:', e.message);
   }
   return null;
 }
@@ -1732,35 +1035,8 @@ function pickBestZhihuCaptureTab(tabs = []) {
     })[0] || null;
 }
 
-function extractZhihuEnvironmentQuery(articleSnapshot = {}, text = '') {
-  const title = String(articleSnapshot?.title || '').replace(/[-_]?知乎.*$/i, '').trim();
-  if (title && title.length >= 4) return title.slice(0, 60);
-  const firstLine = String(text || '').split(/\n+/).map(line => line.trim()).find(line => line.length >= 8) || '';
-  return firstLine.slice(0, 40);
-}
-
-async function buildZhihuEnvironmentApiContext(articleSnapshot, text) {
-  if (typeof zhihuContentApiReady !== 'function' || typeof zhihuSearchContent !== 'function') return null;
-  if (!await zhihuContentApiReady()) return null;
-  const query = extractZhihuEnvironmentQuery(articleSnapshot, text);
-  if (!query) return null;
-  try {
-    const data = await zhihuSearchContent(query, { limit: 5 });
-    if (!data?.results?.length) return { source: 'zhihu_search', query, results: [] };
-    return {
-      source: 'zhihu_search',
-      query,
-      results: data.results,
-    };
-  } catch (e) {
-    debugLog('[知乎创作图鉴 panel] 知乎环境参考获取失败:', e.message);
-    return null;
-  }
-}
-
 function switchToManual() {
   capturedText = '';
-  setDemoAnalyzeButtonReady(false);
   document.getElementById('detectedCard').style.display = 'none';
   document.getElementById('toggleManual').style.display = 'none';
   document.getElementById('waitingSection').style.display = 'block';
@@ -1783,10 +1059,6 @@ async function analyze() {
   if (isAnalyzing) return;
   const text = capturedText || document.getElementById('articleInput').value.trim();
   if (!text || text.length < 50) { showError('请先粘贴文章内容，或在知乎文章页打开侧边栏'); return; }
-  if (packagedDemoArticleLoaded) {
-    await runPackagedDemoAnalysis();
-    return;
-  }
   isAnalyzing = true;
 
   const [settings, apiKeys] = await Promise.all([
@@ -1814,10 +1086,9 @@ async function analyze() {
   document.getElementById('errorBox').style.display = 'none';
 
   try {
-    const zhihuEnvironmentContext = await buildZhihuEnvironmentApiContext(articleSnapshot, text);
     const messages = [
       { role: 'system', content: SYSTEM },
-      { role: 'user',   content: makeUserPrompt(text, zhihuEnvironmentContext) }
+      { role: 'user',   content: makeUserPrompt(text) }
     ];
     const raw = await callLLM(apiKey, provider, model, messages, 3500);
     const { result, jsonStr } = parseAndValidate(raw);
@@ -1828,7 +1099,6 @@ async function analyze() {
     });
     const savedRecord = await saveToLibrary(text, result, articleSnapshot);
     hydrateChatContext('result', { record: savedRecord });
-    showAnalyzeDoneToast();
 
   } catch (e) {
     showError(e.message);
@@ -1840,7 +1110,7 @@ async function analyze() {
 }
 
 // ── 入库 ─────────────────────────────────────────────────
-async function saveToLibrary(articleText, analysis, articleSnapshot, opts = {}) {
+async function saveToLibrary(articleText, analysis, articleSnapshot) {
   try {
     const record = {
       id:         Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
@@ -1868,10 +1138,9 @@ async function saveToLibrary(articleText, analysis, articleSnapshot, opts = {}) 
     writeArticleToLocalFolder(record); // 不 await，失败不影响主流程
     updateAssetCount();
     showSavedBanner();
-    if (opts.advanceOnboarding !== false) maybeShowAnalyzeSavedOnboardingStep();
     return record;
   } catch (e) {
-    console.warn('[知乎创作图鉴] 入库失败:', e.message);
+    console.warn('[知识图鉴] 入库失败:', e.message);
     return null;
   }
 }
@@ -1998,176 +1267,10 @@ const TYPE_META = {
   event:   { label: '事件', color: '#b07828' },
 };
 const tags = arr => (arr || []).map(t => `<span class="tag">${esc(t)}</span>`).join('');
-const ASSET_CARD_TYPE_LABELS = {
-  core_viewpoint: '核心观点',
-  core_claim: '核心观点',
-  viewpoint: '核心观点',
-  opinion: '核心观点',
-  knowledge_node: '知识节点',
-  node: '知识节点',
-  reusable_material: '可复用素材',
-  material: '可复用素材',
-  extension_direction: '延展方向',
-  direction: '延展方向',
-  writing_fingerprint: '写作指纹证据',
-  fingerprint: '写作指纹证据',
-  creator_strength: '创作者优势判断',
-  strength: '创作者优势判断',
-};
-const HIDDEN_RESULT_ASSET_CARD_TYPES = new Set(['知识节点', '可复用素材', '延展方向', '写作指纹证据', '创作者优势判断']);
-
-function compactTextList(list = []) {
-  return list.map(value => String(value || '').trim()).filter(Boolean);
-}
-
-function shortText(text, limit = 80) {
-  const value = String(text || '').replace(/\s+/g, ' ').trim();
-  return value.length > limit ? value.slice(0, Math.max(0, limit - 1)) + '…' : value;
-}
-
-function normalizeReuseScore(value) {
-  const n = Number.parseInt(value, 10);
-  return Number.isFinite(n) ? Math.max(1, Math.min(5, n)) : 4;
-}
-
-function reuseStars(value) {
-  const score = normalizeReuseScore(value);
-  return '★★★★★'.slice(0, score) + '☆☆☆☆☆'.slice(0, 5 - score);
-}
-
-function assetCardPayload(card) {
-  return {
-    type: card.type || '作品资产',
-    title: card.title || '',
-    summary: card.summary || '',
-    source: card.source || '',
-    keywords: card.keywords || [],
-    whyReusable: card.whyReusable || '',
-    reuseScore: normalizeReuseScore(card.reuseScore),
-  };
-}
-
-function assetCardPayloadAttr(card) {
-  return esc(JSON.stringify(assetCardPayload(card)));
-}
-
-function shouldShowResultAssetCard(card) {
-  return !HIDDEN_RESULT_ASSET_CARD_TYPES.has(String(card?.type || '').trim());
-}
-
-function assetCardTypeLabel(card) {
-  const raw = String(card?.asset_type || card?.type || '').trim();
-  return ASSET_CARD_TYPE_LABELS[raw] || raw || '作品资产';
-}
-
-function assetCardKeywords(card, fallback = []) {
-  const fromCard = Array.isArray(card?.keywords) ? card.keywords : String(card?.keywords || '').split(/[、,，\s]+/);
-  return compactTextList([...fromCard, ...fallback]).slice(0, 5);
-}
-
-function fallbackAssetCards(r = {}, sourceTitle = '当前作品', tagsHint = []) {
-  const primaryNode = (r.nodes_hit || []).find(n => n.role === 'primary') || (r.nodes_hit || [])[0] || {};
-  const firstClip = (r.reusable_clips || []).find(c => String(c?.content || '').trim()) || {};
-  const firstInsight = (r.essence_insights || []).find(i => String(i?.viewpoint || '').trim()) || {};
-  const firstSuggestion = (r.next_suggestions || [])[0] || {};
-  const strengths = (r.strengths || []).map(s => s.dimension).filter(Boolean);
-  const nodeNames = (r.nodes_hit || []).map(n => n.name).filter(Boolean);
-
-  return [
-    {
-      type: '核心观点',
-      title: r.core_claim || '这篇作品的核心判断',
-      summary: [r.domain, r.sub_domain, r.perspective].filter(Boolean).join(' · ') || '从作品中提炼出的主要判断。',
-      source: sourceTitle,
-      keywords: tagsHint,
-      whyReusable: '可以作为下一篇文章的主判断或开头立论继续展开。',
-      reuseScore: 5,
-    },
-    {
-      type: '知识节点',
-      title: primaryNode.name || nodeNames.join(' / ') || '本篇命中的知识节点',
-      summary: primaryNode.contribution || r.map_position || '这篇作品已经进入你的知识宇宙节点。',
-      source: sourceTitle,
-      keywords: nodeNames,
-      whyReusable: '节点会把相近旧文连起来，方便后续围绕同一主题继续深挖。',
-      reuseScore: 4,
-    },
-    {
-      type: '可复用素材',
-      title: firstClip.content || '本篇可迁移素材',
-      summary: firstClip.why_reusable || '可以迁移到相邻话题、开篇例子或论证段落中。',
-      source: sourceTitle,
-      keywords: compactTextList([firstClip.type, ...tagsHint]),
-      whyReusable: firstClip.why_reusable || '素材脱离原文后仍能支撑相近观点。',
-      reuseScore: 4,
-    },
-    {
-      type: '延展方向',
-      title: firstSuggestion.suggestion || '下一篇可以继续写的方向',
-      summary: firstSuggestion.reason || '这篇作品已经留下了可以继续放大的问题。',
-      source: sourceTitle,
-      keywords: compactTextList([firstSuggestion.type, firstSuggestion.theory_ref, ...tagsHint]),
-      whyReusable: '它把旧文章变成下一篇选题的入口。',
-      reuseScore: 5,
-    },
-    {
-      type: '写作指纹证据',
-      title: firstInsight.viewpoint || r.insight || '作品识别到的思考习惯',
-      summary: firstInsight.why_essential || r.insight || '这条线索能帮助创作者看见自己反复在意的问题。',
-      source: sourceTitle,
-      keywords: compactTextList([...strengths, ...tagsHint]),
-      whyReusable: '它会进入长期写作指纹，用来识别创作者真正擅长的方向。',
-      reuseScore: 4,
-    },
-    {
-      type: '创作者优势判断',
-      title: '这篇作品显示出的优势',
-      summary: r.creator_strength || '继续分析更多作品后，知乎创作图鉴会更准确地判断你的稳定优势。',
-      source: sourceTitle,
-      keywords: compactTextList([...strengths, r.perspective]),
-      whyReusable: '优势判断可以帮助创作者选择更适合继续深耕的表达路线。',
-      reuseScore: 4,
-    },
-  ].filter(card => String(card.title || card.summary || '').trim());
-}
-
-function normalizeAssetCards(r = {}, context = {}) {
-  const sourceTitle = context.articleTitle || context.record?.article?.title || r.source_title || '当前作品';
-  const tagsHint = compactTextList([...(r.tags || []), r.domain, r.sub_domain, r.perspective]);
-  const fallbackCards = fallbackAssetCards(r, sourceTitle, tagsHint);
-
-  if (!Array.isArray(r.asset_cards) || !r.asset_cards.length) return fallbackCards;
-
-  const explicitCards = r.asset_cards
-    .filter(card => String(card?.title || card?.content || card?.summary || '').trim())
-    .map(card => ({
-      type: assetCardTypeLabel(card),
-      title: String(card.title || card.content || card.summary || '').trim(),
-      summary: String(card.summary || card.explanation || card.content || '').trim(),
-      source: String(card.source_article || card.source_title || sourceTitle).trim(),
-      keywords: assetCardKeywords(card, tagsHint),
-      whyReusable: String(card.why_reusable || card.reuse_reason || card.value || '').trim(),
-      reuseScore: normalizeReuseScore(card.reuseScore || card.reuse_score || card.score),
-    }));
-  const used = new Set(explicitCards.map(card => card.type));
-  const completed = fallbackCards.filter(card => !used.has(card.type));
-  return [...explicitCards, ...completed].slice(0, 6);
-}
-
-function cardAssetCards(r, context = {}) {
-  const items = normalizeAssetCards(r, context).filter(shouldShowResultAssetCard).slice(0, 4).map(card => `
-    <div class="card">
-      <div class="card-label">${esc(card.type)}</div>
-      <div class="core-claim">${esc(card.title)}</div>
-      ${card.summary ? `<div class="field"><div class="field-label">一句话解释</div><div class="field-value">${esc(card.summary)}</div></div>` : ''}
-      <button class="chat-template-btn" type="button" data-asset-remix="${assetCardPayloadAttr(card)}">用于新文章</button>
-    </div>`).join('');
-  return items || cardPosition(r);
-}
 
 function cardPosition(r) {
   return `<div class="card">
-    <div class="card-label">核心观点资产</div>
+    <div class="card-label">定位</div>
     <div class="field">
       <div class="field-label">主领域 / 分支</div>
       <div class="field-value">${esc(r.domain)}${r.sub_domain ? ' · ' + esc(r.sub_domain) : ''}</div>
@@ -2192,7 +1295,7 @@ function cardStrengths(r) {
 function cardCreatorStrength(r) {
   const text = String(r.creator_strength || '').trim();
   return text
-    ? `<div class="card"><div class="card-label">写作指纹证据</div><div class="insight">${esc(shortText(text, 90))}</div></div>`
+    ? `<div class="card"><div class="card-label">创作者优势</div><div class="insight">${esc(text)}</div></div>`
     : '';
 }
 
@@ -2210,7 +1313,7 @@ function cardCraftReview(r) {
 
   if (!praise && !quote && !summary) return '';
   return `<div class="card craft-review-card"><div class="card-label">写作技法</div>
-    ${praise ? `<div class="teacher-praise"><div class="craft-subtitle">知乎创作图鉴夸你</div>${esc(praise)}</div>` : ''}
+    ${praise ? `<div class="teacher-praise"><div class="craft-subtitle">知识图鉴夸你</div>${esc(praise)}</div>` : ''}
     ${quote ? `<div class="teacher-quote">${esc(quote)}</div>` : ''}
     ${summary ? `<div class="craft-summary"><span>整体气质</span>${esc(summary)}</div>` : ''}
   </div>`;
@@ -2226,7 +1329,7 @@ function cardNodes(r) {
       </div>
       <div class="node-contribution">${esc(n.contribution)}</div>
     </div>`).join('');
-  return `<div class="card"><div class="card-label">知识节点资产 · ${(r.nodes_hit||[]).length} 个</div>${items}</div>`;
+  return `<div class="card"><div class="card-label">知识节点 · ${(r.nodes_hit||[]).length} 个</div>${items}</div>`;
 }
 
 function cardConcepts(r) {
@@ -2236,178 +1339,27 @@ function cardConcepts(r) {
 }
 
 function cardMapPosition(r) {
-  return `<div class="card"><div class="card-label">进入知识宇宙的位置</div>
+  return `<div class="card"><div class="card-label">地图位置</div>
     <div style="font-size:12px;line-height:1.7;color:#909090">${esc(r.map_position)}</div></div>`;
 }
 
 function cardSuggestions(r) {
-  const items = collectZhihuQuestionTopics(r).map(s => `
+  const items = (r.next_suggestions || []).map(s => `
     <div class="sug-item">
       <div class="sug-header">
-        <span class="sug-badge sug-延伸">问题</span>
-        <span class="sug-title">${esc(s.title)}</span>
+        <span class="sug-badge sug-${esc(s.type)}">${esc(s.type)}</span>
+        <span class="sug-title">${esc(s.suggestion)}</span>
       </div>
-      ${s.body ? `<div class="sug-reason">切入角度：${esc(shortText(s.body, 64))}</div>` : ''}
+      <div class="sug-reason">${esc(s.reason)}</div>
+      ${s.theory_ref ? `<div class="sug-ref">参考：${esc(s.theory_ref)}</div>` : ''}
     </div>`).join('');
-  return items ? `<div class="card"><div class="card-label">下一篇知乎选题</div>${items}</div>` : '';
-}
-
-function normalizeZhihuAdviceList(list = [], titleKeys = [], bodyKeys = [], limit = 5) {
-  return (Array.isArray(list) ? list : [])
-    .map(item => {
-      if (typeof item === 'string') return { title: item, body: '' };
-      const title = titleKeys.map(key => item?.[key]).find(value => String(value || '').trim()) || '';
-      const body = bodyKeys.map(key => item?.[key]).find(value => String(value || '').trim()) || '';
-      return { title: String(title || '').trim(), body: String(body || '').trim() };
-    })
-    .filter(item => item.title || item.body)
-    .slice(0, limit);
-}
-
-function isQuestionLike(text) {
-  return /[？?]\s*$/.test(String(text || '').trim()) || /(为什么|为何|如何|怎样|怎么|是否|能否|能不能|该不该|有没有|什么|哪|谁|如果|当)/.test(String(text || '').trim());
-}
-
-function ensureZhihuQuestionTitle(text) {
-  const raw = String(text || '').replace(/[。.!！]+$/g, '').trim();
-  if (!raw) return '';
-  if (isQuestionLike(raw)) return /[？?]\s*$/.test(raw) ? raw.replace(/\?$/, '？') : `${raw}？`;
-  if (raw.includes('是') || raw.includes('成为') || raw.includes('衰败') || raw.includes('必然')) {
-    return `为什么说${raw}？`;
-  }
-  return `如何从「${raw}」继续写出一篇知乎回答？`;
-}
-
-function collectZhihuQuestionTopics(r = {}) {
-  const raw = r.zhihu_environment_advice || r.zhihu_context_advice || {};
-  const subject = shortText(r.core_claim || r.perspective || r.sub_domain || r.domain || '这个问题', 28);
-  const items = [
-    ...normalizeZhihuAdviceList(raw.next_zhihu_topics, ['title', 'topic', 'suggestion'], ['angle', 'reason', 'body'], 8),
-    ...normalizeZhihuAdviceList(raw.question_contexts, ['question_type', 'question', 'title'], ['why_fit', 'reason', 'body'], 6),
-    ...(Array.isArray(r.next_suggestions) ? r.next_suggestions.map(s => ({
-      title: s?.suggestion || '',
-      body: s?.reason || s?.theory_ref || '',
-    })) : []),
-    { title: `为什么说${subject}不是单一现象，而是结构性结果？`, body: '可以从结构性原因分析。' },
-    { title: `普通人如何理解${subject}背后的机制？`, body: '适合把原文判断转成解释型回答。' },
-    { title: `如果把${subject}放到现实生活中，会出现哪些相似处境？`, body: '适合做现实迁移。' },
-    { title: `讨论${subject}时，最容易被忽略的前提是什么？`, body: '适合补充边界条件。' },
-    { title: `从${subject}继续写，下一篇应该补上哪个反例或边界？`, body: '适合避免重复旧观点。' },
-  ];
-  const seen = new Set();
-  return items
-    .map(item => ({
-      title: ensureZhihuQuestionTitle(item.title),
-      body: String(item.body || '').trim(),
-    }))
-    .filter(item => item.title)
-    .filter(item => {
-      const key = item.title.replace(/\s+/g, '');
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    })
-    .slice(0, 5);
-}
-
-function normalizeZhihuEnvironmentAdvice(r = {}) {
-  const raw = r.zhihu_environment_advice || r.zhihu_context_advice || {};
-  const nodeKeywords = compactTextList((r.nodes_hit || []).map(n => n.name));
-  const assetKeywords = compactTextList((r.asset_cards || []).flatMap(card => card.keywords || []));
-  const fallbackKeywords = compactTextList([...(r.tags || []), r.domain, r.sub_domain, r.perspective, ...nodeKeywords, ...assetKeywords]).slice(0, 6);
-  const questionContexts = normalizeZhihuAdviceList(
-    raw.question_contexts,
-    ['question_type', 'question', 'title'],
-    ['why_fit', 'reason', 'body'],
-    5
-  );
-  const nextTopics = normalizeZhihuAdviceList(
-    raw.next_zhihu_topics,
-    ['title', 'topic', 'suggestion'],
-    ['angle', 'reason', 'body'],
-    5
-  );
-  const hotspotHooks = normalizeZhihuAdviceList(
-    raw.hotspot_hooks,
-    ['theme', 'title', 'topic'],
-    ['hook', 'reason', 'body'],
-    3
-  );
-  const keywords = compactTextList([
-    ...(Array.isArray(raw.search_keywords) ? raw.search_keywords : []),
-    ...fallbackKeywords,
-  ]).slice(0, 6);
-  const communityDifference = String(raw.community_difference || raw.difference || '').trim();
-
-  if (questionContexts.length || nextTopics.length || hotspotHooks.length || communityDifference || (r.next_suggestions || []).length) {
-    return {
-      questionContexts: questionContexts.length ? questionContexts : (r.next_suggestions || []).slice(0, 2).map(s => ({
-        title: s.suggestion || '这篇文章适合进入相关知乎问题语境',
-        body: s.reason || '可以把文章中的旧观点迁移到新的讨论场景。',
-      })),
-      communityDifference: communityDifference || (r.creator_strength ? `你的差异点在于：${r.creator_strength}` : ''),
-      keywords,
-      nextTopics: (nextTopics.length ? nextTopics : (r.next_suggestions || []).slice(0, 5).map(s => ({
-        title: s.suggestion || '下一篇知乎选题',
-        body: s.reason || s.theory_ref || '让旧文章继续为下一篇创作工作。',
-      }))).map(item => ({ ...item, title: ensureZhihuQuestionTitle(item.title), body: shortText(item.body, 64) })).slice(0, 5),
-      hotspotHooks,
-    };
-  }
-  return null;
-}
-
-function cardZhihuEnvironment(r) {
-  const advice = normalizeZhihuEnvironmentAdvice(r);
-  if (!advice) return '';
-  const hookItems = advice.hotspotHooks.map(item => `
-    <div class="sug-item">
-      <div class="sug-header"><span class="sug-badge sug-跨域">切口</span><span class="sug-title">${esc(item.title)}</span></div>
-      ${item.body ? `<div class="sug-reason">${esc(item.body)}</div>` : ''}
-    </div>`).join('');
-
-  return `<div class="card">
-    <div class="card-label">知乎环境建议</div>
-    <div class="field"><div class="field-label">社区参照原则</div><div class="field-value">知乎 API 提供的是社区语境参照，不替代创作者自己的观点资产。</div></div>
-    ${advice.communityDifference ? `<div class="field"><div class="field-label">和常见讨论的差异点</div><div class="field-value">${esc(advice.communityDifference)}</div></div>` : ''}
-    ${hookItems ? `<div class="field"><div class="field-label">现实切口</div>${hookItems}</div>` : ''}
-  </div>`;
+  return `<div class="card"><div class="card-label">下一步选题建议</div>${items}</div>`;
 }
 
 function cardConnections(r) {
-  const connections = compactTextList(r.connections || []);
-  const books = normalizeRecommendedBooks(r);
-  return (connections.length || books.length)
-    ? `<div class="card"><div class="card-label">专业推荐</div>
-      ${connections.length ? `<div class="field"><div class="field-label">相邻领域</div><div class="tag-row">${tags(connections)}</div></div>` : ''}
-      ${books.length ? `<div class="field"><div class="field-label">可以顺手补的书</div>${books.map(book => `<div class="sug-item"><div class="sug-header"><span class="sug-badge">书</span><span class="sug-title">${esc(book.title)}</span></div>${book.body ? `<div class="sug-reason">${esc(shortText(book.body, 58))}</div>` : ''}</div>`).join('')}</div>` : ''}
-    </div>`
+  return (r.connections||[]).length
+    ? `<div class="card"><div class="card-label">相邻领域</div><div class="tag-row">${tags(r.connections)}</div></div>`
     : '';
-}
-
-function normalizeRecommendedBooks(r = {}) {
-  const raw = Array.isArray(r.recommended_books) ? r.recommended_books : [];
-  const fromBooks = raw.map(item => {
-    if (typeof item === 'string') return { title: item, body: '' };
-    return {
-      title: String(item?.title || item?.name || item?.book || '').trim(),
-      body: String(item?.why || item?.reason || item?.body || '').trim(),
-    };
-  });
-  const fromRefs = (r.next_suggestions || [])
-    .map(item => String(item?.theory_ref || '').trim())
-    .filter(Boolean)
-    .map(title => ({ title, body: '可作为下一篇的理论或阅读补充。' }));
-  const seen = new Set();
-  return [...fromBooks, ...fromRefs]
-    .filter(item => item.title)
-    .filter(item => {
-      const key = item.title.replace(/\s+/g, '');
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    })
-    .slice(0, 4);
 }
 
 function cardClips(r) {
@@ -2417,6 +1369,7 @@ function cardClips(r) {
         <span class="clip-type">${esc(c.type || '素材')}</span>
         <span class="clip-content">${esc(c.content)}</span>
       </div>
+      ${c.why_reusable ? `<div class="clip-why">${esc(c.why_reusable)}</div>` : ''}
     </div>`).join('');
   return items ? `<div class="card"><div class="card-label">可复用素材</div>${items}</div>` : '';
 }
@@ -2435,14 +1388,12 @@ function cardTags(r) {
 }
 
 function cardInsight(r) {
-  return `<div class="card"><div class="card-label">作品识别到的你</div><div class="insight">${esc(r.insight)}</div></div>`;
+  return `<div class="card"><div class="card-label">编辑评语</div><div class="insight">${esc(r.insight)}</div></div>`;
 }
 
 function cardRaw(rawJson) {
-  return DEBUG
-    ? `<div class="raw-toggle"><button class="raw-toggle-btn">查看原始 JSON ↓</button></div>
-      <pre class="raw-json">${esc(rawJson)}</pre>`
-    : '';
+  return `<div class="raw-toggle"><button class="raw-toggle-btn">查看原始 JSON ↓</button></div>
+    <pre class="raw-json">${esc(rawJson)}</pre>`;
 }
 
 const CHAT_TEMPLATES = {
@@ -2475,20 +1426,17 @@ const CHAT_TEMPLATES = {
   },
 };
 
-function cardChat(chatId, options = {}) {
-  const templates = options.templates || CHAT_TEMPLATES;
-  const templateAttr = options.templateAttr || 'data-chat-template';
-  const buttons = Object.entries(templates).map(([key, tpl]) =>
-    `<button class="chat-template-btn" type="button" ${templateAttr}="${esc(key)}">${esc(tpl.label)}</button>`
+function cardChat(chatId) {
+  const buttons = Object.entries(CHAT_TEMPLATES).map(([key, tpl]) =>
+    `<button class="chat-template-btn" type="button" data-chat-template="${esc(key)}">${esc(tpl.label)}</button>`
   ).join('');
   return `<div class="card chat-card" data-chat-id="${esc(chatId)}">
-    <div class="card-label">${esc(options.label || '问问这篇作品')}</div>
-    <div class="chat-mascot" aria-hidden="true" hidden title="知乎刘看山"></div>
+    <div class="card-label">追问 AI</div>
     <div class="chat-templates">${buttons}</div>
     <div class="chat-history" aria-live="polite"></div>
     <div class="chat-status" role="status"></div>
     <div class="chat-input-row">
-      <input class="chat-input" type="text" placeholder="${esc(options.placeholder || '自定义问题…')}">
+      <input class="chat-input" type="text" placeholder="自定义问题…">
       <button class="chat-send-btn" type="button">发送</button>
     </div>
   </div>`;
@@ -2507,8 +1455,6 @@ function createChatSession(analysis, rawJson, containerId, context = {}) {
     sourceUrl: context.articleUrl || record?.article?.url || record?.url || '',
     recordId: record?.id || '',
     projectId: context.projectId || record?.project_id || activeProject,
-    agentMode: context.agentMode || 'article',
-    authorContext: context.authorContext || null,
     history: [],
   };
   return id;
@@ -2544,7 +1490,6 @@ function analysisChatSummary(analysis) {
     domain: [a.domain, a.sub_domain].filter(Boolean).join(' · '),
     perspective: a.perspective || '',
     core_claim: a.core_claim || '',
-    asset_cards: (a.asset_cards || []).slice(0, 6),
     creator_strength: a.creator_strength || '',
     craft_review: a.craft_review || {},
     reusable_clips: (a.reusable_clips || []).slice(0, 5),
@@ -2556,37 +1501,12 @@ function analysisChatSummary(analysis) {
       contribution: n.contribution,
     })),
     next_suggestions: (a.next_suggestions || []).slice(0, 4),
-    zhihu_environment_advice: a.zhihu_environment_advice || null,
     insight: a.insight || '',
   };
   return truncateText(JSON.stringify(summary, null, 2), CHAT_ANALYSIS_LIMIT);
 }
 
-function buildAuthorAgentMessages(session, question) {
-  const history = (session?.history || []).slice(-CHAT_HISTORY_LIMIT).map(item => ({
-    role: item.role,
-    content: truncateText(item.prompt || item.content, item.role === 'assistant' ? 1200 : 700),
-  }));
-  const contextText = truncateText(JSON.stringify(session?.authorContext || {}, null, 2), 12000);
-  return [
-    {
-      role: 'system',
-      content: '你是某位知乎创作者的 AI 分身。你只能基于该创作者历史文章中抽取出的作品资产回答问题。如果历史资产中没有相关内容，请明确说没有找到，不要编造。回答时必须引用相关旧文、观点卡、素材卡或知识节点。',
-    },
-    {
-      role: 'user',
-      content: `以下是这位创作者的历史作品资产库。请把它作为唯一依据，不要使用外部常识替作者表态。\n\n${contextText}`,
-    },
-    ...history,
-    {
-      role: 'user',
-      content: `${question}\n\n请按这个格式回答：\n1. 你的核心判断是……\n2. 你曾经用过的素材是……\n3. 可以复用的金句或节点是……\n4. 相关旧文是……\n5. 可以继续扩写的新方向是……`,
-    },
-  ];
-}
-
 function buildChatMessages(session, question) {
-  if (session?.agentMode === 'author') return buildAuthorAgentMessages(session, question);
   const history = (session?.history || []).slice(-CHAT_HISTORY_LIMIT).map(item => ({
     role: item.role,
     content: truncateText(item.prompt || item.content, item.role === 'assistant' ? 1200 : 700),
@@ -2614,11 +1534,6 @@ function handleResultClick(e) {
     toggleRaw(e.target);
     return;
   }
-  const remixBtn = e.target.closest('[data-asset-remix]');
-  if (remixBtn) {
-    useAssetCardForNewArticle(remixBtn);
-    return;
-  }
   const templateBtn = e.target.closest('[data-chat-template]');
   if (templateBtn) {
     sendTemplateChat(templateBtn.closest('.chat-card'), templateBtn.dataset.chatTemplate);
@@ -2636,89 +1551,6 @@ function handleResultClick(e) {
   }
   const nodeEl = e.target.closest('.node-item[data-node-name]');
   if (nodeEl) showNodeDetail(nodeEl.dataset.nodeName);
-}
-
-function parseAssetRemixPayload(btn) {
-  try {
-    return JSON.parse(btn?.dataset?.assetRemix || '{}');
-  } catch {
-    return {};
-  }
-}
-
-function resultHostForElement(el) {
-  return el?.closest?.('#result, #assetDetailResult') || el?.closest?.('.analysis-group')?.parentElement || document;
-}
-
-function buildAssetRemixPrompt(asset = {}) {
-  const keywords = Array.isArray(asset.keywords) ? asset.keywords.filter(Boolean).join('、') : String(asset.keywords || '');
-  return `请把下面这张旧作品资产卡，用来生成一篇新的知乎文章方向。
-
-资产类型：${asset.type || '作品资产'}
-资产标题：${asset.title || '未命名资产'}
-一句话解释：${asset.summary || '无'}
-来源文章：${asset.source || '当前作品'}
-关键词：${keywords || '无'}
-为什么可复用：${asset.whyReusable || '无'}
-可复用指数：${asset.reuseScore || 4}/5
-
-请严格按以下结构输出，内容要能直接进入下一篇创作：
-1. 新选题
-2. 标题建议（给 3 个）
-3. 文章开头（120 字以内）
-4. 文章大纲（4-6 节）
-5. 可复用旧素材（列出来自旧文的观点、素材或节点）
-6. 可能反驳点
-7. 推荐结尾
-
-要求：不要写成营销文案，不要泛泛而谈。重点展示“旧文章如何继续为下一篇创作工作”。`;
-}
-
-function useAssetCardForNewArticle(btn) {
-  const asset = parseAssetRemixPayload(btn);
-  const host = resultHostForElement(btn);
-  const chatCard = host?.querySelector?.('.chat-card');
-  if (!chatCard) return;
-  const title = asset.title || '这张资产卡';
-  flashAssetRemixButton(btn);
-  revealChatCard(chatCard);
-  sendChatQuestion(chatCard, buildAssetRemixPrompt(asset), {
-    label: `用于新文章：${title}`,
-    custom: true,
-  });
-}
-
-function flashAssetRemixButton(btn) {
-  if (!btn) return;
-  const original = btn.dataset.originalLabel || btn.textContent || '用于新文章';
-  btn.dataset.originalLabel = original;
-  btn.textContent = '已发送到 AI 对话框';
-  btn.classList.add('asset-remix-sent');
-  clearTimeout(btn._assetRemixTimer);
-  btn._assetRemixTimer = setTimeout(() => {
-    btn.textContent = btn.dataset.originalLabel || original;
-    btn.classList.remove('asset-remix-sent');
-  }, 1800);
-}
-
-function revealChatCard(card) {
-  if (!card) return;
-  card.classList.add('chat-card-attention');
-  try {
-    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  } catch {
-    card.scrollIntoView();
-  }
-  clearTimeout(card._attentionTimer);
-  card._attentionTimer = setTimeout(() => {
-    card.classList.remove('chat-card-attention');
-    const input = card.querySelector('.chat-input');
-    try {
-      input?.focus({ preventScroll: true });
-    } catch {
-      input?.focus();
-    }
-  }, 900);
 }
 
 function handleChatKeydown(e) {
@@ -2744,19 +1576,6 @@ function sendCustomChat(card) {
   sendChatQuestion(card, question, { label: question, custom: true });
 }
 
-function handleAuthorAgentClick(e) {
-  const btn = e.target.closest('[data-author-template]');
-  if (!btn) return false;
-  sendAuthorAgentTemplate(btn.closest('.chat-card'), btn.dataset.authorTemplate);
-  return true;
-}
-
-function sendAuthorAgentTemplate(card, key) {
-  const tpl = AUTHOR_AGENT_TEMPLATES[key];
-  if (!tpl) return;
-  sendChatQuestion(card, tpl.prompt, { label: tpl.label, custom: true });
-}
-
 async function sendChatQuestion(card, question, source = {}) {
   const session = getChatSession(card);
   if (!session) return;
@@ -2767,8 +1586,7 @@ async function sendChatQuestion(card, question, source = {}) {
 
   isChatting = true;
   setChatBusy(card, true);
-  hideChatMascot(card);
-  startChatLoadingMessages(card);
+  setChatStatus(card, '正在追问 AI…');
   const messages = buildChatMessages(session, question);
   session.history.push({
     id: makeClipId('chatq'),
@@ -2808,13 +1626,11 @@ async function sendChatQuestion(card, question, source = {}) {
     } else {
       setChatStatus(card, source.custom ? '这条对话可以选择是否入库。' : '回答已生成，可以按需保存到素材库或立意库。');
     }
-    showChatMascot(card);
   } catch (err) {
     setChatStatus(card, err.message || '追问失败，请稍后再试。', true);
   } finally {
     isChatting = false;
     setChatBusy(card, false);
-    stopChatLoadingMessages(card);
   }
 }
 
@@ -2834,90 +1650,8 @@ function setChatBusy(card, busy) {
 function setChatStatus(card, text, isError = false) {
   const status = card?.querySelector('.chat-status');
   if (!status) return;
-  if (card?._chatLoadingTimer) {
-    clearInterval(card._chatLoadingTimer);
-    card._chatLoadingTimer = null;
-  }
   status.textContent = text || '';
   status.classList.toggle('error', Boolean(isError));
-  status.classList.remove('is-loading');
-  status.classList.remove('fading');
-}
-
-function startChatLoadingMessages(card, pool = AUTHOR_CHAT_LOADING_MESSAGES) {
-  if (!card) return;
-  stopChatLoadingMessages(card);
-  const status = card.querySelector('.chat-status');
-  if (!status) return;
-  status.classList.remove('error');
-  status.classList.add('is-loading');
-  status.classList.remove('fading');
-  let prev = -1;
-  const renderAt = (i) => {
-    status.innerHTML = `<span class="chat-status-dot" aria-hidden="true"></span>${esc(pool[i])}`;
-  };
-  let idx = pickNextLoadingIndex(pool, prev);
-  prev = idx;
-  renderAt(idx);
-  card._chatLoadingTimer = setInterval(() => {
-    status.classList.add('fading');
-    setTimeout(() => {
-      idx = pickNextLoadingIndex(pool, prev);
-      prev = idx;
-      renderAt(idx);
-      status.classList.remove('fading');
-    }, 240);
-  }, 2600);
-}
-
-function stopChatLoadingMessages(card) {
-  if (!card) return;
-  if (card._chatLoadingTimer) {
-    clearInterval(card._chatLoadingTimer);
-    card._chatLoadingTimer = null;
-  }
-  const status = card.querySelector('.chat-status');
-  if (status) {
-    status.classList.remove('is-loading');
-    status.classList.remove('fading');
-  }
-}
-
-function showChatMascot(card) {
-  if (!card) return;
-  const mascot = card.querySelector('.chat-mascot');
-  if (!mascot) return;
-  mascot.hidden = false;
-  mascot.classList.remove('visible');
-  void mascot.offsetWidth;
-  mascot.classList.add('visible');
-}
-
-function hideChatMascot(card) {
-  if (!card) return;
-  const mascot = card.querySelector('.chat-mascot');
-  if (!mascot) return;
-  mascot.classList.remove('visible');
-  mascot.hidden = true;
-}
-
-let analyzeDoneToastTimer = null;
-function showAnalyzeDoneToast() {
-  const t = document.getElementById('analyzeDoneToast');
-  if (!t) return;
-  if (analyzeDoneToastTimer) {
-    clearTimeout(analyzeDoneToastTimer);
-    analyzeDoneToastTimer = null;
-  }
-  t.classList.remove('show');
-  t.hidden = false;
-  void t.offsetWidth;
-  t.classList.add('show');
-  analyzeDoneToastTimer = setTimeout(() => {
-    t.classList.remove('show');
-    t.hidden = true;
-    analyzeDoneToastTimer = null;
-  }, 2980);
 }
 
 function renderChatHistory(card, session) {
@@ -3060,17 +1794,12 @@ function analysisGroup(title, content) {
     : '';
 }
 
-function groupReusableReview(r, context = {}) {
-  return analysisGroup('可复用素材与立意', [
-    cardAssetCards(r, context),
-    cardClips(r),
-    cardEssenceInsights(r),
-    cardStrengths(r),
-  ]);
+function groupPosition(r) {
+  return analysisGroup('定位', cardPosition(r));
 }
 
 function groupCreatorFeedback(r) {
-  return analysisGroup('写作指纹证据', [
+  return analysisGroup('创作者反馈', [
     cardCreatorStrength(r),
     cardCraftReview(r),
     cardStrengths(r),
@@ -3086,30 +1815,25 @@ function groupMaterials(r) {
   ]);
 }
 
-function groupZhihuEnvironment(r) {
-  return analysisGroup('知乎环境建议', cardZhihuEnvironment(r));
-}
-
-function groupAdjacentRecommendations(r) {
-  return analysisGroup('相邻领域与专业推荐', [
-    cardConnections(r),
-    cardZhihuEnvironment(r),
+function groupExtension(r) {
+  return analysisGroup('延伸方向', [
+    cardSuggestions(r),
+    cardMapPosition(r),
+    cardNodes(r),
+    cardInsight(r),
   ]);
 }
 
-function groupExtension(r) {
-  return analysisGroup('旧文章复利', cardSuggestions(r));
-}
-
 function groupQA(r, chatId) {
-  return analysisGroup('问问这篇作品', cardChat(chatId));
+  return analysisGroup('追问 AI', cardChat(chatId));
 }
 
 function renderResult(r, rawJson, containerId = 'result', context = {}) {
   const chatId = createChatSession(r, rawJson, containerId, context);
   document.getElementById(containerId).innerHTML = [
-    groupReusableReview(r, context),
-    groupAdjacentRecommendations(r),
+    groupPosition(r),
+    groupCreatorFeedback(r),
+    groupMaterials(r),
     groupExtension(r),
     groupQA(r, chatId),
     cardRaw(rawJson),
@@ -3120,7 +1844,7 @@ function renderResult(r, rawJson, containerId = 'result', context = {}) {
 // ── Tab 导航 ─────────────────────────────────────────────
 function initTabs() {
   document.querySelectorAll('.tab-btn').forEach(btn =>
-    btn.addEventListener('click', () => switchTab(btn.dataset.tab, { userTriggered: true }))
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab))
   );
 }
 
@@ -3140,8 +1864,8 @@ function switchTab(name, opts = {}) {
   document.getElementById('reviewTab').style.display  = name === 'review'  ? '' : 'none';
   document.getElementById('mapTab').style.display     = name === 'map'     ? '' : 'none';
   document.getElementById('fingerprintTab').style.display = name === 'fingerprint' ? '' : 'none';
-  const authorTab = document.getElementById('authorTab');
-  if (authorTab) authorTab.style.display = name === 'author' ? '' : 'none';
+  const exportAnswersTab = document.getElementById('exportAnswersTab');
+  if (exportAnswersTab) exportAnswersTab.style.display = name === 'exportAnswers' ? '' : 'none';
   if (name === 'assets' && !opts.skipLoad) {
     resetAssetSelection('clips-material');
     assetListMode = 'clips-material';
@@ -3150,12 +1874,7 @@ function switchTab(name, opts = {}) {
   if (name === 'review') loadReview();
   if (name === 'map')    loadMap({ resetToOverview: true });
   if (name === 'fingerprint') loadFingerprint();
-  if (name === 'author') loadAuthorAgent();
-  if (opts.userTriggered && !opts.skipOnboarding) {
-    setTimeout(() => {
-      maybeStartPanelOnboardingForSection(name).catch(e => debugLog('[知乎创作图鉴 panel] 分区引导启动失败:', e.message));
-    }, 220);
-  }
+  if (name === 'exportAnswers' && typeof initExportAnswersUI === 'function') initExportAnswersUI();
 }
 
 async function updateAssetCount() {
@@ -3165,7 +1884,7 @@ async function updateAssetCount() {
     badge.textContent = count ? String(count) : '';
     badge.style.display = count ? 'inline-block' : 'none';
   }
-  updateTopMetrics().catch(e => debugLog('[知乎创作图鉴 panel] top metrics 更新失败:', e));
+  updateTopMetrics().catch(e => debugLog('[知识图鉴 panel] top metrics 更新失败:', e));
 }
 
 function formatMetricNumber(n) {
@@ -3279,7 +1998,7 @@ function setMetricSummary(id, summary) {
 
 function setTopPeriodHint(day, month) {
   const el = document.getElementById('topPeriodHint');
-  if (el) el.textContent = `通过作品，看见创作者自己 · 今日 ${day.count} 篇 · 本月 ${month.count} 篇`;
+  if (el) el.textContent = `今日 ${day.count} 篇 · 本月 ${month.count} 篇`;
 }
 
 async function updateTopMetrics() {
@@ -3559,7 +2278,7 @@ async function exportSelectedAssets() {
           .filter(clip => selectedArticleIds.has(clip.source_article_id))
       : [];
     const payload = buildSelectedAssetsExportPayload(items, linkedClips);
-    downloadJsonFile(`知乎创作图鉴_已选资产_${new Date().toISOString().slice(0, 10)}.json`, payload);
+    downloadJsonFile(`知识图鉴_已选资产_${new Date().toISOString().slice(0, 10)}.json`, payload);
   } catch (e) {
     alert(`导出失败：${e.message}`);
   } finally {
@@ -3617,7 +2336,7 @@ async function initAssetsToolbar() {
       <button class="asset-mode" type="button" data-asset-mode="assets">作品</button>
     </div>
     <div class="assets-toolbar">
-      <input type="text" id="assetSearch" class="asset-search" placeholder="搜索你过去写过的观点、素材、人物、金句或主题">
+      <input type="text" id="assetSearch" class="asset-search" placeholder="搜素材、立意、人物、角度…">
       ${assetDateSelectHtml()}
       ${syncHtml}
       <div class="asset-batch-actions">
@@ -3658,13 +2377,11 @@ function setAssetListMode(mode) {
       ? '搜索节点、类型、项目…'
       : mode === 'assets'
         ? '搜索作品正文、作者、领域…'
-        : '搜索你过去写过的观点、素材、人物、金句或主题';
+        : '搜素材、立意、人物、角度…';
   }
 }
 
 function loadCurrentAssetMode() {
-  const query = document.getElementById('assetSearch')?.value.trim() || '';
-  if (query) return loadAssetSearchResults(query);
   if (assetListMode === 'assets') return loadAssets();
   if (assetListMode === 'nodes') return loadNodeIndex();
   if (assetListMode === 'clips-insight') return loadClips('立意');
@@ -3752,322 +2469,6 @@ async function loadClips(type = '素材') {
   bindAssetSelection(container);
 }
 
-function assetSearchMatches(query, values = []) {
-  const q = String(query || '').trim().toLowerCase();
-  if (!q) return false;
-  return values.some(value => String(value || '').toLowerCase().includes(q));
-}
-
-function assetSearchPush(groups, seen, groupKey, item) {
-  if (!item?.title && !item?.summary) return;
-  const key = [
-    groupKey,
-    item.sourceArticleId || '',
-    item.type || '',
-    item.title || '',
-    item.summary || '',
-  ].join('\x00').toLowerCase();
-  if (seen.has(key)) return;
-  seen.add(key);
-  groups[groupKey].push(item);
-}
-
-function assetSearchGroupKey(cardType = '') {
-  const type = String(cardType || '');
-  if (/知识节点|节点/.test(type)) return 'nodes';
-  if (/素材/.test(type)) return 'materials';
-  if (/金句/.test(type)) return 'quotes';
-  if (/延展|方向|二创|下一篇/.test(type)) return 'directions';
-  if (/写作指纹|创作者优势|优势/.test(type)) return 'fingerprints';
-  return 'opinions';
-}
-
-function assetSearchArticleFields(rec = {}) {
-  const a = rec.analysis || {};
-  return [
-    rec.article?.title,
-    rec.article?.body,
-    rec.article?.author,
-    a.domain,
-    a.sub_domain,
-    a.perspective,
-    a.core_claim,
-    a.creator_strength,
-    a.insight,
-    ...(a.tags || []),
-  ];
-}
-
-function collectAssetSearchResults(query, articles = [], clips = []) {
-  const groups = {
-    opinions: [],
-    materials: [],
-    nodes: [],
-    fingerprints: [],
-    quotes: [],
-    directions: [],
-  };
-  const seen = new Set();
-
-  for (const rec of articles) {
-    const a = rec.analysis || {};
-    const source = rec.article?.title || '（无标题）';
-    const articleFields = assetSearchArticleFields(rec);
-    const cards = normalizeAssetCards(a, { record: rec });
-
-    for (const card of cards) {
-      if (!assetSearchMatches(query, [
-        ...articleFields,
-        card.type,
-        card.title,
-        card.summary,
-        card.source,
-        card.whyReusable,
-        ...(card.keywords || []),
-      ])) continue;
-      assetSearchPush(groups, seen, assetSearchGroupKey(card.type), {
-        type: card.type,
-        title: card.title,
-        summary: card.summary,
-        whyReusable: card.whyReusable,
-        keywords: card.keywords || [],
-        reuseScore: card.reuseScore,
-        source,
-        sourceArticleId: rec.id,
-      });
-    }
-
-    for (const insight of a.essence_insights || []) {
-      if (!assetSearchMatches(query, [...articleFields, insight.viewpoint, insight.why_essential])) continue;
-      assetSearchPush(groups, seen, 'opinions', {
-        type: '相关观点',
-        title: insight.viewpoint || '作品立意',
-        summary: insight.why_essential || a.core_claim || '',
-        whyReusable: insight.why_essential || '这条立意可以作为下一篇文章的主判断继续展开。',
-        keywords: compactTextList([a.domain, a.sub_domain, ...(a.tags || [])]),
-        reuseScore: 5,
-        source,
-        sourceArticleId: rec.id,
-      });
-    }
-
-    for (const clip of a.reusable_clips || []) {
-      const isQuote = /金句|句子|表达/.test(String(clip.type || ''));
-      if (!assetSearchMatches(query, [...articleFields, clip.type, clip.content, clip.why_reusable])) continue;
-      assetSearchPush(groups, seen, isQuote ? 'quotes' : 'materials', {
-        type: isQuote ? '可复用金句' : '相关素材',
-        title: clip.content || '可复用素材',
-        summary: clip.why_reusable || '',
-        whyReusable: clip.why_reusable || '这条素材脱离原文后仍能支撑相近论证。',
-        keywords: compactTextList([clip.type, a.domain, a.sub_domain, ...(a.tags || [])]),
-        reuseScore: isQuote ? 4 : 5,
-        source,
-        sourceArticleId: rec.id,
-      });
-    }
-
-    for (const node of recordNodeMentions(rec)) {
-      if (!assetSearchMatches(query, [...articleFields, node.name, node.type, node.role, node.contribution])) continue;
-      assetSearchPush(groups, seen, 'nodes', {
-        type: '相关知识节点',
-        title: node.name || '知识节点',
-        summary: node.contribution || a.core_claim || '',
-        whyReusable: '节点会把相近旧文连起来，适合继续围绕同一主题深挖。',
-        keywords: compactTextList([TYPE_META[node.type]?.label || node.type, ROLE_MAP[node.role] || node.role]),
-        reuseScore: node.role === 'primary' ? 5 : 4,
-        source,
-        sourceArticleId: rec.id,
-      });
-    }
-
-    for (const suggestion of a.next_suggestions || []) {
-      if (!assetSearchMatches(query, [...articleFields, suggestion.type, suggestion.suggestion, suggestion.reason, suggestion.theory_ref])) continue;
-      assetSearchPush(groups, seen, 'directions', {
-        type: '可延展方向',
-        title: suggestion.suggestion || '下一篇方向',
-        summary: suggestion.reason || '',
-        whyReusable: '它把旧文章变成下一篇选题的入口。',
-        keywords: compactTextList([suggestion.type, suggestion.theory_ref, a.domain, a.sub_domain]),
-        reuseScore: 5,
-        source,
-        sourceArticleId: rec.id,
-      });
-    }
-
-    if (assetSearchMatches(query, [...articleFields, a.creator_strength, a.insight])) {
-      assetSearchPush(groups, seen, 'fingerprints', {
-        type: '写作指纹',
-        title: a.creator_strength || a.insight || '作品识别到的创作者优势',
-        summary: a.insight || '这条线索会进入长期写作指纹，帮助创作者看见自己擅长什么。',
-        whyReusable: '写作指纹可以帮助你选择更适合继续深耕的表达路线。',
-        keywords: compactTextList([a.perspective, a.domain, a.sub_domain, ...(a.tags || [])]),
-        reuseScore: 4,
-        source,
-        sourceArticleId: rec.id,
-      });
-    }
-  }
-
-  for (const clip of clips) {
-    if (!assetSearchMatches(query, [clip.type, clip.content, clip.why_reusable, clip.source_article_title])) continue;
-    assetSearchPush(groups, seen, clip.type === '立意' ? 'opinions' : 'materials', {
-      type: clip.type === '立意' ? '相关观点' : '相关素材',
-      title: clip.content || '资产片段',
-      summary: clip.why_reusable || '',
-      whyReusable: clip.why_reusable || '这条旧资产可以被带入下一篇文章。',
-      keywords: compactTextList([clip.type]),
-      reuseScore: clip.type === '立意' ? 5 : 4,
-      source: clip.source_article_title || '未知作品',
-      sourceArticleId: clip.source_article_id,
-    });
-  }
-
-  return groups;
-}
-
-function assetSearchResultCard(item) {
-  const keywords = compactTextList(item.keywords || []).slice(0, 5);
-  const payload = assetCardPayload({
-    type: item.type,
-    title: item.title,
-    summary: item.summary,
-    source: item.source,
-    keywords,
-    whyReusable: item.whyReusable,
-    reuseScore: item.reuseScore,
-  });
-  return `<div class="card">
-    <div class="card-label">${esc(item.type || '旧资产')}</div>
-    <div class="core-claim">${esc(item.title || '未命名资产')}</div>
-    ${item.summary ? `<div class="field"><div class="field-label">AI 解释</div><div class="field-value">${esc(item.summary)}</div></div>` : ''}
-    ${keywords.length ? `<div class="field"><div class="field-label">关键词</div><div class="tag-row">${tags(keywords)}</div></div>` : ''}
-    ${item.whyReusable ? `<div class="field"><div class="field-label">为什么可复用</div><div class="field-value">${esc(item.whyReusable)}</div></div>` : ''}
-    <div class="field"><div class="field-label">可复用指数</div><div class="field-value">${reuseStars(item.reuseScore)}</div></div>
-    <div class="chat-templates">
-      ${item.sourceArticleId ? `<button class="clip-source" type="button" data-search-source-article="${esc(item.sourceArticleId)}">来自《${esc(item.source || '未知作品')}》</button>` : ''}
-      <button class="chat-template-btn" type="button" data-asset-remix="${esc(JSON.stringify(payload))}">用于新文章</button>
-    </div>
-  </div>`;
-}
-
-function assetSearchGroup(title, items = []) {
-  const html = items.slice(0, 6).map(assetSearchResultCard).join('');
-  return analysisGroup(`${title} · ${items.length}`, html);
-}
-
-function assetSearchChatText(groups) {
-  return Object.values(groups).flat().slice(0, 12)
-    .map(item => `${item.type}：${item.title}\n来源：${item.source || '未知作品'}\n可复用原因：${item.whyReusable || item.summary || '无'}`)
-    .join('\n\n');
-}
-
-function assetSearchChatAnalysis(query, groups) {
-  const allResults = Object.values(groups).flat();
-  const all = allResults.slice(0, 10);
-  return {
-    domain: '旧文章复利',
-    sub_domain: '资产搜索',
-    core_claim: `搜索「${query}」找到 ${allResults.length} 条可复用旧资产。`,
-    asset_cards: all.slice(0, 6).map(item => ({
-      type: item.type,
-      title: item.title,
-      summary: item.summary,
-      keywords: item.keywords,
-      why_reusable: item.whyReusable,
-      reuse_score: item.reuseScore,
-      source_article: item.source,
-    })),
-    creator_strength: '你可以从过去写过的观点、素材和节点里继续生成下一篇文章，而不是重新从空白页开始。',
-    reusable_clips: groups.materials.slice(0, 5).map(item => ({
-      type: item.type,
-      content: item.title,
-      why_reusable: item.whyReusable || item.summary,
-    })),
-    essence_insights: groups.opinions.slice(0, 5).map(item => ({
-      viewpoint: item.title,
-      why_essential: item.whyReusable || item.summary,
-    })),
-    nodes_hit: groups.nodes.slice(0, 8).map(item => ({
-      name: item.title,
-      type: 'concept',
-      role: 'secondary',
-      contribution: item.summary || item.whyReusable,
-    })),
-    next_suggestions: groups.directions.slice(0, 4).map(item => ({
-      type: item.type,
-      suggestion: item.title,
-      reason: item.summary || item.whyReusable,
-    })),
-    insight: `这次搜索说明「${query}」已经在你的作品资产中形成了可被再次调用的线索。`,
-  };
-}
-
-async function loadAssetSearchResults(query) {
-  const container = document.getElementById('assetsList');
-  const q = String(query || '').trim();
-  if (!container) return;
-  if (!q) return loadCurrentAssetMode();
-  container.innerHTML = `<div class="asset-empty">正在找回「${esc(q)}」相关旧资产…</div>`;
-
-  const [allArticles, allClips] = await Promise.all([
-    dbGetAllArticles({ project: activeProject }),
-    dbGetClips({ project: activeProject }),
-  ]);
-  const dateParts = updateAssetDateFilterOptions([...allArticles, ...allClips], item => item.savedAt);
-  const hasDate = hasAssetDateFilter(dateParts);
-  const dateLabel = assetDateFilterLabel(dateParts);
-  const articles = hasDate
-    ? allArticles.filter(rec => matchesAssetDateFilter(rec.savedAt, dateParts))
-    : allArticles;
-  const clips = hasDate
-    ? allClips.filter(clip => matchesAssetDateFilter(clip.savedAt, dateParts))
-    : allClips;
-  const groups = collectAssetSearchResults(q, articles, clips);
-  const groupDefs = [
-    ['opinions', '相关观点'],
-    ['materials', '相关素材'],
-    ['nodes', '相关知识节点'],
-    ['fingerprints', '相关写作指纹'],
-    ['quotes', '可复用金句'],
-    ['directions', '可延展方向'],
-  ];
-  const total = groupDefs.reduce((sum, [key]) => sum + groups[key].length, 0);
-  syncAssetSelectionScope('asset-search', []);
-
-  if (!total) {
-    container.innerHTML = `<div class="asset-empty">没有找到${dateLabel ? ` ${esc(dateLabel)} ` : ''}「${esc(q)}」相关旧资产<br>可以换一个观点、人物、素材或主题词再试</div>`;
-    updateAssetSelectionUI();
-    return;
-  }
-
-  const chatAnalysis = assetSearchChatAnalysis(q, groups);
-  const chatId = createChatSession(chatAnalysis, JSON.stringify(chatAnalysis, null, 2), 'assetsList', {
-    articleTitle: `旧资产搜索：${q}`,
-    articleText: assetSearchChatText(groups),
-    projectId: activeProject,
-  });
-  const summaryCard = `<div class="card">
-    <div class="card-label">旧素材搜索</div>
-    <div class="core-claim">你搜索了：${esc(q)}</div>
-    <div class="field"><div class="field-label">找回结果</div><div class="field-value">找到 ${total} 个相关资产${dateLabel ? ` · ${esc(dateLabel)}` : ''}，可以继续复制、查看来源，或直接用于新文章。</div></div>
-  </div>`;
-
-  container.innerHTML = [
-    analysisGroup('找回旧资产', summaryCard),
-    ...groupDefs.map(([key, title]) => assetSearchGroup(title, groups[key])),
-    analysisGroup('用这些旧资产继续写', cardChat(chatId)),
-  ].join('');
-
-  container.querySelectorAll('[data-search-source-article]').forEach(btn => {
-    btn.addEventListener('click', async event => {
-      event.stopPropagation();
-      const rec = await dbGetArticle(btn.dataset.searchSourceArticle);
-      if (rec) showAssetDetail(rec);
-    });
-  });
-  updateAssetSelectionUI();
-}
-
 // ── 我的资产列表 ─────────────────────────────────────────
 async function loadAssets() {
   setAssetListMode('assets');
@@ -4106,7 +2507,7 @@ async function loadAssets() {
     return;
   }
 
-  const typeLabel = { article: '专栏', answer: '回答', pin: '想法', manual: '手动', idea: '速记', zhihu_story: '知乎故事' };
+  const typeLabel = { article: '专栏', answer: '回答', pin: '想法', manual: '手动', idea: '速记' };
   container.innerHTML = articles.map((rec, i) => {
     const a      = rec.analysis || {};
     const date   = (rec.savedAt || '').slice(0, 10);
@@ -5046,7 +3447,6 @@ async function lockUniverseBall(ball) {
   activeBallId = ball.ballId;
   await saveMapState();
   loadMap();
-  maybeShowMapLightModeHint();
 }
 
 async function enterUniverseBall(ball) {
@@ -5944,7 +4344,6 @@ async function focusUniverseBall3D(state, ball) {
   startUniverseCameraTween(state, state.lockedObject, 3000);
   updateUniverseLockOverlay(state, ball);
   await saveMapState();
-  maybeShowMapLightModeHint();
 }
 
 function setUniverseTargetZoom(state, delta) {
@@ -6353,7 +4752,7 @@ function renderUniverseView(articles, projects, container, mode = universeMode) 
   try {
     renderUniverseThreeView(articles, projects, container, mode);
   } catch (err) {
-    console.warn('[知乎创作图鉴] 3D 宇宙渲染失败，回退到 SVG 宇宙:', err.message);
+    console.warn('[知识图鉴] 3D 宇宙渲染失败，回退到 SVG 宇宙:', err.message);
     renderUniverseSvgFallbackView(articles, projects, container, mode);
   }
 }
@@ -6638,7 +5037,6 @@ function setEarthSphereDemoFill(enabled) {
   }
   renderEarthSphereDemoFill(earthSphereState);
   updateEarthSpherePositions(earthSphereState, earthSphereState.staticLinks || []);
-  if (earthSphereDemoFillEnabled) maybeShowMapLightModeHint();
 }
 
 function resetEarthSphereView() {
@@ -7225,226 +5623,7 @@ function reviewLitDirections(articles) {
     .map(([name, count]) => ({ name, count }));
 }
 
-function reviewDirectionLabel(value, fallback = '未细分') {
-  const text = String(value || '').trim();
-  return text || fallback;
-}
-
-function reviewDirectionTitle(rec) {
-  return String(rec.article?.title || '未命名作品').trim() || '未命名作品';
-}
-
-function reviewDirectionAddPoint(bucket, item, rec) {
-  const name = reviewDirectionLabel(item?.name, '');
-  if (!name) return;
-  const key = name.toLowerCase();
-  if (!bucket.points.has(key)) {
-    bucket.points.set(key, {
-      name,
-      type: item?.type || 'concept',
-      count: 0,
-      articles: new Set(),
-      contributions: [],
-      latestTitle: reviewDirectionTitle(rec),
-    });
-  }
-  const point = bucket.points.get(key);
-  if (!point.articles.has(rec.id)) {
-    point.articles.add(rec.id);
-    point.count++;
-  }
-  const contribution = String(item?.contribution || item?.role || '').trim();
-  if (contribution && point.contributions.length < 2) point.contributions.push(contribution);
-}
-
-function reviewDirectionKnowledgeItems(rec) {
-  const analysis = rec.analysis || {};
-  const items = [];
-  for (const node of recordNodeMentions(rec)) {
-    items.push({
-      name: node.name,
-      type: node.type || 'concept',
-      role: node.role || '',
-      contribution: node.contribution || '',
-    });
-  }
-  for (const name of analysis.new_concepts || []) {
-    items.push({ name, type: 'concept', role: 'new', contribution: '新引入概念' });
-  }
-  for (const name of analysis.tags || []) {
-    items.push({ name, type: 'tag', role: 'tag', contribution: '作品标签' });
-  }
-  const perspective = String(analysis.perspective || '').trim();
-  if (perspective) items.push({ name: perspective, type: 'perspective', role: 'view', contribution: '分析视角' });
-
-  const seen = new Set();
-  return items.filter(item => {
-    const name = reviewDirectionLabel(item.name, '');
-    const key = name.toLowerCase();
-    if (!key || seen.has(key)) return false;
-    seen.add(key);
-    item.name = name;
-    return true;
-  }).slice(0, 10);
-}
-
-function reviewDirectionMap(articles) {
-  const records = articles
-    .filter(rec => rec.article?.type !== 'idea')
-    .sort((a, b) => String(b.savedAt || '').localeCompare(String(a.savedAt || '')));
-  const domains = new Map();
-
-  for (const rec of records) {
-    const analysis = rec.analysis || {};
-    const domainName = reviewDirectionLabel(analysis.domain, '未分类');
-    const subName = reviewDirectionLabel(analysis.sub_domain || analysis.perspective, '未细分');
-    const title = reviewDirectionTitle(rec);
-    const id = rec.id || `${domainName}:${subName}:${title}`;
-
-    if (!domains.has(domainName)) {
-      domains.set(domainName, {
-        name: domainName,
-        count: 0,
-        articles: new Set(),
-        works: [],
-        subdomains: new Map(),
-        points: new Map(),
-        latestClaim: '',
-      });
-    }
-    const domain = domains.get(domainName);
-    if (!domain.articles.has(id)) {
-      domain.articles.add(id);
-      domain.count++;
-      if (domain.works.length < 4) domain.works.push({ title, savedAt: rec.savedAt || '' });
-      if (!domain.latestClaim && analysis.core_claim) domain.latestClaim = String(analysis.core_claim).trim();
-    }
-
-    if (!domain.subdomains.has(subName)) {
-      domain.subdomains.set(subName, {
-        name: subName,
-        count: 0,
-        articles: new Set(),
-        works: [],
-        points: new Map(),
-        latestClaim: '',
-      });
-    }
-    const sub = domain.subdomains.get(subName);
-    if (!sub.articles.has(id)) {
-      sub.articles.add(id);
-      sub.count++;
-      if (sub.works.length < 3) sub.works.push({ title, savedAt: rec.savedAt || '' });
-      if (!sub.latestClaim && analysis.core_claim) sub.latestClaim = String(analysis.core_claim).trim();
-    }
-
-    for (const item of reviewDirectionKnowledgeItems(rec)) {
-      reviewDirectionAddPoint(domain, item, rec);
-      reviewDirectionAddPoint(sub, item, rec);
-    }
-  }
-
-  const sortPoints = points => [...points.values()]
-    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-Hans-CN'))
-    .slice(0, 8);
-
-  return [...domains.values()]
-    .map(domain => ({
-      ...domain,
-      points: sortPoints(domain.points),
-      subdomains: [...domain.subdomains.values()]
-        .map(sub => ({ ...sub, points: sortPoints(sub.points) }))
-        .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-Hans-CN'))
-        .slice(0, 4),
-    }))
-    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-Hans-CN'))
-    .slice(0, 6);
-}
-
-function reviewDirectionGrowthHints(domain) {
-  const sub = domain.subdomains?.[0];
-  const point = (sub?.points?.[0] || domain.points?.[0]);
-  const hints = [];
-  if (sub) {
-    const target = `「${domain.name} → ${sub.name}」`;
-    hints.push(sub.count >= 3
-      ? `${target}已经有连续积累，下一篇可以写反例、边界条件或现实迁移，避免只在同一个判断里打转。`
-      : `先把${target}补到 3 篇左右，让它从零散兴趣变成一个小专题。`);
-  }
-  if (point) {
-    hints.push(`把「${point.name}」从关键词扩成知识点：补定义、案例、反例和可迁移场景，后续就能成为你的稳定方法。`);
-  }
-  if ((domain.subdomains?.length || 0) <= 1) {
-    hints.push(`这个大方向还缺相邻子领域，下一篇可以从背景脉络、人物/案例、方法论里选一个入口。`);
-  }
-  return hints.slice(0, 2);
-}
-
-function renderReviewDirectionMap(articles) {
-  const domains = reviewDirectionMap(articles);
-  if (!domains.length) {
-    return `<div class="tl-block">
-      <div class="tl-block-title">方向地图</div>
-      <div class="tl-empty">还没有足够作品形成方向地图。先分析一篇文章，知乎创作图鉴会开始识别大领域、子领域和具体知识点。</div>
-    </div>`;
-  }
-
-  const cards = domains.map(domain => {
-    const subHtml = domain.subdomains.length
-      ? domain.subdomains.map(sub => {
-          const pointChips = sub.points.length
-            ? sub.points.slice(0, 5).map(point => `<span class="direction-point">${esc(point.name)}${point.count > 1 ? ` · ${point.count}` : ''}</span>`).join('')
-            : '<span class="direction-point muted">等待知识点沉淀</span>';
-          const works = sub.works.map(work => `<span class="direction-work" title="${esc(work.title)}">《${esc(work.title)}》</span>`).join('');
-          return `<div class="direction-subdomain">
-            <div class="direction-sub-head">
-              <span class="direction-sub-name">${esc(sub.name)}</span>
-              <span class="direction-sub-count">${sub.count} 篇</span>
-            </div>
-            <div class="direction-points">${pointChips}</div>
-            ${sub.latestClaim ? `<div class="direction-claim">${esc(sub.latestClaim)}</div>` : ''}
-            ${works ? `<div class="direction-works">${works}</div>` : ''}
-          </div>`;
-        }).join('')
-      : '<div class="dashboard-muted">这个方向还没有拆出明确子领域。</div>';
-    const hints = reviewDirectionGrowthHints(domain)
-      .map(hint => `<div class="direction-growth-item">${esc(hint)}</div>`)
-      .join('');
-    return `<div class="direction-domain-card">
-      <div class="direction-domain-head">
-        <div>
-          <div class="direction-domain-name">${esc(domain.name)}</div>
-          <div class="direction-domain-meta">${domain.count} 篇作品 · ${domain.subdomains.length} 个子领域 · ${domain.points.length} 个知识点</div>
-        </div>
-      </div>
-      <div class="direction-subdomain-list">${subHtml}</div>
-      <div class="direction-growth">
-        <div class="direction-growth-title">下一步成长抓手</div>
-        ${hints || '<div class="dashboard-muted">继续分析作品后，知乎创作图鉴会给出更具体的成长抓手。</div>'}
-      </div>
-    </div>`;
-  }).join('');
-
-  return `<div class="tl-block direction-map-block">
-    <div class="tl-block-title">方向地图：大领域 → 子领域 → 知识点</div>
-    <div class="direction-map-note">这里不只统计次数，而是把已有文章放回结构里：你在哪个大方向持续投入，已经长出哪些子领域，哪些知识点值得继续深挖。</div>
-    <div class="direction-domain-list">${cards}</div>
-  </div>`;
-}
-
 function reviewBlankSpotFallback(articles) {
-  const map = reviewDirectionMap(articles);
-  const top = map[0];
-  if (top) {
-    const sub = top.subdomains?.[0];
-    const point = sub?.points?.[0] || top.points?.[0];
-    if (sub && point) {
-      return `你已经在「${top.name}」下进入「${sub.name}」，下一步可以把「${point.name}」从反复出现的词，推进成一个可讲清定义、案例、反例和迁移场景的知识点。`;
-    }
-    if (sub) {
-      return `你已经在「${top.name}」下形成「${sub.name}」分支，下一步可以补一个相邻子领域，让这个方向从单线积累变成可展开的知识版图。`;
-    }
-  }
   const text = articles.map(rec =>
     [rec.analysis?.domain, rec.analysis?.sub_domain, rec.analysis?.perspective]
       .filter(Boolean).join(' ')
@@ -7457,14 +5636,6 @@ function reviewBlankSpotFallback(articles) {
 }
 
 function reviewWritingPatternFallback(articles) {
-  const map = reviewDirectionMap(articles);
-  const top = map[0];
-  if (top) {
-    const sub = top.subdomains?.[0];
-    const point = sub?.points?.[0] || top.points?.[0];
-    const path = [top.name, sub?.name, point?.name].filter(Boolean).join(' → ');
-    return `你的作品已经不是简单散点，而是在形成「${path}」这样的方向路径。继续沿着这个路径写，优势会从兴趣变成方法。`;
-  }
   const domain = reviewLitDirections(articles)[0]?.name;
   const craftSummaries = articles
     .map(rec => rec.analysis?.craft_review?.summary)
@@ -7496,7 +5667,6 @@ function renderReviewDirectionAnalysis(articles, guidance = reviewDirectionFallb
       <div class="tl-block-title">已被点亮的方向</div>
       <div class="tl-chip-row">${chips}</div>
     </div>
-    ${renderReviewDirectionMap(articles)}
     <div class="tl-block">
       <div class="tl-block-title">尚未出现的视角</div>
       <div class="tl-feedback" id="reviewBlankSpots">${esc(guidance.blank_spots || '')}</div>
@@ -7523,25 +5693,18 @@ function buildReviewSystemPrompt(articles, now = new Date()) {
     .slice(0, 24)
     .map((rec, index) => {
       const a = rec.analysis || {};
-      const nodes = recordNodeMentions(rec).slice(0, 8).map(n => `${n.name}(${n.type || 'concept'})`).join('、');
-      const suggestions = (a.next_suggestions || []).slice(0, 3)
-        .map(s => [s.type, s.suggestion, s.reason].filter(Boolean).join('：'))
-        .join('；');
       return `${index + 1}. ${rec.article?.title || '未命名'}｜${(rec.savedAt || '').slice(0, 10)}
 领域：${a.domain || '未分类'} / ${a.sub_domain || ''}
 视角：${a.perspective || ''}
-知识点：${nodes || '无'}
-地图位置：${a.map_position || ''}
 核心判断：${a.core_claim || ''}
 创作者优势：${a.creator_strength || ''}
-写作技法总评：${a.craft_review?.summary || ''}
-延伸建议：${suggestions || '无'}`;
+写作技法总评：${a.craft_review?.summary || ''}`;
     }).join('\n\n');
   return `请基于以下作品记录，为创作者生成本周复盘方向分析。
 当前日期：${now.toISOString().slice(0, 10)}
 
 只返回 JSON，不要 markdown：
-{"blank_spots":"必须基于已有文章指出一个可补的大方向/子领域/知识点，80字以内","writing_pattern":"必须说明创作者正在形成的方向路径，不要只做数据归纳，80字以内"}
+{"blank_spots":"尚未出现的视角，80字以内","writing_pattern":"已建立的写作模式，80字以内"}
 
 作品记录：
 ${items || '暂无作品'}`;
@@ -7595,7 +5758,7 @@ async function loadReviewGuidance(articles) {
     await chrome.storage.local.set({ [cacheKey]: parsed });
     updateReviewGuidance(parsed);
   } catch (e) {
-    debugLog('[知乎创作图鉴 panel] review guidance fallback:', e.message);
+    debugLog('[知识图鉴 panel] review guidance fallback:', e.message);
   }
 }
 
@@ -7635,93 +5798,17 @@ function reviewWeeklyStats(articles, now = new Date()) {
   };
 }
 
-function weeklyKnowledgePointsForArticle(a = {}) {
-  return compactTextList([
-    a.domain,
-    a.sub_domain,
-    a.perspective,
-    ...(a.nodes_hit || []).map(n => n.name),
-    ...(a.connections || []),
-    ...(a.new_concepts || []),
-  ]).slice(0, 5);
-}
-
-function weeklyReadingPlanFallback(articles = []) {
-  const items = [];
-  articles.forEach(rec => {
-    const a = rec.analysis || {};
-    const field = compactTextList([a.domain, a.sub_domain]).join(' / ') || '本周创作方向';
-    const points = weeklyKnowledgePointsForArticle(a);
-    normalizeRecommendedBooks(a).forEach(book => {
-      items.push({
-        title: book.title,
-        direction: a.perspective || a.core_claim || '补强本周文章背后的解释力',
-        field,
-        knowledge_points: points,
-        why: book.body || `它能补强你本周在「${field}」里已经露出的兴趣和判断。`,
-        how_to_use: '周末读的时候只抓一个概念、一条案例或一个反例，下周接回旧文章继续写。',
-      });
-    });
-  });
-  const seen = new Set();
-  return items.filter(item => {
-    const key = String(item.title || '').replace(/\s+/g, '');
-    if (!key || seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  }).slice(0, 4);
-}
-
-function normalizeWeeklyReadingPlan(plan = [], articles = []) {
-  const raw = Array.isArray(plan) ? plan : [];
-  const parsed = raw.map(item => {
-    if (typeof item === 'string') {
-      return { title: item, direction: '', field: '', knowledge_points: [], why: '', how_to_use: '' };
-    }
-    return {
-      title: String(item?.title || item?.book || item?.name || item?.书名 || '').trim(),
-      direction: String(item?.direction || item?.theme || item?.why_direction || item?.方向 || '').trim(),
-      field: String(item?.field || item?.domain || item?.area || item?.领域 || '').trim(),
-      knowledge_points: compactTextList(Array.isArray(item?.knowledge_points)
-        ? item.knowledge_points
-        : Array.isArray(item?.知识点)
-          ? item.知识点
-          : String(item?.knowledge_points || item?.points || item?.知识点 || '').split(/[、,，/]/)),
-      why: String(item?.why || item?.reason || item?.why_this_week || item?.理由 || '').trim(),
-      how_to_use: String(item?.how_to_use || item?.use || item?.action || item?.用法 || '').trim(),
-    };
-  }).filter(item => item.title);
-  return (parsed.length ? parsed : weeklyReadingPlanFallback(articles)).slice(0, 4);
-}
-
-function renderWeeklyReadingPlan(items = []) {
-  const list = normalizeWeeklyReadingPlan(items);
-  if (!list.length) return '';
-  const html = list.map(item => `
-    <div class="weekly-reading-item">
-      <div class="weekly-reading-title">《${esc(item.title)}》</div>
-      ${item.direction ? `<div class="weekly-reading-line"><b>方向</b>${esc(item.direction)}</div>` : ''}
-      ${item.field ? `<div class="weekly-reading-line"><b>领域</b>${esc(item.field)}</div>` : ''}
-      ${item.knowledge_points?.length ? `<div class="weekly-reading-points">${item.knowledge_points.map(point => `<span>${esc(point)}</span>`).join('')}</div>` : ''}
-      ${item.why ? `<p>${esc(item.why)}</p>` : ''}
-      ${item.how_to_use ? `<p>${esc(item.how_to_use)}</p>` : ''}
-    </div>`).join('');
-  return `<div class="weekly-report-block weekly-report-reading"><span>周末书单与知识复利</span>${html}</div>`;
-}
-
 function buildWeeklyReportPrompt(articles, allArticles = articles, now = new Date()) {
   const stats = reviewWeeklyStats(articles, now);
   const historicalDomains = [...new Set(allArticles.map(rec => rec.analysis?.domain).filter(Boolean))].slice(0, 12).join('、') || '暂无';
   const items = stats.articles.map((rec, index) => {
     const a = rec.analysis || {};
-    const books = normalizeRecommendedBooks(a).map(book => `${book.title}${book.body ? `（${book.body}）` : ''}`).join('；');
-    const points = weeklyKnowledgePointsForArticle(a).join('、');
+    const craft = a.craft_review?.praise || a.craft_review?.summary || '';
     const tags = (a.tags || []).join('、');
     return `${index + 1}. ${rec.article?.title || '未命名'}｜${(rec.savedAt || '').slice(0, 10)}
 核心判断：${a.core_claim || '无'}
 创作者优势：${a.creator_strength || '无'}
-相邻领域/知识点：${points || '无'}
-已有书单线索：${books || '无'}
+写作技法：${craft || '无'}
 标签：${tags || '无'}`;
   }).join('\n\n') || '本周暂无作品';
 
@@ -7734,17 +5821,8 @@ function buildWeeklyReportPrompt(articles, allArticles = articles, now = new Dat
 {
   "week_label": "${reviewWeeklyLabel(now)}",
   "highlight": "本周亮点：你这周写得最好的 1-2 篇及理由。语气具体、亲近，80-140字",
+  "pattern": "创作模式：你这周形成的写作风格特征，60-120字",
   "blank": "空白机会：基于本周作品和历史地图，给下周建议方向，60-120字",
-  "reading_plan": [
-    {
-      "title": "推荐书名",
-      "direction": "这本书对应创作者已经显露出的哪个成长方向",
-      "field": "领域/子领域",
-      "knowledge_points": ["具体知识点1", "具体知识点2", "具体知识点3"],
-      "why": "为什么这周适合读它，必须对应本周文章",
-      "how_to_use": "读完后如何反哺下一篇知乎创作"
-    }
-  ],
   "stats": "${stats.statsText}"
 }
 
@@ -7756,9 +5834,9 @@ function normalizeWeeklyReport(report = {}, articles = [], now = new Date()) {
   const stats = reviewWeeklyStats(articles, now);
   return {
     week_label: String(report.week_label || reviewWeeklyLabel(now)).trim(),
-    highlight: formalizeProductName(String(report.highlight || `知乎创作图鉴看了你这周写的 ${stats.count} 篇文章，最想提醒你的是：继续保留那些能把观察变成判断的段落。`).trim()),
+    highlight: formalizeProductName(String(report.highlight || `知识图鉴看了你这周写的 ${stats.count} 篇文章，最想提醒你的是：继续保留那些能把观察变成判断的段落。`).trim()),
+    pattern: formalizeProductName(String(report.pattern || '这周的写作模式还在形成中，建议先保留每篇文章里最能复用的判断句。').trim()),
     blank: formalizeProductName(String(report.blank || '下周可以试着补一个反方视角，或者把本周最有潜力的一篇扩写成系列。').trim()),
-    reading_plan: normalizeWeeklyReadingPlan(report.reading_plan || report.reading || report.weekend_books || [], stats.articles),
     stats: String(report.stats || stats.statsText).trim(),
     generatedAt: report.generatedAt || new Date().toISOString(),
   };
@@ -7780,18 +5858,18 @@ function fallbackWeeklyReport(articles = [], now = new Date()) {
   if (!stats.count) {
     return {
       week_label: reviewWeeklyLabel(now),
-      highlight: '知乎创作图鉴这周还没看到新的正式作品。先别急，哪怕只写一篇，也能给下周的地图点一颗星。',
-      blank: '可以先从最近最想反复解释的问题写起，写完再让知乎创作图鉴帮你沉淀素材和立意。',
-      reading_plan: [],
+      highlight: '知识图鉴这周还没看到新的正式作品。先别急，哪怕只写一篇，也能给下周的地图点一颗星。',
+      pattern: '样本还不够，暂时不急着给你贴风格标签。',
+      blank: '可以先从最近最想反复解释的问题写起，写完再让知识图鉴帮你沉淀素材和立意。',
       stats: stats.statsText,
       generatedAt: new Date().toISOString(),
     };
   }
   const best = stats.articles[0];
   return normalizeWeeklyReport({
-    highlight: `知乎创作图鉴看了你这周写的 ${stats.count} 篇文章，先把《${best?.article?.title || '未命名'}》标出来：它最适合作为本周复盘的支点。`,
+    highlight: `知识图鉴看了你这周写的 ${stats.count} 篇文章，先把《${best?.article?.title || '未命名'}》标出来：它最适合作为本周复盘的支点。`,
+    pattern: reviewWritingPatternFallback(stats.articles),
     blank: reviewBlankSpotFallback(articles),
-    reading_plan: weeklyReadingPlanFallback(stats.articles),
   }, articles, now);
 }
 
@@ -7870,8 +5948,8 @@ function renderWeeklyReportCard(report, reports = {}, currentKey = reviewWeeklyR
   const cleanReport = {
     ...report,
     highlight: formalizeProductName(report?.highlight),
+    pattern: formalizeProductName(report?.pattern),
     blank: formalizeProductName(report?.blank),
-    reading_plan: normalizeWeeklyReadingPlan(report?.reading_plan || []),
   };
   const isCurrentWeek = currentKey === reviewWeeklyReportKey();
   return `<div class="weekly-report-card" id="weeklyReportCard" data-week-key="${esc(currentKey)}">
@@ -7888,8 +5966,8 @@ function renderWeeklyReportCard(report, reports = {}, currentKey = reviewWeeklyR
     <div class="weekly-report-stats">${esc(report.stats || '')}</div>
     <div class="weekly-report-grid">
       <div class="weekly-report-block"><span>本周亮点</span><p>${esc(cleanReport.highlight || '')}</p></div>
+      <div class="weekly-report-block"><span>创作模式</span><p>${esc(cleanReport.pattern || '')}</p></div>
       <div class="weekly-report-block"><span>空白机会</span><p>${esc(cleanReport.blank || '')}</p></div>
-      ${renderWeeklyReadingPlan(cleanReport.reading_plan)}
     </div>
     ${status ? `<div class="weekly-report-status">${esc(formalizeProductName(status))}</div>` : ''}
     ${renderWeeklyReportHistory(entries, currentKey)}
@@ -7908,13 +5986,13 @@ async function ensureWeeklyReport(articles, allArticles = articles, options = {}
   const key = reviewWeeklyReportKey(now);
   const reports = await getWeeklyReports();
   const stats = reviewWeeklyStats(articles, now);
-  if (!options.force && reports[key] && normalizeWeeklyReadingPlan(reports[key].reading_plan || [], []).length) return;
+  if (!options.force && reports[key]) return;
   if (!stats.count) {
     updateWeeklyReportCard(fallbackWeeklyReport(articles, now), reports);
     return;
   }
 
-  updateWeeklyReportCard(reports[key] || fallbackWeeklyReport(articles, now), reports, '知乎创作图鉴正在写本周复盘…', key);
+  updateWeeklyReportCard(reports[key] || fallbackWeeklyReport(articles, now), reports, '知识图鉴正在写本周复盘…', key);
   bindWeeklyReportCardInteractions(getWeeklyReportContainer(), allArticles, articles);
   try {
     const [settings, apiKeys] = await Promise.all([
@@ -7924,21 +6002,21 @@ async function ensureWeeklyReport(articles, allArticles = articles, options = {}
     const { provider, model } = resolveProviderModel(settings);
     const apiKey = getApiKeyForProvider(provider, apiKeys);
     if (!apiKey) {
-      updateWeeklyReportCard(fallbackWeeklyReport(articles, now), reports, '知乎创作图鉴还没有 API Key，先显示本地复盘。', key);
+      updateWeeklyReportCard(fallbackWeeklyReport(articles, now), reports, '知识图鉴还没有 API Key，先显示本地复盘。', key);
       bindWeeklyReportCardInteractions(getWeeklyReportContainer(), allArticles, articles);
       return;
     }
     const raw = await callLLM(apiKey, provider, model, [
-      { role: 'system', content: '你是知乎创作图鉴，创作者的周复盘伙伴。只输出 JSON，不要 markdown。语气具体、亲近、像真的读过作品。' },
+      { role: 'system', content: '你是知识图鉴，创作者的周复盘伙伴。只输出 JSON，不要 markdown。语气具体、亲近、像真的读过作品。' },
       { role: 'user', content: buildWeeklyReportPrompt(articles, allArticles, now) },
-    ], 1800);
+    ], 1200);
     const report = parseWeeklyReport(raw, articles, now) || fallbackWeeklyReport(articles, now);
     const nextReports = await saveWeeklyReport(key, report);
-    updateWeeklyReportCard(report, nextReports, '知乎创作图鉴写好了本周复盘。', key);
+    updateWeeklyReportCard(report, nextReports, '知识图鉴写好了本周复盘。', key);
     bindWeeklyReportCardInteractions(getWeeklyReportContainer(), allArticles, articles);
   } catch (e) {
-    debugLog('[知乎创作图鉴 panel] weekly report fallback:', e.message);
-    updateWeeklyReportCard(fallbackWeeklyReport(articles, now), reports, `知乎创作图鉴这次没写成周报：${e.message}`, key);
+    debugLog('[知识图鉴 panel] weekly report fallback:', e.message);
+    updateWeeklyReportCard(fallbackWeeklyReport(articles, now), reports, `知识图鉴这次没写成周报：${e.message}`, key);
     bindWeeklyReportCardInteractions(getWeeklyReportContainer(), allArticles, articles);
   }
 }
@@ -8001,9 +6079,6 @@ function bindWeeklyReportActions(container, allRecords, articles) {
   });
 }
 
-const STYLE_FINGERPRINT_SCHEMA = 'fingerprint_v2';
-const STYLE_FINGERPRINT_LABELS = ['高频主题：', '论证方式：', '表达气质：', '反复世界观：', '问题切口：', '隐性连接：'];
-
 function craftTextForFingerprint(rec) {
   const review = rec.analysis?.craft_review || {};
   return String(
@@ -8013,110 +6088,34 @@ function craftTextForFingerprint(rec) {
   ).trim();
 }
 
-function fingerprintTopValues(values = [], limit = 3) {
-  const counts = new Map();
-  for (const value of values.map(item => String(item || '').trim()).filter(Boolean)) {
-    counts.set(value, (counts.get(value) || 0) + 1);
-  }
-  return [...counts.entries()]
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'zh-Hans-CN'))
-    .slice(0, limit)
-    .map(([name]) => name);
-}
-
-function fingerprintArticleContext(rec) {
-  const a = rec.analysis || {};
-  const nodes = (a.nodes_hit || []).map(n => n.name).filter(Boolean).slice(0, 5);
-  const assets = (a.asset_cards || []).map(card => [card.type, card.title].filter(Boolean).join(':')).filter(Boolean).slice(0, 4);
-  const clips = (a.reusable_clips || []).map(c => c.type || c.content).filter(Boolean).slice(0, 3);
-  return {
-    title: rec.article?.title || '未命名',
-    path: [a.domain, a.sub_domain, a.perspective].filter(Boolean).join(' → '),
-    core: a.core_claim || '',
-    strength: a.creator_strength || '',
-    craft: craftTextForFingerprint(rec),
-    nodes,
-    assets,
-    clips,
-  };
-}
-
-function hasFingerprintContext(rec) {
-  const ctx = fingerprintArticleContext(rec);
-  return Boolean(ctx.craft || ctx.core || ctx.strength || ctx.nodes.length || ctx.assets.length || ctx.clips.length);
-}
-
 function buildStyleFingerprintPrompt(articles) {
   const items = [...articles]
-    .map(fingerprintArticleContext)
-    .filter(item => item.craft || item.core || item.strength || item.nodes.length || item.assets.length || item.clips.length)
+    .map(rec => ({
+      title: rec.article?.title || '未命名',
+      craft: craftTextForFingerprint(rec),
+    }))
+    .filter(item => item.craft)
     .slice(0, 10)
-    .map((item, index) => `${index + 1}. 《${item.title}》
-路径：${item.path || '未分类'}
-核心判断：${item.core || '无'}
-知识节点：${item.nodes.join('、') || '无'}
-资产卡：${item.assets.join('；') || '无'}
-创作者优势：${item.strength || '无'}
-技法反馈：${item.craft || '无'}
-素材类型：${item.clips.join('、') || '无'}`)
+    .map((item, index) => `${index + 1}. 《${item.title}》：${item.craft}`)
     .join('\n');
-  return `基于下面这些同一创作者的作品记录，生成“写作指纹”。
-要求：第二人称对话语气（"你"），具体、亲近、像真的读过作品；不要夸空话，不要泛泛说“专业”“有思想”。
-请严格输出 6 行，每行保留标签：
-高频主题：指出反复出现的主题/领域/知识节点。
-论证方式：指出常用的推理路径、材料组织或结构习惯。
-表达气质：指出语言和叙述气质。
-反复世界观：指出这些作品背后反复出现的判断方式或价值关切。
-问题切口：指出创作者最擅长切入的问题类型。
-隐性连接：指出不同作品之间过去不容易被创作者意识到的连接。
+  return `基于下面这些对同一创作者历篇文章的写作技法夸奖，归纳这位创作者正在形成的写作风格。
+要求：100-150 字，第二人称对话语气（"你"），具体到句法/材料选择/论证习惯/语言美学，不要贴标签，不要"专业的""有思想的"这种空话。
 
-作品记录：
+历篇技法反馈：
 ${items || '暂无足够反馈'}`;
 }
 
-function buildLocalStyleFingerprintContent(articles) {
-  const map = reviewDirectionMap(articles);
-  const top = map[0];
-  const sub = top?.subdomains?.[0];
-  const point = sub?.points?.[0] || top?.points?.[0];
-  const path = [top?.name, sub?.name, point?.name].filter(Boolean).join(' → ');
-  const domains = fingerprintTopValues(articles.map(rec => rec.analysis?.domain));
-  const perspectives = fingerprintTopValues(articles.map(rec => rec.analysis?.perspective || rec.analysis?.sub_domain));
-  const nodes = fingerprintTopValues(articles.flatMap(rec => (rec.analysis?.nodes_hit || []).map(n => n.name)));
-  const strengths = articles.map(rec => rec.analysis?.creator_strength).filter(Boolean);
-  const craft = articles.map(rec => rec.analysis?.craft_review?.summary || craftTextForFingerprint(rec)).filter(Boolean);
-  const claims = articles.map(rec => rec.analysis?.core_claim).filter(Boolean);
-  const topDomains = domains.slice(0, 2).join('、');
-  const topNodes = nodes.slice(0, 3).join('、');
-  const mainPerspective = perspectives[0] || sub?.name || top?.name || '具体问题';
-
-  return [
-    `高频主题：${path || topDomains || '样本还少，先从连续分析作品开始'}。`,
-    `论证方式：你常把${topNodes ? `「${topNodes}」` : '具体材料'}放回${mainPerspective ? `「${mainPerspective}」` : '一个更大的结构'}里看，而不是只停在表层评价。`,
-    `表达气质：${craft[0] || strengths[0] || '你的表达更像是在慢慢确认一个判断，重视清楚、具体和可继续生长的线索'}。`,
-    `反复世界观：${claims[0] ? `你反复追问“${claims[0]}”背后的机制。` : '你在作品里反复关心事物如何被结构、位置、关系和经验塑形。'}`,
-    `问题切口：你适合继续写${mainPerspective ? `「${mainPerspective}」` : '那些能从个体经验进入系统解释'}的问题，把单篇观点推进成稳定专题。`,
-    `隐性连接：${topDomains && nodes.length ? `「${topDomains}」和「${topNodes}」正在互相连线，旧作品会变成下一篇的素材入口。` : reviewWritingPatternFallback(articles)}`,
-  ].join('\n');
-}
-
 function fallbackStyleFingerprint(articles) {
+  const pattern = reviewWritingPatternFallback(articles);
   return {
-    schema: STYLE_FINGERPRINT_SCHEMA,
     generatedAt: new Date().toISOString(),
-    content: buildLocalStyleFingerprintContent(articles),
+    content: `知识图鉴读了你的作品后，先抓到一个雏形：${pattern}`,
   };
-}
-
-function hasStructuredStyleFingerprintContent(content) {
-  const text = String(content || '');
-  return STYLE_FINGERPRINT_LABELS.every(label => text.includes(label));
 }
 
 function isStyleFingerprintFresh(fp, now = new Date()) {
   const d = new Date(fp?.generatedAt || '');
-  const currentSchema = fp?.schema === STYLE_FINGERPRINT_SCHEMA || hasStructuredStyleFingerprintContent(fp?.content);
-  return fp?.content && currentSchema && !Number.isNaN(d.getTime()) &&
+  return fp?.content && !Number.isNaN(d.getTime()) &&
     d.getFullYear() === now.getFullYear() &&
     d.getMonth() === now.getMonth();
 }
@@ -8128,19 +6127,18 @@ async function getStyleFingerprint() {
 }
 
 async function saveStyleFingerprint(fp) {
-  const normalized = { ...fp, schema: STYLE_FINGERPRINT_SCHEMA };
-  if (typeof chrome === 'undefined' || !chrome.storage?.local) return normalized;
-  await chrome.storage.local.set({ styleFingerprint: normalized });
-  return normalized;
+  if (typeof chrome === 'undefined' || !chrome.storage?.local) return fp;
+  await chrome.storage.local.set({ styleFingerprint: fp });
+  return fp;
 }
 
 function renderStyleFingerprintCard(fp, status = '') {
-  const content = formalizeProductName(fp?.content || '知乎创作图鉴还需要多读几篇，才能更准确地说出你的写作味道。');
+  const content = formalizeProductName(fp?.content || '知识图鉴还需要多读几篇，才能更准确地说出你的写作味道。');
   return `<div class="style-fingerprint-card" id="styleFingerprintCard">
     <div class="style-fingerprint-top">
       <div>
         <div class="style-fingerprint-kicker">你的写作指纹</div>
-        <div class="style-fingerprint-title">知乎创作图鉴读出来的“你”</div>
+        <div class="style-fingerprint-title">知识图鉴读出来的“你”</div>
       </div>
       <button class="style-fingerprint-refresh" id="refreshStyleFingerprintBtn" type="button">刷新指纹</button>
     </div>
@@ -8158,17 +6156,15 @@ function updateStyleFingerprintCard(fp, status = '') {
 async function ensureStyleFingerprint(articles, options = {}) {
   if (typeof chrome === 'undefined' || !chrome.storage?.local) return;
   const cached = await getStyleFingerprint();
-  const freshCached = isStyleFingerprintFresh(cached) ? cached : null;
-  if (!options.force && freshCached) return;
+  if (!options.force && isStyleFingerprintFresh(cached)) return;
 
-  const craftItems = articles.filter(hasFingerprintContext);
-  const fallback = fallbackStyleFingerprint(articles);
+  const craftItems = articles.filter(rec => craftTextForFingerprint(rec));
   if (!craftItems.length) {
-    updateStyleFingerprintCard(fallback);
+    updateStyleFingerprintCard(fallbackStyleFingerprint(articles));
     return;
   }
 
-  updateStyleFingerprintCard(freshCached || fallback, '知乎创作图鉴正在重新闻你的写作味道…');
+  updateStyleFingerprintCard(cached || fallbackStyleFingerprint(articles), '知识图鉴正在重新闻你的写作味道…');
   bindStyleFingerprintActions(document.getElementById('fingerprintTab'), articles);
   try {
     const [settings, apiKeys] = await Promise.all([
@@ -8178,24 +6174,23 @@ async function ensureStyleFingerprint(articles, options = {}) {
     const { provider, model } = resolveProviderModel(settings);
     const apiKey = getApiKeyForProvider(provider, apiKeys);
     if (!apiKey) {
-      updateStyleFingerprintCard(fallback, '知乎创作图鉴还没有 API Key，先显示本地指纹。');
+      updateStyleFingerprintCard(cached || fallbackStyleFingerprint(articles), '知识图鉴还没有 API Key，先显示本地指纹。');
       bindStyleFingerprintActions(document.getElementById('fingerprintTab'), articles);
       return;
     }
     const content = String(await callLLM(apiKey, provider, model, [
-      { role: 'system', content: '你是知乎创作图鉴，创作者的长期写作观察伙伴。只基于作品记录输出写作指纹，不预测流量，不泛泛夸奖。只输出六行文本。' },
+      { role: 'system', content: '你是知识图鉴，创作者的长期写作观察伙伴。回答要具体、亲近，只输出一段文字。' },
       { role: 'user', content: buildStyleFingerprintPrompt(craftItems) },
-    ], 950) || '').trim();
-    const normalizedContent = hasStructuredStyleFingerprintContent(content) ? content : fallback.content;
+    ], 700) || '').trim();
     const fp = await saveStyleFingerprint({
       generatedAt: new Date().toISOString(),
-      content: normalizedContent,
+      content: content || fallbackStyleFingerprint(articles).content,
     });
-    updateStyleFingerprintCard(fp, '知乎创作图鉴更新好了你的写作指纹。');
+    updateStyleFingerprintCard(fp, '知识图鉴更新好了你的写作指纹。');
     bindStyleFingerprintActions(document.getElementById('fingerprintTab'), articles);
   } catch (e) {
-    debugLog('[知乎创作图鉴 panel] style fingerprint fallback:', e.message);
-    updateStyleFingerprintCard(freshCached || fallback, `知乎创作图鉴这次没闻准：${e.message}`);
+    debugLog('[知识图鉴 panel] style fingerprint fallback:', e.message);
+    updateStyleFingerprintCard(cached || fallbackStyleFingerprint(articles), `知识图鉴这次没闻准：${e.message}`);
     bindStyleFingerprintActions(document.getElementById('fingerprintTab'), articles);
   }
 }
@@ -8288,9 +6283,8 @@ function reviewChatPanel() {
   return `<div class="review-chat-entry">
     <button class="btn btn-secondary review-chat-open" type="button" id="openReviewChat">打开 AI 复盘对话</button>
     <div class="review-chat-panel" id="reviewChatPanel" hidden>
-      <div class="card chat-card review-chat-card" id="reviewChatCard">
+      <div class="card chat-card review-chat-card">
         <div class="card-label">AI 复盘对话</div>
-        <div class="chat-mascot" aria-hidden="true" hidden title="知乎刘看山"></div>
         <div class="chat-templates">${buttons}</div>
         <div class="chat-history" id="reviewChatHistory" aria-live="polite"></div>
         <div class="chat-status" id="reviewChatStatus" role="status"></div>
@@ -8377,9 +6371,7 @@ async function sendReviewChat(key) {
   }
   isReviewChatting = true;
   setReviewChatBusy(true);
-  const card = document.getElementById('reviewChatCard');
-  hideChatMascot(card);
-  startChatLoadingMessages(card, REVIEW_CHAT_LOADING_MESSAGES);
+  setReviewChatStatus('正在生成复盘回答…');
   reviewChatHistory.push({ role: 'user', content: tpl.label });
   renderReviewChatHistory();
 
@@ -8394,11 +6386,8 @@ async function sendReviewChat(key) {
     const answer = String(await callLLM(apiKey, provider, model, buildReviewChatMessages(reviewChatContext, tpl.prompt), 1600) || '').trim();
     reviewChatHistory.push({ role: 'assistant', content: answer || 'AI 没有返回可用内容。' });
     renderReviewChatHistory();
-    stopChatLoadingMessages(card);
     setReviewChatStatus('复盘回答已生成。');
-    showChatMascot(card);
   } catch (e) {
-    stopChatLoadingMessages(card);
     setReviewChatStatus(e.message || '复盘对话失败，请稍后再试。', true);
   } finally {
     isReviewChatting = false;
@@ -8660,120 +6649,6 @@ function openTimelineArticleFromDeck(id) {
   showAssetDetail(rec);
 }
 
-// ── 作者分身 ─────────────────────────────────────────────
-function authorAgentTopValues(values = [], limit = 4) {
-  const counts = {};
-  for (const value of values) {
-    const text = String(value || '').trim();
-    if (text) counts[text] = (counts[text] || 0) + 1;
-  }
-  return Object.entries(counts)
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'zh-Hans-CN'))
-    .slice(0, limit)
-    .map(([name, count]) => ({ name, count }));
-}
-
-function buildAuthorAgentContext(records = []) {
-  const articles = records
-    .filter(rec => rec.article?.type !== 'idea' && Object.keys(rec.analysis || {}).length)
-    .slice(0, 16);
-  const works = articles.map(rec => {
-    const a = rec.analysis || {};
-    return {
-      id: rec.id,
-      title: rec.article?.title || '（无标题）',
-      savedAt: rec.savedAt || '',
-      sourceUrl: rec.article?.url || rec.url || '',
-      domain: [a.domain, a.sub_domain].filter(Boolean).join(' · '),
-      core_claim: a.core_claim || '',
-      creator_strength: a.creator_strength || '',
-      insight: a.insight || '',
-      nodes: recordNodeMentions(rec).slice(0, 8).map(n => ({
-        name: n.name,
-        type: TYPE_META[n.type]?.label || n.type || '',
-        role: ROLE_MAP[n.role] || n.role || '',
-        contribution: n.contribution || '',
-      })),
-      asset_cards: normalizeAssetCards(a, { record: rec }).slice(0, 4).map(card => assetCardPayload(card)),
-      reusable_clips: (a.reusable_clips || []).slice(0, 4).map(clip => ({
-        type: clip.type || '素材',
-        content: clip.content || '',
-        why_reusable: clip.why_reusable || '',
-      })),
-      essence_insights: (a.essence_insights || []).slice(0, 3).map(insight => ({
-        viewpoint: insight.viewpoint || '',
-        why_essential: insight.why_essential || '',
-      })),
-      next_suggestions: (a.next_suggestions || []).slice(0, 3).map(s => ({
-        type: s.type || '延展',
-        suggestion: s.suggestion || '',
-        reason: s.reason || '',
-      })),
-    };
-  });
-  return {
-    articleCount: works.length,
-    topThemes: authorAgentTopValues(works.flatMap(w => [w.domain, ...w.asset_cards.flatMap(card => card.keywords || [])])),
-    topNodes: authorAgentTopValues(works.flatMap(w => w.nodes.map(n => n.name))),
-    strengths: works.map(w => w.creator_strength).filter(Boolean).slice(0, 6),
-    works,
-  };
-}
-
-function buildAuthorAgentAnalysis(context = {}) {
-  const firstWork = context.works?.[0] || {};
-  return {
-    domain: '作者分身',
-    sub_domain: '历史作品资产',
-    core_claim: context.articleCount
-      ? `作者分身已读取 ${context.articleCount} 篇历史作品资产。`
-      : '还没有可用于作者分身的历史作品。',
-    asset_cards: (firstWork.asset_cards || []).slice(0, 6),
-    creator_strength: context.strengths?.[0] || '继续分析更多作品后，作者分身会更准确。',
-    reusable_clips: (firstWork.reusable_clips || []).slice(0, 5),
-    essence_insights: (firstWork.essence_insights || []).slice(0, 5),
-    nodes_hit: (firstWork.nodes || []).slice(0, 8).map(n => ({
-      name: n.name,
-      type: 'concept',
-      role: 'secondary',
-      contribution: n.contribution || n.role,
-    })),
-    next_suggestions: (firstWork.next_suggestions || []).slice(0, 4),
-    insight: context.topThemes?.length
-      ? `你的历史作品反复出现：${context.topThemes.map(t => t.name).join('、')}`
-      : '',
-  };
-}
-
-async function loadAuthorAgent() {
-  const container = document.getElementById('authorTab');
-  if (!container) return;
-  container.innerHTML = `<div class="asset-empty">正在读取历史作品资产…</div>`;
-  const records = await dbGetAllArticles({ project: activeProject });
-  const context = buildAuthorAgentContext(records);
-
-  if (!context.articleCount) {
-    container.innerHTML = analysisGroup('作者分身', `<div class="asset-empty">还没有可提问的历史作品<br>先分析一篇文章，知乎创作图鉴就能从旧文里回答你。</div>`);
-    return;
-  }
-
-  const analysis = buildAuthorAgentAnalysis(context);
-  const chatId = createChatSession(analysis, JSON.stringify(context, null, 2), 'authorTab', {
-    agentMode: 'author',
-    authorContext: context,
-    articleTitle: '作者分身',
-    articleText: JSON.stringify(context.works.slice(0, 8), null, 2),
-    projectId: activeProject,
-  });
-
-  container.innerHTML = analysisGroup('向自己历史作品提问', cardChat(chatId, {
-      label: '问问过去的我',
-      placeholder: '例如：我以前怎么看位置决定命运？',
-      templates: AUTHOR_AGENT_TEMPLATES,
-      templateAttr: 'data-author-template',
-    }));
-}
-
 // ── 指纹周报 ─────────────────────────────────────────────
 async function loadFingerprint() {
   const allRecords = await dbGetAllArticles({ project: activeProject });
@@ -8781,27 +6656,24 @@ async function loadFingerprint() {
   const container = document.getElementById('fingerprintTab');
 
   if (!articles.length) {
-    container.innerHTML = `<div class="asset-empty">还没有正式作品<br>分析几篇文章后，这里会生成“知乎创作图鉴读出的你”和本周资产复盘</div>`;
+    container.innerHTML = `<div class="asset-empty">还没有正式作品<br>分析几篇文章后，这里会生成写作指纹和周复盘报告</div>`;
     return;
   }
 
   const styleFingerprint = await getStyleFingerprint();
-  const initialStyleFingerprint = isStyleFingerprintFresh(styleFingerprint)
-    ? styleFingerprint
-    : fallbackStyleFingerprint(articles);
   const weeklyReports = await getWeeklyReports();
   const weeklyKey = reviewWeeklyReportKey();
   const weeklyReport = weeklyReports[weeklyKey] || fallbackWeeklyReport(articles);
 
   container.innerHTML = [
-    renderStyleFingerprintCard(initialStyleFingerprint),
+    renderStyleFingerprintCard(styleFingerprint || fallbackStyleFingerprint(articles)),
     renderWeeklyReportCard(weeklyReport, weeklyReports, weeklyKey),
   ].join('');
 
   bindStyleFingerprintActions(container, articles);
   bindWeeklyReportCardInteractions(container, allRecords, articles);
-  ensureStyleFingerprint(articles).catch(e => debugLog('[知乎创作图鉴 panel] style fingerprint load failed:', e.message));
-  ensureWeeklyReport(articles, allRecords).catch(e => debugLog('[知乎创作图鉴 panel] weekly report load failed:', e.message));
+  ensureStyleFingerprint(articles).catch(e => debugLog('[知识图鉴 panel] style fingerprint load failed:', e.message));
+  ensureWeeklyReport(articles, allRecords).catch(e => debugLog('[知识图鉴 panel] weekly report load failed:', e.message));
 }
 
 // ── 复盘中心 ─────────────────────────────────────────────
@@ -8906,7 +6778,7 @@ async function deleteAssetRecord(rec, kind = '作品', btn = null) {
     await updateAssetCount();
     await loadCurrentAssetMode();
   } catch (e) {
-    alert(`知乎创作图鉴删除失败：${e.message}`);
+    alert(`知识图鉴删除失败：${e.message}`);
     if (btn) {
       btn.disabled = false;
       btn.textContent = oldText || (kind === '速记' ? '删除速记' : '删除作品');
@@ -9069,113 +6941,6 @@ async function saveMarkdownEdit(original) {
   }
 }
 
-function nodeDetailRelatedAssets(mentions = [], displayName = '') {
-  const seen = new Set();
-  const items = [];
-  for (const mention of mentions) {
-    const rec = mention.rec || {};
-    const cards = normalizeAssetCards(rec.analysis || {}, { record: rec });
-    for (const card of cards) {
-      const relevant = assetSearchMatches(displayName, [
-        card.type,
-        card.title,
-        card.summary,
-        card.whyReusable,
-        ...(card.keywords || []),
-        mention.hit?.contribution,
-      ]) || /知识节点|核心观点|写作指纹|延展|创作者优势/.test(String(card.type || ''));
-      if (!relevant) continue;
-      const key = [rec.id, card.type, card.title].join('\x00').toLowerCase();
-      if (seen.has(key)) continue;
-      seen.add(key);
-      items.push({
-        card,
-        sourceTitle: rec.article?.title || '（无标题）',
-      });
-      if (items.length >= 6) return items;
-    }
-  }
-  return items;
-}
-
-function nodeDetailFingerprintMeaning(mentions = [], displayName = '') {
-  const strengths = compactTextList(mentions.map(m => m.rec?.analysis?.creator_strength));
-  const insights = compactTextList(mentions.map(m => m.rec?.analysis?.insight));
-  const contributions = compactTextList(mentions.map(m => m.hit?.contribution));
-  if (strengths.length) {
-    return `「${displayName}」在你的写作指纹里，不只是一个标签，而是你反复调用的思考入口。${strengths[0]}`;
-  }
-  if (insights.length) {
-    return `「${displayName}」连接了你作品里的稳定观察：${insights[0]}`;
-  }
-  if (contributions.length) {
-    return `「${displayName}」目前主要承担这个作用：${contributions[0]}`;
-  }
-  return `「${displayName}」已经进入你的知识宇宙。继续围绕它写下去，系统会逐渐读出它和你的写作优势之间的关系。`;
-}
-
-function nodeDetailExtensionDirections(mentions = [], displayName = '') {
-  const suggestions = [];
-  for (const mention of mentions) {
-    const rec = mention.rec || {};
-    for (const s of rec.analysis?.next_suggestions || []) {
-      const title = String(s.suggestion || '').trim();
-      if (!title) continue;
-      suggestions.push({
-        title,
-        reason: s.reason || mention.hit?.contribution || '',
-        sourceTitle: rec.article?.title || '（无标题）',
-      });
-    }
-  }
-  if (suggestions.length) return suggestions.slice(0, 4);
-  return [{
-    title: `把「${displayName}」写成一篇新的现实迁移文章`,
-    reason: '从已有作品里抽出这个节点的定义、案例、反例和边界条件，让旧节点变成下一篇文章的入口。',
-    sourceTitle: '',
-  }];
-}
-
-function renderNodeAssetExplanation(mentions = [], displayName = '', nodeType = '', projectsHit = []) {
-  if (!mentions.length) return '';
-  const relatedAssets = nodeDetailRelatedAssets(mentions, displayName);
-  const fingerprintMeaning = nodeDetailFingerprintMeaning(mentions, displayName);
-  const directions = nodeDetailExtensionDirections(mentions, displayName);
-  const typeLabel = TYPE_META[nodeType]?.label || nodeType || '知识节点';
-  const assetHtml = relatedAssets.length
-    ? relatedAssets.map(item => `<div class="field">
-        <div class="field-label">${esc(item.card.type)} · 来自《${esc(item.sourceTitle)}》</div>
-        <div class="field-value">${esc(item.card.title || item.card.summary || '')}</div>
-      </div>`).join('')
-    : `<div class="field"><div class="field-label">关联资产</div><div class="field-value">继续分析更多文章后，这里会显示观点卡、素材卡和延展方向。</div></div>`;
-  const directionHtml = directions.map(item => `<div class="field">
-      <div class="field-label">${item.sourceTitle ? `来自《${esc(item.sourceTitle)}》` : '可延展方向'}</div>
-      <div class="field-value">${esc(item.title)}${item.reason ? `：${esc(item.reason)}` : ''}</div>
-    </div>`).join('');
-
-  return [
-    `<div class="card">
-      <div class="card-label">作品资产解释卡</div>
-      <div class="core-claim">${esc(displayName)}</div>
-      <div class="field"><div class="field-label">节点类型</div><div class="field-value">${esc(typeLabel)}</div></div>
-      <div class="field"><div class="field-label">关联作品</div><div class="field-value">${mentions.length} 篇作品 · ${projectsHit.length} 个项目</div></div>
-      <div class="field"><div class="field-label">关联资产</div><div class="field-value">${relatedAssets.length} 个作品资产</div></div>
-    </div>`,
-    `<div class="card">
-      <div class="card-label">关联资产</div>
-      ${assetHtml}
-    </div>`,
-    `<div class="card">
-      <div class="card-label">写作指纹意义</div>
-      <div class="field-value">${esc(fingerprintMeaning)}</div>
-    </div>`,
-    `<div class="card">
-      <div class="card-label">可延展方向</div>
-      ${directionHtml}
-    </div>`,
-  ].join('');
-}
-
 async function showNodeDetail(nodeName, backTarget = 'assets') {
   const key = String(nodeName || '').trim().toLowerCase();
   if (!key) return;
@@ -9224,7 +6989,6 @@ async function showNodeDetail(nodeName, backTarget = 'assets') {
       </div>
       ${roleHtml ? `<div class="node-detail-roles">${roleHtml}</div>` : ''}
     </div>
-    ${renderNodeAssetExplanation(mentions, displayName, nodeType, projectsHit)}
     ${mentions.length ? mentions.map((m, i) => {
       const rec = m.rec;
       const a = rec.analysis || {};
@@ -9308,15 +7072,13 @@ function setKnowledgeLoadingMessage(text) {
 
 function startKnowledgeLoadingMessages() {
   stopKnowledgeLoadingMessages();
-  let prev = -1;
-  knowledgeLoadingIndex = pickNextLoadingIndex(KNOWLEDGE_LOADING_MESSAGES, prev);
-  prev = knowledgeLoadingIndex;
-  setKnowledgeLoadingMessage(KNOWLEDGE_LOADING_MESSAGES[knowledgeLoadingIndex]);
-  knowledgeLoadingTimer = setInterval(() => {
-    knowledgeLoadingIndex = pickNextLoadingIndex(KNOWLEDGE_LOADING_MESSAGES, prev);
-    prev = knowledgeLoadingIndex;
+  knowledgeLoadingIndex = Math.floor(Math.random() * KNOWLEDGE_LOADING_MESSAGES.length);
+  const next = () => {
     setKnowledgeLoadingMessage(KNOWLEDGE_LOADING_MESSAGES[knowledgeLoadingIndex]);
-  }, 3000);
+    knowledgeLoadingIndex = (knowledgeLoadingIndex + 1) % KNOWLEDGE_LOADING_MESSAGES.length;
+  };
+  next();
+  knowledgeLoadingTimer = setInterval(next, 3000);
 }
 
 function stopKnowledgeLoadingMessages() {
@@ -9328,7 +7090,7 @@ function stopKnowledgeLoadingMessages() {
 function setLoading(on) {
   document.getElementById('loading').style.display = on ? 'block' : 'none';
   document.getElementById('analyzeBtn').disabled = on;
-  document.getElementById('analyzeBtn').textContent = on ? '知乎创作图鉴分析中…' : '开始分析';
+  document.getElementById('analyzeBtn').textContent = on ? '知识图鉴分析中…' : '开始分析';
   if (on) startKnowledgeLoadingMessages();
   else stopKnowledgeLoadingMessages();
 }

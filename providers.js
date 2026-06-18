@@ -8,7 +8,6 @@ const PROVIDERS = {
     keyHint:  '格式：xxxxxxxx.xxxxxxxxxxxxxxxx',
     models: [
       { id: 'glm-4-flash',     label: 'GLM-4 Flash（免费，推荐入门）' },
-      { id: 'glm-4.5-air',     label: 'GLM-4.5 Air（赠送额度，比赛推荐）' },
       { id: 'glm-4-air',       label: 'GLM-4 Air（性价比高）' },
       { id: 'glm-4-plus',      label: 'GLM-4 Plus（效果最佳）' },
     ],

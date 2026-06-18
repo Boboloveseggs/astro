@@ -22,7 +22,6 @@ async function setStoredApiKeys(apiKeys) {
 
 const DEFAULT_WEEK_GOAL = 3;
 const UI_THEME_KEY = 'uiTheme';
-const ZHIHU_CONTENT_ACCESS_SECRET_KEY = 'zhihuAccessSecret';
 const ONBOARDING_OPTIONS_PENDING_KEY = 'onboardingOptionsPending';
 let optionsOnboardingState = { active: false, index: 0, wired: false };
 
@@ -47,37 +46,40 @@ async function loadUiTheme() {
 function optionsOnboardingSteps() {
   return [
     {
-      title: '这里是可选设置页',
-      body: '比赛提交版已经内置默认分析通道，不填 API Key 也可以直接分析、归库和点亮知识宇宙。\n\n这个页面只是给你以后更换自己的 API、模型或知乎增强配置用。',
+      title: '这里是设置页',
+      body: '这是新手引导里的 API 设置这一段。我们先把分析文章需要的 API Key 放好，回到面板后会继续介绍资产、复盘和知识地图。\n\nAPI Key 是你自己的分析钥匙，只填写在这里。不要发给别人，不要截图公开，也不要写进公开代码。',
       primary: '下一步',
     },
     {
-      title: '可以更换 AI 提供商',
-      body: '这里可以选择 AI 提供商。比赛包默认已经使用智谱 AI，不需要你额外操作。\n\n如果你以后想换成 DeepSeek、Kimi 或自己的其他模型，再从这里改。',
+      title: '先确认 AI 提供商',
+      body: '看这里。新手可以先用默认的智谱 AI · GLM-4 Flash。\n\n如果你以后想换模型，也是在这个地方选择。',
       target: '#provider',
       primary: '下一步',
     },
     {
-      title: 'API Key 是覆盖选项',
-      body: '这个输入框可以填写你自己的 API Key，用来覆盖比赛包内置通道。\n\n如果你只是评审或第一次试用，可以保持空白，直接回到面板分析文章。',
+      title: '去官方平台创建 API Key',
+      body: '如果你还没有 API Key，可以选择打开当前提供商的官方平台，登录自己的账号后找到 API Key 页面。\n\n如果你已经有 Key，或者比赛后续改用知乎提供的 API，也可以不跳转，直接继续到下一步。知识图鉴不会替你决定打开哪个平台。',
+      target: '.onboarding',
+      primary: '不跳转，继续填写',
+      extra: '打开智谱官方平台',
+      extraAction: 'openOfficial',
+      officialUrl: 'https://open.bigmodel.cn/usercenter/apikeys',
+    },
+    {
+      title: '把 API Key 粘贴到这个框里',
+      body: '点一下这个输入框，然后粘贴你刚才复制的 API Key。\n\n可以按 Ctrl + V，也可以右键选择“粘贴”。记住：这串 Key 不要发给别人。',
       target: '#apiKey',
-      primary: '知道了',
+      primary: '我粘贴好了',
     },
     {
-      title: '知乎开放平台增强也是可选',
-      body: 'Access Secret 用来读取知乎搜索语境，生成“知乎环境建议”。\n\n不填写也不影响核心流程：文章分析、作品归库、资产卡和知识宇宙都能正常使用。',
-      target: '#zhihuAccessSecret',
-      primary: '下一步',
-    },
-    {
-      title: '改过设置再保存',
-      body: '如果你更换了提供商、模型或填写了自己的 Key，就点“保存设置”。\n\n如果只是来看看，不需要保存，直接回到知乎创作图鉴面板就能继续使用默认分析通道。',
+      title: '别忘了保存设置',
+      body: '点“保存设置”。\n\n不点保存的话，知识图鉴还不知道你已经填好了。看到保存成功以后，就可以回到知乎文章页开始分析。',
       target: '#saveBtn',
-      primary: '我知道了',
+      primary: '保存好了',
     },
     {
-      title: '回到面板，直接分析',
-      body: '现在回到知乎创作图鉴面板。比赛包已经有默认 API，评审不需要配置任何 Key。\n\n核心用法就是：载入一篇文章，点击开始分析，等它归库。',
+      title: '设置完成，可以开始用了',
+      body: '现在回到知识图鉴面板。主引导会从“分析第一篇文章”继续，不会从头再来。\n\n接着打开知乎，挑一篇文章，让正文完整显示出来，再回到面板点击“开始分析”。',
       primary: '回到面板继续',
       action: 'finish',
     },
@@ -125,7 +127,7 @@ function renderOptionsOnboarding() {
 
   clearOptionsOnboardingHighlight();
   layer.classList.add('visible');
-  document.getElementById('optionsOnboardingMeta').textContent = `可选设置说明 · 第 ${optionsOnboardingState.index + 1} 步 / 共 ${steps.length} 步`;
+  document.getElementById('optionsOnboardingMeta').textContent = `主引导 · API 设置 · 第 ${optionsOnboardingState.index + 1} 步 / 共 ${steps.length} 步`;
   document.getElementById('optionsOnboardingTitle').textContent = step.title;
   document.getElementById('optionsOnboardingBody').textContent = step.body;
   document.getElementById('optionsOnboardingBackBtn').style.display = optionsOnboardingState.index ? '' : 'none';
@@ -218,7 +220,7 @@ function updateModelSelect(providerId) {
 function updateKeyHint(providerId) {
   const competition = getCompetitionDefaultConfig();
   const suffix = competition?.provider === providerId
-    ? '。比赛提交版已内置默认分析通道；也可以填写自己的 Key 覆盖。'
+    ? '。比赛演示版已内置默认分析通道；也可以填写自己的 Key 覆盖。'
     : '';
   document.getElementById('keyHint').textContent = (PROVIDERS[providerId]?.keyHint || '') + suffix;
   document.getElementById('apiKey').placeholder   = PROVIDERS[providerId]?.keyHint || '';
@@ -226,10 +228,10 @@ function updateKeyHint(providerId) {
 
 // ── 读取已保存设置 ────────────────────────────────────────
 async function loadSettings() {
-  const [settings, apiKeys, { weekGoal, [ZHIHU_CONTENT_ACCESS_SECRET_KEY]: zhihuAccessSecret = '' }] = await Promise.all([
+  const [settings, apiKeys, { weekGoal }] = await Promise.all([
     chrome.storage.sync.get(['provider', 'model']),
     getStoredApiKeys(),
-    chrome.storage.local.get(['weekGoal', ZHIHU_CONTENT_ACCESS_SECRET_KEY]),
+    chrome.storage.local.get('weekGoal'),
   ]);
   const { provider, model } = resolveProviderModel(settings);
 
@@ -238,7 +240,6 @@ async function loadSettings() {
   updateKeyHint(provider);
 
   if (apiKeys[provider]) document.getElementById('apiKey').value = apiKeys[provider];
-  document.getElementById('zhihuAccessSecret').value = zhihuAccessSecret || '';
   if (model) document.getElementById('model').value = model;
   document.getElementById('weekGoal').value = normalizeWeekGoal(weekGoal);
 
@@ -246,31 +247,22 @@ async function loadSettings() {
 }
 
 // ── 保存设置 ─────────────────────────────────────────────
-async function saveSettings(opts = {}) {
+async function saveSettings() {
   const provider = document.getElementById('provider').value;
   const model    = document.getElementById('model').value;
   const apiKey   = document.getElementById('apiKey').value.trim();
-  const zhihuAccessSecret = document.getElementById('zhihuAccessSecret').value.trim();
   const weekGoal = normalizeWeekGoal(document.getElementById('weekGoal').value);
 
   const apiKeys = await getStoredApiKeys();
   if (apiKey) apiKeys[provider] = apiKey;
 
-  const localPayload = { weekGoal };
-  if (zhihuAccessSecret) localPayload[ZHIHU_CONTENT_ACCESS_SECRET_KEY] = zhihuAccessSecret;
-
   await Promise.all([
     chrome.storage.sync.set({ provider, model }),
-    chrome.storage.local.set(localPayload),
-    zhihuAccessSecret ? Promise.resolve() : chrome.storage.local.remove(ZHIHU_CONTENT_ACCESS_SECRET_KEY),
+    chrome.storage.local.set({ weekGoal }),
     setStoredApiKeys(apiKeys),
   ]);
   renderSavedKeys(apiKeys);
-  if (opts.silent) {
-    showStatus(opts.silentText || '已自动保存', 'ok');
-  } else {
-    showStatus('设置已保存 ✓', 'ok');
-  }
+  showStatus('设置已保存 ✓', 'ok');
 }
 
 // ── 渲染已保存密钥列表 ────────────────────────────────────
@@ -310,7 +302,7 @@ async function testConnection() {
   const model    = document.getElementById('model').value;
   const storedKeys = await getStoredApiKeys();
   const apiKey   = document.getElementById('apiKey').value.trim() || getApiKeyForProvider(provider, storedKeys);
-  if (!apiKey) { showStatus('当前提供商没有内置 API，请填写自己的 API Key 后再测试。比赛默认智谱通道可直接使用。', 'err'); return; }
+  if (!apiKey) { showStatus('请先填入 API Key', 'err'); return; }
 
   const btn = document.getElementById('testBtn');
   btn.textContent = '测试中…';
@@ -346,42 +338,6 @@ document.getElementById('provider').addEventListener('change', async e => {
   updateKeyHint(pid);
   const apiKeys = await getStoredApiKeys();
   document.getElementById('apiKey').value = apiKeys[pid] || '';
-  await saveSettings({ silent: true, silentText: '提供商已切换并保存' });
-});
-
-document.getElementById('model').addEventListener('change', () => {
-  saveSettings({ silent: true, silentText: '模型已切换并保存' }).catch(() => {});
-});
-
-let zhihuSecretSaveTimer = null;
-document.getElementById('zhihuAccessSecret').addEventListener('input', () => {
-  clearTimeout(zhihuSecretSaveTimer);
-  zhihuSecretSaveTimer = setTimeout(() => {
-    saveSettings({ silent: true, silentText: 'Access Secret 已自动保存' }).catch(() => {});
-  }, 600);
-});
-
-document.getElementById('weekGoal').addEventListener('change', () => {
-  saveSettings({ silent: true, silentText: '周创作目标已保存' }).catch(() => {});
-});
-
-document.getElementById('useCompetitionKeyBtn')?.addEventListener('click', async () => {
-  const cfg = window.COMPETITION_DEFAULTS || {};
-  if (!cfg.apiKey || !cfg.provider) {
-    showStatus('当前包内未注入比赛专用密钥，请联系开发者。', 'err');
-    return;
-  }
-  document.getElementById('provider').value = cfg.provider;
-  updateModelSelect(cfg.provider);
-  updateKeyHint(cfg.provider);
-  if (cfg.model) document.getElementById('model').value = cfg.model;
-  document.getElementById('apiKey').value = cfg.apiKey;
-  try {
-    await saveSettings();
-    showStatus('✓ 已填入比赛专用密钥（GLM-4.5 Air），回到面板即可直接分析文章。', 'ok');
-  } catch (e) {
-    showStatus(`填入失败：${e.message}`, 'err');
-  }
 });
 
 document.getElementById('exportBtn').addEventListener('click', async () => {
@@ -391,7 +347,7 @@ document.getElementById('exportBtn').addEventListener('click', async () => {
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
     a.href     = url;
-    a.download = `知乎创作图鉴_备份_${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `知识图鉴_备份_${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
     const viewCount = data.config?.asset_views?.length || 0;
@@ -518,7 +474,7 @@ buildProviderSelect();
 loadUiTheme();
 loadSettings();
 loadLocalFolder();
-maybeStartOptionsOnboarding().catch(e => console.warn('[知乎创作图鉴 options] 新手引导启动失败:', e.message));
+maybeStartOptionsOnboarding().catch(e => console.warn('[知识图鉴 options] 新手引导启动失败:', e.message));
 
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'local' && changes[UI_THEME_KEY]) {
